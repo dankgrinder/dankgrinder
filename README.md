@@ -18,20 +18,15 @@ The most feature-rich, advanced Dank Memer automation tool.
 ### Installation
 1. Download the latest release for your operating system [here](https://github.com/dankgrinder/dankgrinder/releases/latest), or [build from source](#building-from-source). If you build from source you can delete everything besides the compiled binary and config.json.
 
-#### Windows
+#### Windows and MacOS
 2. Extract the archive
-3. [Configure](#configuration)
-4. Double click dankgrinder.exe to run
-
-#### MacOS
-2. Extract the archive
-3. [Configure](#configuration)
-4. Double click the dankgrinder binary to run
+3. [Configure](#configuration), make sure `token`, `channel_id` and `user_id` are set, it will not run otherwise
+4. Double click dankgrinder.exe for windows or the dankgrinder binary for MacOS to run
 
 #### Linux
 2. Extract the tarball:  
    `$ tar -xzf dankgrinder-0.1.0-linux-amd64.tar.gz`
-3. [Configure](#configuration)
+3. [Configure](#configuration), make sure `token`, `channel_id` and `user_id` are set, it will not run otherwise
 4. Run the binary:  
    `$ ./dankgrinder`
    
