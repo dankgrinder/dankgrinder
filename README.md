@@ -1,7 +1,9 @@
-# Dankgrinder
-![](https://img.shields.io/github/stars/dankgrinder/dankgrinder) ![](https://img.shields.io/github/forks/dankgrinder/dankgrinder) ![](https://img.shields.io/github/last-commit/dankgrinder/dankgrinder) ![](https://img.shields.io/github/downloads/dankgrinder/dankgrinder/total)
+# Dank Grinder
+The most feature-rich, advanced Dank Memer automation tool.
 
-![](https://img.shields.io/github/go-mod/go-version/dankgrinder/dankgrinder) ![](https://img.shields.io/github/v/release/dankgrinder/dankgrinder) ![](https://img.shields.io/github/workflow/status/dankgrinder/dankgrinder/Go)
+![](https://img.shields.io/github/last-commit/dankgrinder/dankgrinder) ![](https://img.shields.io/github/downloads/dankgrinder/dankgrinder/total) ![](https://img.shields.io/github/v/release/dankgrinder/dankgrinder) ![](https://img.shields.io/github/workflow/status/dankgrinder/dankgrinder/Go)
+
+![](https://i.imgur.com/IHXrnxC.png)
 ## Features
 * Cycles through currency commands to earn approximately 150,000 coins per hour
 * Responds to fishing and hunting events (i.e. captures the dragon, etc.)
