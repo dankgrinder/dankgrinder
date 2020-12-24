@@ -3,6 +3,8 @@ The most feature-rich, advanced Dank Memer automation tool.
 
 ![](https://img.shields.io/github/last-commit/dankgrinder/dankgrinder) ![](https://img.shields.io/github/downloads/dankgrinder/dankgrinder/total) ![](https://img.shields.io/github/v/release/dankgrinder/dankgrinder) ![](https://img.shields.io/github/workflow/status/dankgrinder/dankgrinder/Go)
 
+Need support or have a suggestion? [Join our Discord](https://discord.gg). Encountered a bug? [Report a bug](https://github.com/dankgrinder/dankgrinder/issues/new?assignees=&labels=bug&template=bug-report.md&title=)
+
 ![](https://i.imgur.com/IHXrnxC.png)
 ## Features
 * Cycles through currency commands to earn approximately 150,000 coins per hour
