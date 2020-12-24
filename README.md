@@ -1,7 +1,9 @@
-# Dankgrinder
-![](https://img.shields.io/github/stars/dankgrinder/dankgrinder) ![](https://img.shields.io/github/forks/dankgrinder/dankgrinder) ![](https://img.shields.io/github/last-commit/dankgrinder/dankgrinder) ![](https://img.shields.io/github/downloads/dankgrinder/dankgrinder/total)
+# Dank Grinder
+The most feature-rich, advanced Dank Memer automation tool.
 
-![](https://img.shields.io/github/go-mod/go-version/dankgrinder/dankgrinder) ![](https://img.shields.io/github/v/release/dankgrinder/dankgrinder) ![](https://img.shields.io/github/workflow/status/dankgrinder/dankgrinder/Go)
+![](https://img.shields.io/github/last-commit/dankgrinder/dankgrinder) ![](https://img.shields.io/github/downloads/dankgrinder/dankgrinder/total) ![](https://img.shields.io/github/v/release/dankgrinder/dankgrinder) ![](https://img.shields.io/github/workflow/status/dankgrinder/dankgrinder/Go)
+
+![](https://i.imgur.com/IHXrnxC.png)
 ## Features
 * Cycles through currency commands to earn approximately 150,000 coins per hour
 * Responds to fishing and hunting events (i.e. captures the dragon, etc.)
@@ -16,20 +18,15 @@
 ### Installation
 1. Download the latest release for your operating system [here](https://github.com/dankgrinder/dankgrinder/releases/latest), or [build from source](#building-from-source). If you build from source you can delete everything besides the compiled binary and config.json.
 
-#### Windows
+#### Windows and MacOS
 2. Extract the archive
-3. [Configure](#configuration)
-4. Double click dankgrinder.exe to run
-
-#### MacOS
-2. Extract the archive
-3. [Configure](#configuration)
-4. Double click the dankgrinder binary to run
+3. [Configure](#configuration), make sure `token`, `channel_id` and `user_id` are set, it will not run otherwise
+4. Double click dankgrinder.exe for windows or the dankgrinder binary for MacOS to run
 
 #### Linux
 2. Extract the tarball:  
    `$ tar -xzf dankgrinder-0.1.0-linux-amd64.tar.gz`
-3. [Configure](#configuration)
+3. [Configure](#configuration), make sure `token`, `channel_id` and `user_id` are set, it will not run otherwise
 4. Run the binary:  
    `$ ./dankgrinder`
    
