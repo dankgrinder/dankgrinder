@@ -1,5 +1,5 @@
 # Dankgrinder
-![](https://img.shields.io/github/stars/dankgrinder/dankgrinder) ![](https://img.shields.io/github/forks/dankgrinder/dankgrinder) ![](https://img.shields.io/github/downloads/dankgrinder/dankgrinder/total) ![](https://img.shields.io/github/license/dankgrinder/dankgrinder)
+![](https://img.shields.io/github/stars/dankgrinder/dankgrinder) ![](https://img.shields.io/github/forks/dankgrinder/dankgrinder) ![](https://img.shields.io/github/last-commit/dankgrinder/dankgrinder) ![](https://img.shields.io/github/downloads/dankgrinder/dankgrinder/total)
 
 ![](https://img.shields.io/github/go-mod/go-version/dankgrinder/dankgrinder) ![](https://img.shields.io/github/v/release/dankgrinder/dankgrinder) ![](https://img.shields.io/github/workflow/status/dankgrinder/dankgrinder/Go)
 ## Features
