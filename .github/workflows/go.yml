@@ -1,0 +1,32 @@
+name: Go
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+      - feature/*
+  pull_request:
+    branches:
+      - master
+      - develop
+      - feature/*
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Go 1.15.6
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.15.6
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: Get dependencies
+      run: go get -v -t -d ./...
+        
+    - name: Build
+      run: make build
