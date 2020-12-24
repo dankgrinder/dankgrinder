@@ -8,12 +8,16 @@ assignees: ''
 ---
 
 **Expected behavior**
+The behavior you expected
 
 **Actual behavior**
+What actually happened
 
 **Steps to reproduce**
+How the problem can be reproduced from a clean installation
 
 **Logs**
+If relevant, paste any errors or other logs here.
 
 **Environment**
 OS: e.g. MacOS 10.14.2, Windows, Ubuntu 20.04
@@ -69,3 +73,4 @@ Config: e.g.
 ```
 
 **Additional comments**
+Any other information that might be helpful but does not fit in the above categories.
