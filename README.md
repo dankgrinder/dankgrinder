@@ -18,7 +18,7 @@ Need support or have a suggestion? [Join our Discord](https://discord.gg/Fjzpq8Y
 ## Getting started
 
 ### Installation
-1. Download the latest release for your operating system [here](https://github.com/dankgrinder/dankgrinder/releases/latest), or [build from source](#building-from-source). If you build from source you can delete everything besides the compiled binary and config.json.
+1. Download the latest release for your operating system [here](https://github.com/dankgrinder/dankgrinder/releases/latest), or [build from source](#building-from-source). If you build from source you can delete everything besides the compiled binaries and config.json.
 
 #### Windows and MacOS
 2. Extract the archive
@@ -31,6 +31,8 @@ Need support or have a suggestion? [Join our Discord](https://discord.gg/Fjzpq8Y
 3. [Configure](#configuration), make sure `token`, `channel_id` and `user_id` are set, it will not run otherwise
 4. Run the binary:  
    `$ ./dankgrinder`
+   
+You can use the candy binary (or candy.exe on Windows) to automatically consume all candy. Simply double click it. Running this also requires `token`, `channel_id` and `user_id` to be set in config.json.
    
 ### Getting an authorization token
 1. Go to Discord, logged into the account you want to use
@@ -70,9 +72,8 @@ Option | Type | Description
 token | string | The user's [authorization token](#getting-an-authorization-token).
 channel_id | string | The ID of the channel you want the bot to work in. To get one, right click a channel in [developer mode](#enabling-discords-developer-mode).
 user_id | string | The ID of the account the bot will use. To get one, right click a message the account you want to use for the bot sent in [developer mode](#enabling-discords-developer-mode).
-enable | object | Values in this object can be set to `true` or `false`.
+commands | object | Values in this object can be set to `true` or `false`.
 response_delay | int | The delay in milliseconds before a response will be sent to incoming messages from Dank Memer.
-command_delay | int | The delay in milliseconds between commands sent to Dank Memer. Keep this at least above `2000` to prevent interference. A value of `4000` is recommended.
 typing_duration | int | The time in milliseconds that the bot will type for before sending a message. This can be left at `0` when the bot is active in a private channel. This feature's primary purpose is to avoid suspicion in a public environment.  
 postmeme | array\<string> | The options the bot has to respond to the `pls postmeme` command. 
 global_events | array\<string> | A list of phrases that must be typed in chat during a global event.

@@ -27,19 +27,19 @@ func sendMessage(content string) {
 }
 
 func main() {
-	fmt.Printf("iterations: ")
+	fmt.Printf("amount: ")
 	var s string
 	_, err := fmt.Scanln(&s)
 	if err != nil {
 		logrus.Fatalf("error while scanning stdin: %v", err)
 	}
-	iterations, err := strconv.Atoi(s)
-	if err != nil {
-		logrus.Fatalf("invalid input, must be a number")
+	amount, err := strconv.Atoi(s)
+	if err != nil || amount < 1 {
+		logrus.Fatalf("invalid input: must be a positive integer")
 	}
 
 	t := time.Tick(cycleTime)
-	for i := 0; i < iterations; i++ {
+	for i := 0; i < amount; i++ {
 		go cycle()
 		<-t
 	}

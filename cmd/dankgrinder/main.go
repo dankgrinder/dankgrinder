@@ -37,8 +37,8 @@ func main() {
 
 	connWS()
 	t := time.Tick(cycleTime)
-	for {
-		go cycle()
+	for i := 0; true; i++ {
+		cycle()
 		<-t
 	}
 }
