@@ -69,7 +69,7 @@ type (
 
 		// fatalHandler is used for when a fatal error occurs, not when
 		// WSConn.Close() is called.
-		fatalHandler func(err error)
+		fatalHandler func(err *websocket.CloseError)
 		token        string
 		seq          int
 		state        uint8
@@ -77,7 +77,7 @@ type (
 	WSConnOpts struct {
 		ChatHandler  func(msg Message)
 		ErrHandler   func(err error)
-		FatalHandler func(err error)
+		FatalHandler func(err *websocket.CloseError)
 	}
 
 	WSMessage struct {
@@ -258,11 +258,11 @@ func (c *WSConn) listen() {
 			c.Close()
 			if closeErr.Code == websocket.CloseGoingAway {
 				if err := c.resume(); err != nil {
-					c.fatalHandler(err)
+					c.fatalHandler(closeErr)
 				}
 				break
 			}
-			c.fatalHandler(err)
+			c.fatalHandler(closeErr)
 			break
 		}
 
@@ -283,7 +283,7 @@ func (c *WSConn) listen() {
 			}
 		case OpcodeInvalidSession:
 			c.Close()
-			c.fatalHandler(fmt.Errorf("session was invalidated"))
+			c.fatalHandler(&websocket.CloseError{Text: "session invalidated"})
 			break
 		}
 	}

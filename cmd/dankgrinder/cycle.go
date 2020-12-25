@@ -8,17 +8,17 @@ import (
 func cmd(cmd string) {
 	logrus.WithField("command", cmd).Infof("sending command")
 	sendMessage(cmd)
-	time.Sleep(time.Duration(cfg.CmdDelay) * time.Millisecond)
+	time.Sleep(4 * time.Second)
 }
 
 // cycle is a cycle that goes through all configured commands for the bot.
 func cycle() {
 	logrus.Infof("starting new cycle")
 	cmd("pls beg")
-	if cfg.Enable.Fish {
+	if cfg.Commands.Fish {
 		cmd("pls fish")
 	}
-	if cfg.Enable.Hunt {
+	if cfg.Commands.Hunt {
 		cmd("pls hunt")
 	}
 	cmd("pls search")

@@ -16,16 +16,15 @@ type (
 		ChannelID      string       `json:"channel_id"`
 		UserID         string       `json:"user_id"`
 		ResDelay       int          `json:"response_delay"`
-		CmdDelay       int          `json:"command_delay"`
 		TypingDuration int          `json:"typing_duration"`
-		Enable         Enable       `json:"enable"`
+		Commands       Commands     `json:"commands"`
 		Postmeme       []string     `json:"postmeme"`
 		GlobalEvents   []string     `json:"global_events"`
 		Search         []string     `json:"search"`
 		BalanceCheck   BalanceCheck `json:"balance_check"`
 		AutoBuy        AutoBuy      `json:"auto_buy"`
 	}
-	Enable struct {
+	Commands struct {
 		Fish bool `json:"fish"`
 		Hunt bool `json:"hunt"`
 	}

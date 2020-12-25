@@ -12,5 +12,15 @@ func cmd(cmd string) {
 }
 
 func cycle() {
+	if cfg.Token == "" {
+		logrus.Fatalf("no authorization token configured")
+	}
+	if cfg.ChannelID == "" {
+		logrus.Fatalf("no channel id configured")
+	}
+	if cfg.UserID == "" {
+		logrus.Fatalf("no user id configured")
+	}
+
 	cmd("pls use candy")
 }

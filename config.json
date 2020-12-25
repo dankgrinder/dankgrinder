@@ -2,12 +2,11 @@
   "token": "",
   "channel_id": "",
   "user_id": "",
-  "enable": {
+  "commands": {
     "fish": true,
     "hunt": true
   },
   "response_delay": 0,
-  "command_delay": 4000,
   "typing_duration": 500,
   "postmeme": [
     "f",

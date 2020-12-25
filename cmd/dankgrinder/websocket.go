@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/dankgrinder/dankgrinder/api"
+	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
@@ -175,7 +176,10 @@ func errHandler(err error) {
 	logrus.Errorf("websocket error: %v", err)
 }
 
-func fatalHandler(err error) {
+func fatalHandler(err *websocket.CloseError) {
+	if err.Code == 4004 { // Discord's close code for authentication failed.
+		logrus.Fatalf("websocket closed: authentication failed, try using a new token")
+	}
 	logrus.Errorf("websocket closed: %v", err)
 	logrus.Infof("reconnecting to websocket")
 	connWS()
