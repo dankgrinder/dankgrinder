@@ -5,6 +5,7 @@ VERSION=0.1.1
 
 build:
 	(cd cmd/dankgrinder; $(GO) build -v -o ../../dankgrinder .)
+	(cd cmd/candy; $(GO) build -v -o ../../candy .)
 
 pack:
 	mkdir dankgrinder-$(VERSION)-windows-amd64
