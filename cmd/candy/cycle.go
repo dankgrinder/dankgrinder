@@ -8,7 +8,7 @@ import (
 func cmd(cmd string) {
 	logrus.WithField("command", cmd).Infof("sending command")
 	sendMessage(cmd)
-	time.Sleep(time.Duration(cfg.CmdDelay) * time.Millisecond)
+	time.Sleep(time.Second * 4)
 }
 
 func cycle() {
