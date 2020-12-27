@@ -1,11 +1,14 @@
 GO=go
 VERSION=0.2.0beta
 
-.PHONY: build pack clean release
+.PHONY: build pack clean release rebuild
 
 build:
-	(cd cmd/dankgrinder; $(GO) build -v -o ../../dankgrinder .)
-	(cd cmd/candy; $(GO) build -v -o ../../candy .)
+	mkdir bin
+	(cd cmd/dankgrinder; $(GO) build -v -o ../../bin/dankgrinder .)
+	(cd cmd/candy; $(GO) build -v -o ../../bin/candy .)
+
+rebuild: clean build
 
 pack:
 	mkdir dankgrinder-$(VERSION)-windows-amd64
@@ -28,4 +31,4 @@ release: pack clean
 
 clean:
 	$(GO) clean
-	rm -rf dankgrinder-$(VERSION)-windows-amd64 dankgrinder-$(VERSION)-darwin-amd64 dankgrinder-$(VERSION)-linux-amd64
+	rm -rf dankgrinder-$(VERSION)-windows-amd64 dankgrinder-$(VERSION)-darwin-amd64 dankgrinder-$(VERSION)-linux-amd64 bin
