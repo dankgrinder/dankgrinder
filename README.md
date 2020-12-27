@@ -5,20 +5,20 @@ The most feature-rich, advanced Dank Memer automation tool.
 
 Need support or have a suggestion? [Join our Discord](https://discord.gg/Fjzpq8YPSn). Encountered a bug? [Report a bug](https://github.com/dankgrinder/dankgrinder/issues/new?assignees=&labels=bug&template=bug-report.md&title=)
 
-![](https://i.imgur.com/IHXrnxC.png)
+![](https://i.imgur.com/6a7XETo.png)
 ## Features
 * Cycles through currency commands to earn approximately 150,000 coins per hour
 * Responds to fishing and hunting events (i.e. captures the dragon, etc.)
-* Responds to global events, search, and  postmeme
+* Responds to global events, search, and postmeme
 * Automation of highlow
-* Reports an average income every cycle
+* Reports an average income every 2 minutes
 * Automatically buys a fishing pole, hunting rifle or laptop if they have broken
 * High configurability
 
 ## Getting started
 
 ### Installation
-1. Download the latest release for your operating system [here](https://github.com/dankgrinder/dankgrinder/releases/latest), or [build from source](#building-from-source). If you build from source you can delete everything besides the compiled binaries and config.json.
+1. Download the latest release for your operating system [here](https://github.com/dankgrinder/dankgrinder/releases/latest), or [build from source](#building-from-source). If you build from source you can delete everything besides the compiled binaries and config.yml. NB. darwin is for MacOS.
 
 #### Windows and MacOS
 2. Extract the archive
@@ -32,7 +32,7 @@ Need support or have a suggestion? [Join our Discord](https://discord.gg/Fjzpq8Y
 4. Run the binary:  
    `$ ./dankgrinder`
    
-You can use the candy binary (or candy.exe on Windows) to automatically consume all candy. Simply double click it. Running this also requires `token`, `channel_id` and `user_id` to be set in config.json.
+You can use the candy binary (or candy.exe on Windows) to automatically consume all candy. Simply double click it. Running this also requires `token` and `channel_id` to be set in config.yml.
    
 ### Getting an authorization token
 1. Go to Discord, logged into the account you want to use
@@ -62,7 +62,7 @@ A working Go installation, see https://golang.org/doc/install
 2. Build:  
    `$ make build`
    
-An executable should then be in the repository's main directory.
+The executables should then be in the `/bin` folder.
 
 ## Configuration
 All configuration can be done by editing config.yml. The comments in the file itself provide extra explanation where necessary. [Join our Discord](https://discord.gg/Fjzpq8YPSn) if you have any extra questions.
