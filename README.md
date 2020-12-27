@@ -22,13 +22,13 @@ Need support or have a suggestion? [Join our Discord](https://discord.gg/Fjzpq8Y
 
 #### Windows and MacOS
 2. Extract the archive
-3. [Configure](#configuration), make sure `token`, `channel_id` and `user_id` are set, it will not run otherwise
+3. [Configure](#configuration), make sure `token` and `channel_id` are set, it will not run otherwise
 4. Double click dankgrinder.exe for windows or the dankgrinder binary for MacOS to run
 
 #### Linux
 2. Extract the tarball:  
    `$ tar -xzf dankgrinder-0.1.0-linux-amd64.tar.gz`
-3. [Configure](#configuration), make sure `token`, `channel_id` and `user_id` are set, it will not run otherwise
+3. [Configure](#configuration), make sure `token` and `channel_id` are set, it will not run otherwise
 4. Run the binary:  
    `$ ./dankgrinder`
    
