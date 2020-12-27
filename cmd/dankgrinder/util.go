@@ -6,16 +6,8 @@ import (
 	"math/rand"
 	"regexp"
 	"strings"
+	"time"
 )
-
-// avg returns the average of the passed data.
-func avg(data []int) float64 {
-	var sum int
-	for i := 0; i < len(data); i++ {
-		sum += data[i]
-	}
-	return math.Round(float64(sum) / float64(len(data)))
-}
 
 // randElem returns a random element from the passed slice.
 func randElem(elems []string) string {
@@ -44,11 +36,32 @@ func mentions(s string, userID string) bool {
 // returned.
 func chooseSearch(options []string) string {
 	for i := 0; i < len(options); i++ {
-		for j := 0; j < len(cfg.Search); j++ {
-			if options[i] == cfg.Search[j] {
+		for j := 0; j < len(cfg.Compat.Search); j++ {
+			if options[i] == cfg.Compat.Search[j] {
 				return options[i]
 			}
 		}
 	}
 	return randElem(noSearchesFound)
+}
+
+// ms returns n as a time.Duration in milliseconds.
+func ms(n int) time.Duration {
+	return time.Duration(n) * time.Millisecond
+}
+
+// sec returns n as a time.Duration in seconds.
+func sec(n int) time.Duration {
+	return time.Duration(n) * time.Second
+}
+
+func typingTime(cmd string) time.Duration {
+	msPerKey := int(math.Round((1.0 / float64(cfg.SuspicionAvoidance.Typing.Speed)) * 60000))
+
+	d := ms(cfg.SuspicionAvoidance.Typing.Base)
+	d += ms(len(cmd) * msPerKey)
+	if cfg.SuspicionAvoidance.Typing.Variance > 0 {
+		d += ms(rand.Intn(cfg.SuspicionAvoidance.Typing.Variance))
+	}
+	return d
 }

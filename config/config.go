@@ -1,50 +1,77 @@
 package config
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 	"os"
 	"path"
 )
 
-const fileName = "config.json"
+type Config struct {
+	Token              string             `yaml:"token"`
+	ChannelID          string             `yaml:"channel_id"`
+	Features           Features           `yaml:"features"`
+	Compat             Compat             `yaml:"compatibility"`
+	SuspicionAvoidance SuspicionAvoidance `yaml:"suspicion_avoidance"`
+}
 
-type (
-	Config struct {
-		Token          string       `json:"token"`
-		ChannelID      string       `json:"channel_id"`
-		UserID         string       `json:"user_id"`
-		ResDelay       int          `json:"response_delay"`
-		TypingDuration int          `json:"typing_duration"`
-		Commands       Commands     `json:"commands"`
-		Postmeme       []string     `json:"postmeme"`
-		GlobalEvents   []string     `json:"global_events"`
-		Search         []string     `json:"search"`
-		BalanceCheck   BalanceCheck `json:"balance_check"`
-		AutoBuy        AutoBuy      `json:"auto_buy"`
-	}
-	Commands struct {
-		Fish bool `json:"fish"`
-		Hunt bool `json:"hunt"`
-	}
-	BalanceCheck struct {
-		Enable   bool   `json:"enable"`
-		Username string `json:"username"`
-	}
-	AutoBuy struct {
-		FishingPole  bool `json:"fishing_pole"`
-		HuntingRifle bool `json:"hunting_rifle"`
-		Laptop       bool `json:"laptop"`
-	}
-)
+type Compat struct {
+	Postmeme     []string `yaml:"postmeme"`
+	GlobalEvents []string `yaml:"global_events"`
+	Search       []string `yaml:"search"`
+	Cooldown     Cooldown `yaml:"cooldown"`
+}
 
-func configPath() string {
+type Cooldown struct {
+	Beg      int `yaml:"beg"`
+	Fish     int `yaml:"fish"`
+	Hunt     int `yaml:"hunt"`
+	Postmeme int `yaml:"postmeme"`
+	Search   int `yaml:"search"`
+	Highlow  int `yaml:"highlow"`
+	Margin   int `yaml:"margin"`
+}
+
+type Features struct {
+	Commands     Commands `yaml:"commands"`
+	AutoBuy      AutoBuy  `yaml:"auto_buy"`
+	BalanceCheck bool     `yaml:"balance_check"`
+}
+
+type AutoBuy struct {
+	FishingPole  bool `yaml:"fishing_pole"`
+	HuntingRifle bool `yaml:"hunting_rifle"`
+	Laptop       bool `yaml:"laptop"`
+}
+
+type Commands struct {
+	Fish bool `yaml:"fish"`
+	Hunt bool `yaml:"hunt"`
+}
+
+type SuspicionAvoidance struct {
+	Typing       Typing       `yaml:"typing"`
+	MessageDelay MessageDelay `yaml:"message_delay"`
+}
+
+type Typing struct {
+	Base     int `yaml:"base"`
+	Speed    int `yaml:"speed"`
+	Variance int `yaml:"variance"`
+}
+
+type MessageDelay struct {
+	Base     int `yaml:"base"`
+	Variance int `yaml:"variance"`
+}
+
+func configDir() (string, error) {
 	ex, err := os.Executable()
 	if err != nil {
-		logrus.Fatalf("cannot find executable path: %v", err)
+		return "", fmt.Errorf("cannot find executable path: %v", err)
 	}
-	return path.Dir(ex)
+	return path.Dir(ex), nil
 }
 
 // MustLoad runs Load and calls logrus.Fatalf is an error occurs.
@@ -58,13 +85,19 @@ func MustLoad() Config {
 
 // Load loads the config from the expected path.
 func Load() (Config, error) {
-	f, err := os.Open(path.Join(configPath(), fileName))
+	dir, err := configDir()
+	if err != nil {
+		return Config{}, err
+	}
+	f, err := os.Open(path.Join(dir, "config.yml"))
 	if err != nil {
 		return Config{}, fmt.Errorf("error while opening config file: %v", err)
 	}
-	var c Config
-	if err := json.NewDecoder(f).Decode(&c); err != nil {
-		return Config{}, fmt.Errorf("error while decoding config as json: %v", err)
+
+	var cfg Config
+	if err := yaml.NewDecoder(f).Decode(&cfg); err != nil {
+		return Config{}, fmt.Errorf("error while unmarshalling config: %v", err)
 	}
-	return c, nil
+
+	return cfg, nil
 }

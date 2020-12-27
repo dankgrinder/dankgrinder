@@ -1,0 +1,101 @@
+# See https://github.com/dankgrinder/dankgrinder#getting-an-authorization-token
+# for instructions on how to get a token.
+token: ""
+
+# See https://github.com/dankgrinder/dankgrinder#enabling-discords-developer-mode
+# for instructions on how to get a channel ID.
+channel_id: ""
+
+features:
+  commands:
+    fish: true
+    hunt: true
+  auto_buy:
+    fishing_pole: true
+    hunting_rifle: true
+    laptop: true
+  balance_check: true
+
+compatibility:
+  postmeme:
+    - "f"
+    - "r"
+    - "i"
+    - "c"
+    - "k"
+  global_events:
+    - "pew pew"
+    - "bang"
+    - "please"
+    - "unoriginal content"
+    - "f in the chat"
+    - "mine!"
+    - "fuck off karen"
+    - "i am impoverish i swear"
+    - "disinfect"
+    - "hoe"
+    - "why my pls rich no work?"
+    - "what a gamer"
+    - "vine ripoff"
+    - "boycott"
+    - "me so poor"
+    - "wear a mask"
+    - "provolone"
+    - "shotgun it"
+    - "lol imagine using skype in 2020"
+    - "ban"
+    - "downdoot"
+    - "draw"
+    - "banned"
+    - "we're gaming now"
+    - "cheddar"
+    - "beg"
+    - "big f"
+    - "f"
+    - "savage"
+    - "ok"
+    - "dibs"
+    - "bored in the house and I'm in the house bored"
+  search:
+    - "bus"
+    - "coat"
+    - "dresser"
+    - "grass"
+    - "laundromat"
+    - "mailbox"
+    - "pantry"
+    - "pocket"
+    - "shoe"
+    - "sink"
+    - "car"
+
+  # Cooldown values in seconds for each command. Default is non-donator.
+  cooldown:
+    beg: 45
+    search: 30
+    highlow: 20
+    postmeme: 60
+    fish: 60
+    hunt: 60
+
+    # This value in seconds in added to each cooldown to accommodate timing errors.
+    margin: 8
+
+
+suspicion_avoidance:
+  typing:
+    # This is a base typing duration in milliseconds that is added to the TOTAL
+    # typing time.
+    base: 0
+
+    # The typing speed in keys per minute, approx. 350 is fast. Can be set to 0
+    # to use only the base and variance.
+    speed: 400
+
+    # A random value between 0 and this will be added to the TOTAL typing time
+    # in milliseconds.
+    variance: 500
+
+  message_delay:
+    base: 100
+    variance: 400
