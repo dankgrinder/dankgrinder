@@ -1,9 +1,7 @@
-# Dank Grinder
+# Dank Grinder ![](https://img.shields.io/github/last-commit/dankgrinder/dankgrinder) ![](https://img.shields.io/github/workflow/status/dankgrinder/dankgrinder/Go) ![](https://img.shields.io/github/v/release/dankgrinder/dankgrinder)
 The most feature-rich, advanced Dank Memer automation tool.
 
-![](https://img.shields.io/github/last-commit/dankgrinder/dankgrinder) ![](https://img.shields.io/github/v/release/dankgrinder/dankgrinder) ![](https://img.shields.io/github/workflow/status/dankgrinder/dankgrinder/Go)
-
-Need support or have a suggestion? [Join our Discord](https://discord.gg/Fjzpq8YPSn). Encountered a bug? [Report a bug](https://github.com/dankgrinder/dankgrinder/issues/new?assignees=&labels=bug&template=bug-report.md&title=)
+Need support with the installation process, usage or have a suggestion? [Join our Discord](https://discord.gg/Fjzpq8YPSn). Encountered a bug? [Report a bug](https://github.com/dankgrinder/dankgrinder/issues/new?assignees=&labels=bug&template=bug-report.md&title=). Want to contribute? [Read our contribution guidelines](https://github.com/dankgrinder/dankgrinder/blob/master/CONTRIBUTING.md).
 
 ![](https://i.imgur.com/6a7XETo.png)
 ## Features
