@@ -25,6 +25,7 @@ var (
 	cleanNumExp = regexp.MustCompile(`[0-9]`)
 	hlExp       = regexp.MustCompile(`Your hint is \*\*(?P<n>[0-9]+)\*\*`)
 	balExp      = regexp.MustCompile(`\*\*Wallet\*\*: \x60?⏣?\s?(?P<bal>[0-9,]+)\x60?`)
+	eventExp    = regexp.MustCompile(`^(Attack the boss by typing|Type) \x60(?P<event>.+)\x60`)
 )
 
 // Used to calculate average income.
@@ -52,7 +53,7 @@ func chatHandler(_ string, msg discord.Message) { // TODO: message update handli
 	if fhExp.MatchString(msg.Content) && mentions(msg.Content, user.ID) {
 		content := clean(fhExp.FindStringSubmatch(msg.Content)[2], cleanExp)
 		logrus.WithField("response", content).Infof("respoding to fishing or hunting event")
-		sched.priority <- content
+		sched.priority <- command{content: content}
 		return
 	}
 
@@ -62,17 +63,16 @@ func chatHandler(_ string, msg discord.Message) { // TODO: message update handli
 
 		content := randElem(cfg.Compat.Postmeme)
 		logrus.WithField("response", content).Infof("respoding to postmeme")
-		sched.priority <- content
+		sched.priority <- command{content: content}
 		return
 	}
 
 	// Handle global events.
-	for i := 0; i < len(cfg.Compat.GlobalEvents); i++ {
-		if strings.Contains(clean(msg.Content, cleanExp), fmt.Sprintf("`%v`", cfg.Compat.GlobalEvents[i])) {
-			logrus.WithField("response", cfg.Compat.GlobalEvents[i]).Infof("respoding to global event")
-			sched.priority <- cfg.Compat.GlobalEvents[i]
-			return
-		}
+	if eventExp.MatchString(msg.Content) {
+		content := clean(eventExp.FindStringSubmatch(msg.Content)[2], cleanExp)
+		logrus.WithField("response", content).Infof("respoding to global event")
+		sched.priority <- command{content: content}
+		return
 	}
 
 	// Handle search.
@@ -80,7 +80,7 @@ func chatHandler(_ string, msg discord.Message) { // TODO: message update handli
 		choices := searchExp.FindStringSubmatch(msg.Content)[1:]
 		content := chooseSearch(choices)
 		logrus.WithField("response", content).Infof("respoding to search")
-		sched.priority <- content
+		sched.priority <- command{content: content}
 		return
 	}
 
@@ -93,11 +93,11 @@ func chatHandler(_ string, msg discord.Message) { // TODO: message update handli
 		}
 		if n > 50 {
 			logrus.WithField("response", "low").Infof("respoding to highlow")
-			sched.priority <- "low"
+			sched.priority <- command{content: "low"}
 			return
 		}
 		logrus.WithField("response", "high").Infof("respoding to highlow")
-		sched.priority <- "high"
+		sched.priority <- command{content: "high"}
 		return
 	}
 
@@ -142,7 +142,7 @@ func chatHandler(_ string, msg discord.Message) { // TODO: message update handli
 		cfg.Features.AutoBuy.Laptop {
 
 		logrus.WithField("command", "pls buy laptop").Infof("no laptop, buying a new one")
-		sched.priority <- "pls buy laptop"
+		sched.priority <- command{content: "pls buy laptop"}
 		return
 	}
 
@@ -152,7 +152,7 @@ func chatHandler(_ string, msg discord.Message) { // TODO: message update handli
 		cfg.Features.AutoBuy.FishingPole {
 
 		logrus.WithField("command", "pls buy fishingpole").Infof("no fishing pole, buying a new one")
-		sched.priority <- "pls buy fishingpole"
+		sched.priority <- command{content: "pls buy fishingpole"}
 		return
 	}
 
@@ -162,7 +162,7 @@ func chatHandler(_ string, msg discord.Message) { // TODO: message update handli
 		cfg.Features.AutoBuy.HuntingRifle {
 
 		logrus.WithField("command", "pls buy rifle").Infof("no hunting rifle, buying a new one")
-		sched.priority <- "pls buy rifle"
+		sched.priority <- command{content: "pls buy rifle"}
 		return
 	}
 }
@@ -172,7 +172,7 @@ func errHandler(err error) {
 }
 
 func fatalHandler(err *websocket.CloseError) {
-	if err.Code == 4004 { // Discord's close code for authentication failed.
+	if err.Code == 4004 {
 		logrus.Fatalf("websocket closed: authentication failed, try using a new token")
 	}
 	logrus.Errorf("websocket closed: %v", err)
@@ -183,7 +183,7 @@ func fatalHandler(err *websocket.CloseError) {
 // connWS connects to the Discord websocket. Put in a separate function to avoid
 // repetition in fatalHandler.
 func connWS() {
-	var err error // Declared beforehand so that conn is a global declaration.
+	var err error
 	conn, err = discord.NewWSConn(cfg.Token, discord.WSConnOpts{
 		ChatHandler:  chatHandler,
 		ErrHandler:   errHandler,

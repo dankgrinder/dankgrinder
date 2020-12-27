@@ -65,3 +65,11 @@ func typingTime(cmd string) time.Duration {
 	}
 	return d
 }
+
+func delay() time.Duration {
+	d := ms(cfg.SuspicionAvoidance.MessageDelay.Base)
+	if cfg.SuspicionAvoidance.MessageDelay.Variance > 0 {
+		d += ms(rand.Intn(cfg.SuspicionAvoidance.MessageDelay.Variance))
+	}
+	return d
+}
