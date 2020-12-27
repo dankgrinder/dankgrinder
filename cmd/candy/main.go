@@ -9,22 +9,34 @@ import (
 	"time"
 )
 
-var cfg = config.MustLoad()
-var auth = discord.Authorization{Token: cfg.Token}
-var user discord.User
+var (
+	cfg  = config.MustLoad()
+	auth = discord.Authorization{Token: cfg.Token}
+	user discord.User
+)
 
 // cycleTime is how often a command cycle is triggered, where a command cycle
 // is a cycle that goes through all configured commands for the bot.
 const cycleTime = time.Second * 4
 
 func sendMessage(content string) {
-	err := auth.SendMessage(cfg.ChannelID, content, time.Millisecond*300, nil)
+	err := auth.SendMessage(content, discord.SendMessageOpts{
+		ChannelID:  cfg.ChannelID,
+		TypingTime: time.Second,
+	})
 	if err != nil {
 		logrus.Errorf("%v", err)
 	}
 }
 
 func main() {
+	if cfg.Token == "" {
+		logrus.Fatalf("no authorization token configured")
+	}
+	if cfg.ChannelID == "" {
+		logrus.Fatalf("no channel id configured")
+	}
+
 	var err error
 	user, err = auth.CurrentUser()
 	if err != nil {
@@ -38,6 +50,7 @@ func main() {
 	if err != nil {
 		logrus.Fatalf("error while scanning stdin: %v", err)
 	}
+
 	amount, err := strconv.Atoi(s)
 	if err != nil || amount < 1 {
 		logrus.Fatalf("invalid input: must be a positive integer")
@@ -45,7 +58,8 @@ func main() {
 
 	t := time.Tick(cycleTime)
 	for i := 0; i < amount; i++ {
-		go cycle()
+		logrus.Infof("sending command: pls use candy")
+		sendMessage("pls use candy")
 		<-t
 	}
 }

@@ -12,35 +12,49 @@ type Authorization struct {
 	Token string
 }
 
-func (auth Authorization) SendMessage(channelID, content string, typingTime time.Duration, abort chan bool) error {
+type SendMessageOpts struct {
+	ChannelID  string
+	TypingTime time.Duration
+
+	// If a bool is sent on this channel before the http request is sent (i.e.
+	// when it is still typing or just after typing) execution will be aborted
+	// and a nil error will be returned.
+	Abort chan bool
+}
+
+func (auth Authorization) SendMessage(content string, opts SendMessageOpts) error {
 	if auth.Token == "" {
 		return fmt.Errorf("invalid authorization")
 	}
-	if channelID == "" {
+	if opts.ChannelID == "" {
 		return fmt.Errorf("no channel id provided")
 	}
 	if content == "" {
 		return fmt.Errorf("no content provided")
 	}
 
-	if typingTime != 0 {
-		for i := 0; i < int(typingTime)/int(time.Second*10); i++ {
-			if err := auth.typing(channelID); err != nil {
+	if opts.TypingTime != 0 {
+		for i := 0; i < int(opts.TypingTime)/int(time.Second*10); i++ {
+			if err := auth.typing(opts.ChannelID); err != nil {
 				return err
 			}
-			time.Sleep(time.Second * 10)
 			select {
-			case <-abort: return nil
-			default:
+			case <-opts.Abort:
+				return nil
+			case <-time.After(time.Second * 10):
 			}
 		}
-		if err := auth.typing(channelID); err != nil {
+		if err := auth.typing(opts.ChannelID); err != nil {
 			return err
 		}
-		time.Sleep(typingTime % (time.Second * 10))
+		select {
+		case <-opts.Abort:
+			return nil
+		case <-time.After(opts.TypingTime % (time.Second * 10)):
+		}
 	}
 
-	reqURL := fmt.Sprintf("https://discord.com/api/v8/channels/%v/messages", channelID)
+	reqURL := fmt.Sprintf("https://discord.com/api/v8/channels/%v/messages", opts.ChannelID)
 
 	body, err := json.Marshal(&map[string]interface{}{
 		"content": content,
@@ -48,11 +62,6 @@ func (auth Authorization) SendMessage(channelID, content string, typingTime time
 	})
 	if err != nil {
 		return fmt.Errorf("error while encoding message content as json: %v", err)
-	}
-
-	select {
-	case <-abort: return nil
-	default:
 	}
 
 	req, err := http.NewRequest("POST", reqURL, strings.NewReader(string(body)))
@@ -63,6 +72,12 @@ func (auth Authorization) SendMessage(channelID, content string, typingTime time
 	req.Header.Add("User-Agent", "Chrome/86.0.4240.75")
 	req.Header.Add("Accept-Language", "en-GB")
 	req.Header.Add("Content-Type", "application/json")
+
+	select {
+	case <-opts.Abort:
+		return nil
+	default:
+	}
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {

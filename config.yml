@@ -23,39 +23,9 @@ compatibility:
     - "i"
     - "c"
     - "k"
-  global_events:
-    - "pew pew"
-    - "bang"
-    - "please"
-    - "unoriginal content"
-    - "f in the chat"
-    - "mine!"
-    - "fuck off karen"
-    - "i am impoverish i swear"
-    - "disinfect"
-    - "hoe"
-    - "why my pls rich no work?"
-    - "what a gamer"
-    - "vine ripoff"
-    - "boycott"
-    - "me so poor"
-    - "wear a mask"
-    - "provolone"
-    - "shotgun it"
-    - "lol imagine using skype in 2020"
-    - "ban"
-    - "downdoot"
-    - "draw"
-    - "banned"
-    - "we're gaming now"
-    - "cheddar"
-    - "beg"
-    - "big f"
-    - "f"
-    - "savage"
-    - "ok"
-    - "dibs"
-    - "bored in the house and I'm in the house bored"
+
+  # Search options the bot will pick if provided to it. It will prefer options
+  # which are higher in the list.
   search:
     - "bus"
     - "coat"
@@ -79,7 +49,7 @@ compatibility:
     hunt: 60
 
     # This value in seconds in added to each cooldown to accommodate timing errors.
-    margin: 8
+    margin: 3
 
 
 suspicion_avoidance:
@@ -90,12 +60,14 @@ suspicion_avoidance:
 
     # The typing speed in keys per minute, approx. 350 is fast. Can be set to 0
     # to use only the base and variance.
-    speed: 400
+    speed: 450
 
     # A random value between 0 and this will be added to the TOTAL typing time
     # in milliseconds.
-    variance: 500
+    variance: 250
 
+  # The delay between deciding to send a command and starting to type. Base and
+  # variance work just like they do in typing.
   message_delay:
     base: 100
     variance: 400
