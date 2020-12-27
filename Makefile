@@ -1,5 +1,5 @@
 GO=go
-VERSION=0.1.1
+VERSION=0.2.0beta
 
 .PHONY: build pack clean release
 
@@ -11,9 +11,9 @@ pack:
 	mkdir dankgrinder-$(VERSION)-windows-amd64
 	mkdir dankgrinder-$(VERSION)-darwin-amd64
 	mkdir dankgrinder-$(VERSION)-linux-amd64
-	cp config.json dankgrinder-$(VERSION)-windows-amd64
-	cp config.json dankgrinder-$(VERSION)-darwin-amd64
-	cp config.json dankgrinder-$(VERSION)-linux-amd64
+	cp config.yml dankgrinder-$(VERSION)-windows-amd64
+	cp config.yml dankgrinder-$(VERSION)-darwin-amd64
+	cp config.yml dankgrinder-$(VERSION)-linux-amd64
 	(cd cmd/dankgrinder; GOOS=windows GOARCH=amd64 $(GO) build -v -o ../../dankgrinder-$(VERSION)-windows-amd64/dankgrinder.exe .)
 	(cd cmd/dankgrinder; GOOS=darwin GOARCH=amd64 $(GO) build -v -o ../../dankgrinder-$(VERSION)-darwin-amd64/dankgrinder .)
 	(cd cmd/dankgrinder; GOOS=linux GOARCH=amd64 $(GO) build -v -o ../../dankgrinder-$(VERSION)-linux-amd64/dankgrinder .)

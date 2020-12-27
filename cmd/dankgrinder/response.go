@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/dankgrinder/dankgrinder/api"
+	"github.com/dankgrinder/dankgrinder/discord"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/text/language"
@@ -16,7 +16,7 @@ import (
 
 const dankMemerID = "270904126974590976"
 
-var conn *api.WSConn
+var conn *discord.WSConn
 
 var (
 	searchExp   = regexp.MustCompile(`Pick from the list below and type the name in chat\.\s\x60(?P<option1>.+)\x60,\s\x60(?P<option2>.+)\x60,\s\x60(?P<option3>.+)\x60`)
@@ -24,13 +24,14 @@ var (
 	cleanExp    = regexp.MustCompile(`[\x20-\x7E]`)
 	cleanNumExp = regexp.MustCompile(`[0-9]`)
 	hlExp       = regexp.MustCompile(`Your hint is \*\*(?P<n>[0-9]+)\*\*`)
-	balExp      = regexp.MustCompile(`\*\*Wallet\*\*: \x60⏣?\s?(?P<bal>[0-9,]+)\x60`)
+	balExp      = regexp.MustCompile(`\*\*Wallet\*\*: \x60?⏣?\s?(?P<bal>[0-9,]+)\x60?`)
 )
 
-var (
-	bal     int   // Used to calculate the income from the past cycle.
-	incomes []int // Used to report average coin income, if enabled in the config.
-)
+// Used to calculate average income.
+var initialBal int
+
+// Used to calculate average income.
+var startingTime time.Time
 
 var numFormat = message.NewPrinter(language.English)
 
@@ -43,50 +44,48 @@ var noSearchesFound = []string{
 	"i dont wanna die",
 }
 
-func chatHandler(msg api.Message) {
+func chatHandler(_ string, msg discord.Message) { // TODO: message update handling.
 	if msg.ChannelID != cfg.ChannelID || msg.Author.ID != dankMemerID {
 		return
 	}
-	time.Sleep(time.Duration(cfg.ResDelay) * time.Millisecond)
-
 	// Handle fishing and hunting events.
-	if fhExp.MatchString(msg.Content) && mentions(msg.Content, cfg.UserID) {
+	if fhExp.MatchString(msg.Content) && mentions(msg.Content, user.ID) {
 		content := clean(fhExp.FindStringSubmatch(msg.Content)[2], cleanExp)
 		logrus.WithField("response", content).Infof("respoding to fishing or hunting event")
-		sendMessage(content)
+		sched.priority <- content
 		return
-	}
-
-	// Handle global events.
-	for i := 0; i < len(cfg.GlobalEvents); i++ {
-		if strings.Contains(clean(msg.Content, cleanExp), fmt.Sprintf("`%v`", cfg.GlobalEvents[i])) {
-			logrus.WithField("response", cfg.GlobalEvents[i]).Infof("respoding to global event")
-			sendMessage(cfg.GlobalEvents[i])
-			return
-		}
 	}
 
 	// Handle postmeme.
 	if strings.Contains(msg.Content, "What type of meme do you want to post") &&
-		mentions(msg.Content, cfg.UserID) {
+		mentions(msg.Content, user.ID) {
 
-		content := randElem(cfg.Postmeme)
+		content := randElem(cfg.Compat.Postmeme)
 		logrus.WithField("response", content).Infof("respoding to postmeme")
-		sendMessage(content)
+		sched.priority <- content
 		return
 	}
 
+	// Handle global events.
+	for i := 0; i < len(cfg.Compat.GlobalEvents); i++ {
+		if strings.Contains(clean(msg.Content, cleanExp), fmt.Sprintf("`%v`", cfg.Compat.GlobalEvents[i])) {
+			logrus.WithField("response", cfg.Compat.GlobalEvents[i]).Infof("respoding to global event")
+			sched.priority <- cfg.Compat.GlobalEvents[i]
+			return
+		}
+	}
+
 	// Handle search.
-	if searchExp.MatchString(msg.Content) && mentions(msg.Content, cfg.UserID) {
+	if searchExp.MatchString(msg.Content) && mentions(msg.Content, user.ID) {
 		choices := searchExp.FindStringSubmatch(msg.Content)[1:]
 		content := chooseSearch(choices)
 		logrus.WithField("response", content).Infof("respoding to search")
-		sendMessage(content)
+		sched.priority <- content
 		return
 	}
 
 	// Handle highlow.
-	if len(msg.Embeds) > 0 && hlExp.MatchString(msg.Embeds[0].Description) && mentions(msg.Content, cfg.UserID) {
+	if len(msg.Embeds) > 0 && hlExp.MatchString(msg.Embeds[0].Description) && mentions(msg.Content, user.ID) {
 		n, err := strconv.Atoi(hlExp.FindStringSubmatch(msg.Embeds[0].Description)[1])
 		if err != nil {
 			logrus.Errorf("error while reading highlow hint: %v", err)
@@ -94,80 +93,76 @@ func chatHandler(msg api.Message) {
 		}
 		if n > 50 {
 			logrus.WithField("response", "low").Infof("respoding to highlow")
-			sendMessage("low")
+			sched.priority <- "low"
 			return
 		}
 		logrus.WithField("response", "high").Infof("respoding to highlow")
-		sendMessage("high")
+		sched.priority <- "high"
 		return
 	}
 
 	// Handle balance and report average income.
 	if len(msg.Embeds) > 0 &&
-		strings.Contains(msg.Embeds[0].Title, fmt.Sprintf("%v's balance", cfg.BalanceCheck.Username)) &&
-		cfg.BalanceCheck.Enable {
+		strings.Contains(msg.Embeds[0].Title, fmt.Sprintf("%v's balance", user.Username)) &&
+		cfg.Features.BalanceCheck {
 
 		currBal, err := strconv.Atoi(clean(balExp.FindStringSubmatch(msg.Embeds[0].Description)[1], cleanNumExp))
 		if err != nil {
 			logrus.Errorf("error while reading balance: %v", err)
 		}
 
-		if bal == 0 {
+		if initialBal == 0 {
 			logrus.Infof(
 				"current wallet balance: %v",
 				numFormat.Sprintf("%d", currBal),
 			)
 			logrus.Infof("no average income available")
-			bal = currBal
+			startingTime = time.Now()
+			initialBal = currBal
 			return
 		}
 
-		income := currBal - bal
-		incomes = append(incomes, income)
-
-		// Turn average income per cycle into average income per hour.
-		avgIncomeHour := math.Round(avg(incomes) / cycleTime.Hours())
+		totalIncome := float64(currBal - initialBal)
+		hourlyIncome := int(math.Round(totalIncome / time.Now().Sub(startingTime).Hours()))
 
 		logrus.Infof(
 			"current wallet balance: %v",
 			numFormat.Sprintf("%d", currBal),
 		)
 		logrus.Infof(
-			"average income based on %v cycles: %v coins/h",
-			numFormat.Sprintf("%d", len(incomes)),
-			numFormat.Sprintf("%d", int(avgIncomeHour)),
+			"average income: %v coins/h",
+			numFormat.Sprintf("%d", hourlyIncome),
 		)
-		bal = currBal
 		return
 	}
 
 	// Respond to no laptop.
 	if strings.Contains(msg.Content, "oi you need to buy a laptop in the shop to post memes") &&
-		mentions(msg.Content, cfg.UserID) &&
-		cfg.AutoBuy.Laptop {
+		mentions(msg.Content, user.ID) &&
+		cfg.Features.AutoBuy.Laptop {
 
 		logrus.WithField("command", "pls buy laptop").Infof("no laptop, buying a new one")
-		sendMessage("pls buy laptop")
+		sched.priority <- "pls buy laptop"
 		return
 	}
 
 	// Respond to no fishing pole.
 	if strings.Contains(msg.Content, "You don't have a fishing pole") &&
-		mentions(msg.Content, cfg.UserID) &&
-		cfg.AutoBuy.FishingPole {
+		mentions(msg.Content, user.ID) &&
+		cfg.Features.AutoBuy.FishingPole {
 
 		logrus.WithField("command", "pls buy fishingpole").Infof("no fishing pole, buying a new one")
-		sendMessage("pls buy fishingpole")
+		sched.priority <- "pls buy fishingpole"
 		return
 	}
 
 	// Respond to no hunting rifle.
 	if strings.Contains(msg.Content, "You don't have a hunting rifle") &&
-		mentions(msg.Content, cfg.UserID) &&
-		cfg.AutoBuy.HuntingRifle {
+		mentions(msg.Content, user.ID) &&
+		cfg.Features.AutoBuy.HuntingRifle {
 
 		logrus.WithField("command", "pls buy rifle").Infof("no hunting rifle, buying a new one")
-		sendMessage("pls buy rifle")
+		sched.priority <- "pls buy rifle"
 		return
 	}
 }
@@ -189,7 +184,7 @@ func fatalHandler(err *websocket.CloseError) {
 // repetition in fatalHandler.
 func connWS() {
 	var err error // Declared beforehand so that conn is a global declaration.
-	conn, err = api.NewWSConn(cfg.Token, api.WSConnOpts{
+	conn, err = discord.NewWSConn(cfg.Token, discord.WSConnOpts{
 		ChatHandler:  chatHandler,
 		ErrHandler:   errHandler,
 		FatalHandler: fatalHandler,

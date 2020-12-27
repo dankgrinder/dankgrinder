@@ -18,7 +18,7 @@ func cycle() {
 	if cfg.ChannelID == "" {
 		logrus.Fatalf("no channel id configured")
 	}
-	if cfg.UserID == "" {
+	if user.ID == "" {
 		logrus.Fatalf("no user id configured")
 	}
 
