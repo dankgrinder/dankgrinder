@@ -11,6 +11,7 @@ import (
 
 var cfg = config.MustLoad()
 var auth = discord.Authorization{Token: cfg.Token}
+var user discord.User
 
 // cycleTime is how often a command cycle is triggered, where a command cycle
 // is a cycle that goes through all configured commands for the bot.
@@ -24,9 +25,16 @@ func sendMessage(content string) {
 }
 
 func main() {
+	var err error
+	user, err = auth.CurrentUser()
+	if err != nil {
+		logrus.Fatalf("error while getting user information: %v", err)
+	}
+	logrus.Infof("successful authorization as %v", user.Username+"#"+user.Discriminator)
+
 	fmt.Printf("amount: ")
 	var s string
-	_, err := fmt.Scanln(&s)
+	_, err = fmt.Scanln(&s)
 	if err != nil {
 		logrus.Fatalf("error while scanning stdin: %v", err)
 	}
