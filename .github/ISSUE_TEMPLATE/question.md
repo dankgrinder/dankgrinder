@@ -1,6 +1,6 @@
 ---
 name: Question
-about: Ask a question about the source code or about contributing
+about: Ask a question about anything related to the application
 title: ''
 labels: question
 assignees: ''
