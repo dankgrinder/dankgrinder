@@ -60,7 +60,7 @@ A working Go installation, see https://golang.org/doc/install
 2. Build:  
    `$ make build`
    
-The executables should then be in the `/bin` folder.
+The executables should then be in the `/build` folder.
 
 ## Configuration
 All configuration can be done by editing config.yml. The comments in the file itself provide extra explanation where necessary. [Join our Discord](https://discord.gg/Fjzpq8YPSn) if you have any extra questions.
