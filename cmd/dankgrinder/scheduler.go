@@ -14,20 +14,21 @@ import (
 )
 
 type scheduler struct {
-	schedule      chan command
-	priority      chan command
+	schedule      chan *command
+	priority      chan *command
 	priorityQueue queue
 	queue         queue
 }
 
 type queue struct {
-	enqueue chan command
-	dequeue chan command
+	enqueue chan *command
+	dequeue chan *command
 	queued  *list.List
 }
 
 type command struct {
 	content string
+	response bool
 
 	// The interval at which the command should be rescheduled. Set to 0 to
 	// disable.
@@ -54,8 +55,8 @@ func sendMessage(content string, abort chan bool) {
 
 func startNewQueue() queue {
 	q := queue{
-		enqueue: make(chan command),
-		dequeue: make(chan command),
+		enqueue: make(chan *command),
+		dequeue: make(chan *command),
 		queued:  list.New(),
 	}
 	go func() {
@@ -68,7 +69,7 @@ func startNewQueue() queue {
 			select {
 			case cmd := <-q.enqueue:
 				q.queued.PushBack(cmd)
-			case q.dequeue <- q.queued.Front().Value.(command):
+			case q.dequeue <- q.queued.Front().Value.(*command):
 				q.queued.Remove(q.queued.Front())
 			}
 		}
@@ -106,25 +107,23 @@ func startNewScheduler() scheduler {
 				}
 				continue
 			}
+			var cmd *command
 			select {
-			case cmd := <-s.priorityQueue.dequeue:
-				sendMessage(cmd.content, nil)
-				if cmd.interval > 0 {
-					s.reschedule(cmd)
-				}
-
-			case cmd := <-s.queue.dequeue:
-				sendMessage(cmd.content, abort)
-				if cmd.interval > 0 {
-					s.reschedule(cmd)
-				}
+			case cmd = <-s.priorityQueue.dequeue: sendMessage(cmd.content, nil)
+			case cmd = <-s.queue.dequeue: sendMessage(cmd.content, abort)
+			}
+			if cmd.interval > 0 {
+				s.reschedule(cmd)
 			}
 		}
 	}()
 	return s
 }
 
-func (s scheduler) reschedule(cmd command) {
+// reschedule is run after a command has been sent by the scheduler to
+// add the command to the back of the queue again. This should only be run
+// by the scheduler!
+func (s scheduler) reschedule(cmd *command) {
 	go func() {
 		time.Sleep(cmd.interval)
 		s.schedule <- cmd
