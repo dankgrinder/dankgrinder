@@ -59,7 +59,7 @@ func chatHandler(_ string, msg discord.Message) { // TODO: message update handli
 	if fhExp.MatchString(msg.Content) && mentions(msg.Content, user.ID) {
 		content := clean(fhExp.FindStringSubmatch(msg.Content)[2], cleanExp)
 		logrus.WithField("response", content).Infof("respoding to fishing or hunting event")
-		sched.priority <- command{content: content}
+		sched.priority <- &command{content: content, response: true}
 		return
 	}
 
@@ -69,7 +69,7 @@ func chatHandler(_ string, msg discord.Message) { // TODO: message update handli
 
 		content := randElem(cfg.Compat.Postmeme)
 		logrus.WithField("response", content).Infof("respoding to postmeme")
-		sched.priority <- command{content: content}
+		sched.priority <- &command{content: content, response: true}
 		return
 	}
 
@@ -77,7 +77,7 @@ func chatHandler(_ string, msg discord.Message) { // TODO: message update handli
 	if eventExp.MatchString(msg.Content) {
 		content := clean(eventExp.FindStringSubmatch(msg.Content)[2], cleanExp)
 		logrus.WithField("response", content).Infof("respoding to global event")
-		sched.priority <- command{content: content}
+		sched.priority <- &command{content: content, response: true}
 		return
 	}
 
@@ -86,7 +86,7 @@ func chatHandler(_ string, msg discord.Message) { // TODO: message update handli
 		choices := searchExp.FindStringSubmatch(msg.Content)[1:]
 		content := chooseSearch(choices)
 		logrus.WithField("response", content).Infof("respoding to search")
-		sched.priority <- command{content: content}
+		sched.priority <- &command{content: content, response: true}
 		return
 	}
 
@@ -99,11 +99,11 @@ func chatHandler(_ string, msg discord.Message) { // TODO: message update handli
 		}
 		if n > 50 {
 			logrus.WithField("response", "low").Infof("respoding to highlow")
-			sched.priority <- command{content: "low"}
+			sched.priority <- &command{content: "low", response: true}
 			return
 		}
 		logrus.WithField("response", "high").Infof("respoding to highlow")
-		sched.priority <- command{content: "high"}
+		sched.priority <- &command{content: "high", response: true}
 		return
 	}
 
@@ -148,7 +148,7 @@ func chatHandler(_ string, msg discord.Message) { // TODO: message update handli
 		cfg.Features.AutoBuy.Laptop {
 
 		logrus.WithField("command", "pls buy laptop").Infof("no laptop, buying a new one")
-		sched.priority <- command{content: "pls buy laptop"}
+		sched.priority <- &command{content: "pls buy laptop", response: true}
 		return
 	}
 
@@ -158,7 +158,7 @@ func chatHandler(_ string, msg discord.Message) { // TODO: message update handli
 		cfg.Features.AutoBuy.FishingPole {
 
 		logrus.WithField("command", "pls buy fishingpole").Infof("no fishing pole, buying a new one")
-		sched.priority <- command{content: "pls buy fishingpole"}
+		sched.priority <- &command{content: "pls buy fishingpole", response: true}
 		return
 	}
 
@@ -168,7 +168,7 @@ func chatHandler(_ string, msg discord.Message) { // TODO: message update handli
 		cfg.Features.AutoBuy.HuntingRifle {
 
 		logrus.WithField("command", "pls buy rifle").Infof("no hunting rifle, buying a new one")
-		sched.priority <- command{content: "pls buy rifle"}
+		sched.priority <- &command{content: "pls buy rifle", response: true}
 		return
 	}
 }

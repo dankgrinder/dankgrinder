@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/kr/pretty v0.1.0 // indirect
+	github.com/shiena/ansicolor v0.0.0-20200904210342-c7312218db18
 	github.com/sirupsen/logrus v1.7.0
 	github.com/stretchr/testify v1.4.0 // indirect
 	golang.org/x/sys v0.0.0-20201223074533-0d417f636930 // indirect
