@@ -27,8 +27,8 @@ const cycleTime = time.Second * 4
 
 func sendMessage(content string) {
 	err := auth.SendMessage(content, discord.SendMessageOpts{
-		ChannelID:  cfg.ChannelID,
-		TypingTime: time.Second,
+		ChannelID: cfg.ChannelID,
+		Typing:    time.Second,
 	})
 	if err != nil {
 		logrus.Errorf("%v", err)

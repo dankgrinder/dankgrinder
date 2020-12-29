@@ -43,7 +43,7 @@ const (
 	IntentDirectMessageTyping
 )
 
-type WSMessage struct {
+type Event struct {
 	Op        int    `json:"op"`
 	Data      Data   `json:"d,omitempty"`
 	Sequence  int    `json:"s,omitempty"`

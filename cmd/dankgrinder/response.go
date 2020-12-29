@@ -1,19 +1,12 @@
-// Copyright (C) 2020 The Dank Grinder authors.
-//
-// This source code has been released under the GNU Affero General Public
-// License v3.0. A copy of this license is available at
-// https://www.gnu.org/licenses/agpl-3.0.en.html
-
 package main
 
 import (
-	"fmt"
 	"github.com/dankgrinder/dankgrinder/discord"
-	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 	"math"
+	"math/rand"
 	"regexp"
 	"strconv"
 	"strings"
@@ -22,181 +15,230 @@ import (
 
 const dankMemerID = "270904126974590976"
 
-var conn *discord.WSConn
+var exp = struct {
+	search,
+	fh,
+	hl,
+	bal,
+	event *regexp.Regexp
+}{
+	search: regexp.MustCompile(`Pick from the list below and type the name in chat\.\s\x60(?P<m1>.+)\x60,\s\x60(?P<m2>.+)\x60,\s\x60(?P<m3>.+)\x60`),
+	fh:     regexp.MustCompile(`10\sseconds.*\s?([Tt]yping|[Tt]ype)\s\x60(?P<m1>.+)\x60`),
+	hl:     regexp.MustCompile(`Your hint is \*\*(?P<m1>[0-9]+)\*\*`),
+	bal:    regexp.MustCompile(`\*\*Wallet\*\*: \x60?⏣?\s?(?P<m1>[0-9,]+)\x60?`),
+	event:  regexp.MustCompile(`^(Attack the boss by typing|Type) \x60(?P<m1>.+)\x60`),
+}
 
+// Used to calculate average income.
 var (
-	searchExp   = regexp.MustCompile(`Pick from the list below and type the name in chat\.\s\x60(?P<option1>.+)\x60,\s\x60(?P<option2>.+)\x60,\s\x60(?P<option3>.+)\x60`)
-	fhExp       = regexp.MustCompile(`10\sseconds.*\s?([Tt]yping|[Tt]ype)\s\x60(?P<fh>.+)\x60`)
-	cleanExp    = regexp.MustCompile(`[\x20-\x7E]`)
-	cleanNumExp = regexp.MustCompile(`[0-9]`)
-	hlExp       = regexp.MustCompile(`Your hint is \*\*(?P<n>[0-9]+)\*\*`)
-	balExp      = regexp.MustCompile(`\*\*Wallet\*\*: \x60?⏣?\s?(?P<bal>[0-9,]+)\x60?`)
-	eventExp    = regexp.MustCompile(`^(Attack the boss by typing|Type) \x60(?P<event>.+)\x60`)
+	startingBal  int
+	startingTime time.Time
 )
 
-// Used to calculate average income.
-var initialBal int
+var numFmt = message.NewPrinter(language.English)
 
-// Used to calculate average income.
-var startingTime time.Time
-
-var numFormat = message.NewPrinter(language.English)
-
-var noSearchesFound = []string{
-	"trash options",
-	"tf is this",
-	"f off",
-	"wth is this",
-	"why no good opts?",
-	"i dont wanna die",
-}
-
-func chatHandler(_ string, msg discord.Message) { // TODO: message update handling.
-	if msg.ChannelID != cfg.ChannelID || msg.Author.ID != dankMemerID {
-		return
-	}
-	// Handle fishing and hunting events.
-	if fhExp.MatchString(msg.Content) && mentions(msg.Content, user.ID) {
-		content := clean(fhExp.FindStringSubmatch(msg.Content)[2], cleanExp)
-		logrus.WithField("response", content).Infof("respoding to fishing or hunting event")
-		sched.priority <- &command{content: content, response: true}
-		return
-	}
-
-	// Handle postmeme.
-	if strings.Contains(msg.Content, "What type of meme do you want to post") &&
-		mentions(msg.Content, user.ID) {
-
-		content := randElem(cfg.Compat.Postmeme)
-		logrus.WithField("response", content).Infof("respoding to postmeme")
-		sched.priority <- &command{content: content, response: true}
-		return
-	}
-
-	// Handle global events.
-	if eventExp.MatchString(msg.Content) {
-		content := clean(eventExp.FindStringSubmatch(msg.Content)[2], cleanExp)
-		logrus.WithField("response", content).Infof("respoding to global event")
-		sched.priority <- &command{content: content, response: true}
-		return
-	}
-
-	// Handle search.
-	if searchExp.MatchString(msg.Content) && mentions(msg.Content, user.ID) {
-		choices := searchExp.FindStringSubmatch(msg.Content)[1:]
-		content := chooseSearch(choices)
-		logrus.WithField("response", content).Infof("respoding to search")
-		sched.priority <- &command{content: content, response: true}
-		return
-	}
-
-	// Handle highlow.
-	if len(msg.Embeds) > 0 && hlExp.MatchString(msg.Embeds[0].Description) && mentions(msg.Content, user.ID) {
-		n, err := strconv.Atoi(hlExp.FindStringSubmatch(msg.Embeds[0].Description)[1])
-		if err != nil {
-			logrus.Errorf("error while reading highlow hint: %v", err)
-			return
-		}
-		if n > 50 {
-			logrus.WithField("response", "low").Infof("respoding to highlow")
-			sched.priority <- &command{content: "low", response: true}
-			return
-		}
-		logrus.WithField("response", "high").Infof("respoding to highlow")
-		sched.priority <- &command{content: "high", response: true}
-		return
-	}
-
-	// Handle balance and report average income.
-	if len(msg.Embeds) > 0 &&
-		strings.Contains(msg.Embeds[0].Title, fmt.Sprintf("%v's balance", user.Username)) &&
-		cfg.Features.BalanceCheck {
-
-		currBal, err := strconv.Atoi(clean(balExp.FindStringSubmatch(msg.Embeds[0].Description)[1], cleanNumExp))
-		if err != nil {
-			logrus.Errorf("error while reading balance: %v", err)
-		}
-
-		if initialBal == 0 {
-			logrus.Infof(
-				"current wallet balance: %v",
-				numFormat.Sprintf("%d", currBal),
-			)
-			logrus.Infof("no average income available")
-			startingTime = time.Now()
-			initialBal = currBal
-			return
-		}
-
-		totalIncome := float64(currBal - initialBal)
-		hourlyIncome := int(math.Round(totalIncome / time.Now().Sub(startingTime).Hours()))
-
-		logrus.Infof(
-			"current wallet balance: %v",
-			numFormat.Sprintf("%d", currBal),
-		)
-		logrus.Infof(
-			"average income: %v coins/h",
-			numFormat.Sprintf("%d", hourlyIncome),
-		)
-		return
-	}
-
-	// Respond to no laptop.
-	if strings.Contains(msg.Content, "oi you need to buy a laptop in the shop to post memes") &&
-		mentions(msg.Content, user.ID) &&
-		cfg.Features.AutoBuy.Laptop {
-
-		logrus.WithField("command", "pls buy laptop").Infof("no laptop, buying a new one")
-		sched.priority <- &command{content: "pls buy laptop", response: true}
-		return
-	}
-
-	// Respond to no fishing pole.
-	if strings.Contains(msg.Content, "You don't have a fishing pole") &&
-		mentions(msg.Content, user.ID) &&
-		cfg.Features.AutoBuy.FishingPole {
-
-		logrus.WithField("command", "pls buy fishingpole").Infof("no fishing pole, buying a new one")
-		sched.priority <- &command{content: "pls buy fishingpole", response: true}
-		return
-	}
-
-	// Respond to no hunting rifle.
-	if strings.Contains(msg.Content, "You don't have a hunting rifle") &&
-		mentions(msg.Content, user.ID) &&
-		cfg.Features.AutoBuy.HuntingRifle {
-
-		logrus.WithField("command", "pls buy rifle").Infof("no hunting rifle, buying a new one")
-		sched.priority <- &command{content: "pls buy rifle", response: true}
-		return
+func fh(msg discord.Message) {
+	res := exp.fh.FindStringSubmatch(msg.Content)[2]
+	sdlr.priority <- &command{
+		content: clean(res),
+		log:     "responding to fishing or hunting event",
 	}
 }
 
-func errHandler(err error) {
-	logrus.Errorf("websocket error: %v", err)
-}
-
-func fatalHandler(err *websocket.CloseError) {
-	if err.Code == 4004 {
-		logrus.Fatalf("websocket closed: authentication failed, try using a new token")
+func pm(_ discord.Message) {
+	res := cfg.Compat.Postmeme[rand.Intn(len(cfg.Compat.Postmeme))]
+	sdlr.priority <- &command{
+		content: res,
+		log:     "responding to postmeme",
 	}
-	logrus.Errorf("websocket closed: %v", err)
-	logrus.Infof("reconnecting to websocket")
-	connWS()
 }
 
-// connWS connects to the Discord websocket. Put in a separate function to avoid
-// repetition in fatalHandler.
-func connWS() {
-	var err error
-	conn, err = discord.NewWSConn(cfg.Token, discord.WSConnOpts{
-		ChatHandler:  chatHandler,
-		ErrHandler:   errHandler,
-		FatalHandler: fatalHandler,
-	})
+func event(msg discord.Message) {
+	res := exp.event.FindStringSubmatch(msg.Content)[2]
+	sdlr.priority <- &command{
+		content: clean(res),
+		log:     "responding to global event",
+	}
+}
+
+func search(msg discord.Message) {
+	choices := exp.search.FindStringSubmatch(msg.Content)[1:]
+	for _, choice := range choices {
+		for _, allowed := range cfg.Compat.AllowedSearches {
+			if choice == allowed {
+				sdlr.priority <- &command{
+					content: choice,
+					log:     "responding to search",
+				}
+				return
+			}
+		}
+	}
+	sdlr.priority <- &command{
+		content: []string{
+			"trash options",
+			"tf is this",
+			"f off",
+			"wth is this",
+			"why no good opts?",
+			"i dont wanna die",
+		}[rand.Intn(6)], // Update this number to be the length of the slice!
+		log: "no allowed search options provided, responding",
+	}
+}
+
+func hl(msg discord.Message) {
+	if !exp.hl.MatchString(msg.Embeds[0].Description) {
+		return
+	}
+	nstr := strings.Replace(exp.hl.FindStringSubmatch(msg.Embeds[0].Description)[1], ",", "", -1)
+	n, err := strconv.Atoi(nstr)
 	if err != nil {
-		logrus.Fatalf("%v", err)
+		logrus.Errorf("error while reading highlow hint: %v", err)
+		return
 	}
-	logrus.Infof("connected to websocket")
+	res := "high"
+	if n > 50 {
+		res = "low"
+	}
+	sdlr.priority <- &command{
+		content: res,
+		log:     "responding to highlow",
+	}
+}
+
+func balCheck(msg discord.Message) {
+	if !cfg.Features.BalanceCheck {
+		return
+	}
+	if !strings.Contains(msg.Embeds[0].Title, user.Username) {
+		return
+	}
+	balstr := strings.Replace(exp.bal.FindStringSubmatch(msg.Embeds[0].Description)[1], ",", "", -1)
+	bal, err := strconv.Atoi(balstr)
+	if err != nil {
+		logrus.Errorf("error while reading balance: %v", err)
+		return
+	}
+	logrus.Infof(
+		"current wallet balance: %v coins",
+		numFmt.Sprintf("%d", bal),
+	)
+	if startingTime.IsZero() {
+		startingBal = bal
+		startingTime = time.Now()
+		return
+	}
+	inc := bal - startingBal
+	per := time.Now().Sub(startingTime)
+	hourlyInc := int(math.Round(float64(inc) / per.Hours()))
+	logrus.Infof(
+		"average income: %v coins/h",
+		numFmt.Sprintf("%d", hourlyInc),
+	)
+}
+
+func abLaptop(_ discord.Message) {
+	if !cfg.Features.AutoBuy.Laptop {
+		return
+	}
+	sdlr.priority <- &command{
+		content: "pls buy laptop",
+		log:     "no laptop, buying a new one",
+	}
+}
+
+func abHuntingRifle(_ discord.Message) {
+	if !cfg.Features.AutoBuy.HuntingRifle {
+		return
+	}
+	sdlr.priority <- &command{
+		content: "pls buy rifle",
+		log:     "no hunting rifle, buying a new one",
+	}
+}
+
+func abFishingPole(_ discord.Message) {
+	if !cfg.Features.AutoBuy.FishingPole {
+		return
+	}
+	sdlr.priority <- &command{
+		content: "pls buy fishing pole",
+		log:     "no fishing pole, buying a new one",
+	}
+}
+
+func router() *discord.MessageRouter {
+	rtr := &discord.MessageRouter{}
+	// Fishing and hunting events.
+	rtr.NewRoute().
+		Channel(cfg.ChannelID).
+		Author(dankMemerID).
+		ContentMatchesExp(exp.fh).
+		Mentions(user.ID).
+		Handler(fh)
+
+	// Postmeme.
+	rtr.NewRoute().
+		Channel(cfg.ChannelID).
+		Author(dankMemerID).
+		ContentContains("What type of meme do you want to post").
+		Mentions(user.ID).
+		Handler(pm)
+
+	// Global events.
+	rtr.NewRoute().
+		Channel(cfg.ChannelID).
+		Author(dankMemerID).
+		ContentMatchesExp(exp.event).
+		Handler(event)
+
+	// Search.
+	rtr.NewRoute().
+		Channel(cfg.ChannelID).
+		Author(dankMemerID).
+		ContentMatchesExp(exp.search).
+		Mentions(user.ID).
+		Handler(search)
+
+	// Highlow.
+	rtr.NewRoute().
+		Channel(cfg.ChannelID).
+		Author(dankMemerID).
+		HasEmbeds(true).
+		Mentions(user.ID).
+		Handler(hl)
+
+	// Balance report.
+	rtr.NewRoute().
+		Channel(cfg.ChannelID).
+		Author(dankMemerID).
+		HasEmbeds(true).
+		Handler(balCheck)
+
+	// Auto buy laptop.
+	rtr.NewRoute().
+		Channel(cfg.ChannelID).
+		Author(dankMemerID).
+		ContentContains("oi you need to buy a laptop in the shop to post memes").
+		Mentions(user.ID).
+		Handler(abLaptop)
+
+	// Auto buy fishing pole.
+	rtr.NewRoute().
+		Channel(cfg.ChannelID).
+		Author(dankMemerID).
+		ContentContains("You don't have a fishing pole").
+		Mentions(user.ID).
+		Handler(abFishingPole)
+
+	// Auto buy hunting rifle.
+	rtr.NewRoute().
+		Channel(cfg.ChannelID).
+		Author(dankMemerID).
+		ContentContains("You don't have a hunting rifle").
+		Mentions(user.ID).
+		Handler(abHuntingRifle)
+
+	return rtr
 }
