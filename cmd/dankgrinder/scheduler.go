@@ -28,29 +28,14 @@ type queue struct {
 
 type command struct {
 	content string
-	response bool
+
+	// If not an empty string, this is what will be displayed by logrus when.
+	// sending the command. The format will be "%v: %v", log, content.
+	log string
 
 	// The interval at which the command should be rescheduled. Set to 0 to
 	// disable.
 	interval time.Duration
-}
-
-func sendMessage(content string, abort chan bool) {
-	d := delay()
-	tt := typingTime(content)
-	logrus.WithFields(map[string]interface{}{
-		"delay":  d.String(),
-		"typing": tt.String(),
-	}).Infof("sending command: %v", content)
-	time.Sleep(d)
-
-	if err := auth.SendMessage(content, discord.SendMessageOpts{
-		ChannelID:  cfg.ChannelID,
-		TypingTime: tt,
-		Abort:      abort,
-	}); err != nil {
-		logrus.Errorf("%v", err)
-	}
 }
 
 func startNewQueue() queue {
@@ -87,6 +72,7 @@ func startNewScheduler() scheduler {
 		priorityQueue: qp,
 	}
 
+	// An abort will be sent to free up the scheduler for a priority command.
 	abort := make(chan bool)
 	go func() {
 		for {
@@ -101,23 +87,60 @@ func startNewScheduler() scheduler {
 		for {
 			if s.priorityQueue.queued.Len() > 0 {
 				cmd := <-s.priorityQueue.dequeue
-				sendMessage(cmd.content, nil)
-				if cmd.interval > 0 {
-					s.reschedule(cmd)
+				s.send(cmd, nil)
+
+				// Clear the abort channel. Otherwise a scenario might occur
+				// where an abort is sent during the execution of a priority
+				// command and the next regular command is canceled due to that
+				// abort, even though the priority command was already executed.
+				select {
+				case <-abort:
+				default:
 				}
 				continue
 			}
 			var cmd *command
 			select {
-			case cmd = <-s.priorityQueue.dequeue: sendMessage(cmd.content, nil)
-			case cmd = <-s.queue.dequeue: sendMessage(cmd.content, abort)
-			}
-			if cmd.interval > 0 {
-				s.reschedule(cmd)
+			case cmd = <-s.priorityQueue.dequeue:
+				s.send(cmd, nil)
+			case cmd = <-s.queue.dequeue:
+				s.send(cmd, abort)
 			}
 		}
 	}()
 	return s
+}
+
+func (s scheduler) send(cmd *command, abort chan bool) {
+	d := delay()
+	tt := typing(cmd.content)
+	info := "sending command"
+	if cmd.log != "" {
+		info = cmd.log
+	}
+	logrus.WithFields(map[string]interface{}{
+		"delay":  d.String(),
+		"typing": tt.String(),
+	}).Infof("%v: %v", info, cmd.content)
+
+	select {
+	case <-abort:
+		return
+	case <-time.After(d):
+	}
+	if err := auth.SendMessage(cmd.content, discord.SendMessageOpts{
+		ChannelID: cfg.ChannelID,
+		Typing:    tt,
+		Abort:     abort,
+	}); err == discord.ErrAborted {
+		s.schedule <- cmd
+		return
+	} else if err != nil {
+		logrus.Errorf("%v", err)
+	}
+	if cmd.interval > 0 {
+		s.reschedule(cmd)
+	}
 }
 
 // reschedule is run after a command has been sent by the scheduler to

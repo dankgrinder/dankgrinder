@@ -26,7 +26,7 @@ compatibility:
 
   # Search options the bot will pick if provided to it. It will prefer options
   # which are higher in the list.
-  search:
+  allowed_searches:
     - "bus"
     - "coat"
     - "dresser"

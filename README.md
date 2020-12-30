@@ -21,7 +21,7 @@ Want to join the community or need support? [Join our Discord](https://discord.g
 3. [Configure](#configuration), make sure `token` and `channel_id` are set, it will not run otherwise
 
 #### Windows
-4. Run dankgrinder.exe from the command line or by double clicking it. Note that if you choose the latter option any fatal errors will only be visible for a fraction of a second.
+4. Run dankgrinder.exe from the command prompt by opening it, then dragging dankgrinder.exe to it and hitting enter.
 
 #### MacOS
 4. Run by double clicking the dankgrinder binary.

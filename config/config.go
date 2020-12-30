@@ -23,9 +23,9 @@ type Config struct {
 }
 
 type Compat struct {
-	Postmeme []string `yaml:"postmeme"`
-	Search   []string `yaml:"search"`
-	Cooldown Cooldown `yaml:"cooldown"`
+	Postmeme        []string `yaml:"postmeme"`
+	AllowedSearches []string `yaml:"allowed_searches"`
+	Cooldown        Cooldown `yaml:"cooldown"`
 }
 
 type Cooldown struct {

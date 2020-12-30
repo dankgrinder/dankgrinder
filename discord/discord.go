@@ -14,17 +14,19 @@ import (
 	"time"
 )
 
+var ErrAborted = fmt.Errorf("request for abortion of execution fulfilled")
+
 type Authorization struct {
 	Token string
 }
 
 type SendMessageOpts struct {
-	ChannelID  string
-	TypingTime time.Duration
+	ChannelID string
+	Typing    time.Duration
 
 	// If a bool is sent on this channel before the http request is sent (i.e.
 	// when it is still typing or just after typing) execution will be aborted
-	// and a nil error will be returned.
+	// and an ErrAborted will be returned.
 	Abort chan bool
 }
 
@@ -39,24 +41,21 @@ func (auth Authorization) SendMessage(content string, opts SendMessageOpts) erro
 		return fmt.Errorf("no content provided")
 	}
 
-	if opts.TypingTime != 0 {
-		for i := 0; i < int(opts.TypingTime)/int(time.Second*10); i++ {
+	if opts.Typing != 0 {
+		iterations := int(opts.Typing)/int(time.Second*10) + 1
+		for i := 0; i < iterations; i++ {
 			if err := auth.typing(opts.ChannelID); err != nil {
 				return err
 			}
+			a := time.After(time.Second * 10)
+			if i == iterations-1 { // If this is the last iteration.
+				a = time.After(opts.Typing % (time.Second * 10))
+			}
 			select {
 			case <-opts.Abort:
-				return nil
-			case <-time.After(time.Second * 10):
+				return ErrAborted
+			case <-a:
 			}
-		}
-		if err := auth.typing(opts.ChannelID); err != nil {
-			return err
-		}
-		select {
-		case <-opts.Abort:
-			return nil
-		case <-time.After(opts.TypingTime % (time.Second * 10)):
 		}
 	}
 
@@ -81,7 +80,7 @@ func (auth Authorization) SendMessage(content string, opts SendMessageOpts) erro
 
 	select {
 	case <-opts.Abort:
-		return nil
+		return ErrAborted
 	default:
 	}
 

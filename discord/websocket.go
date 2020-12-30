@@ -22,10 +22,10 @@ const (
 )
 
 type WSConn struct {
-	underlying  *websocket.Conn
-	sessionID   string
-	chatHandler func(event string, msg Message)
-	errHandler  func(err error)
+	underlying *websocket.Conn
+	sessionID  string
+	msgRouter  *MessageRouter
+	errHandler func(err error)
 
 	// fatalHandler is used for when a fatal error occurs, not when
 	// WSConn.Close() is called.
@@ -36,9 +36,9 @@ type WSConn struct {
 }
 
 type WSConnOpts struct {
-	ChatHandler  func(event string, msg Message)
-	ErrHandler   func(err error)
-	FatalHandler func(err *websocket.CloseError)
+	MessageRouter *MessageRouter
+	ErrHandler    func(err error)
+	FatalHandler  func(err *websocket.CloseError)
 }
 
 func NewWSConn(token string, opts WSConnOpts) (*WSConn, error) {
@@ -49,7 +49,7 @@ func NewWSConn(token string, opts WSConnOpts) (*WSConn, error) {
 
 	c := WSConn{
 		underlying:   conn,
-		chatHandler:  opts.ChatHandler,
+		msgRouter:    opts.MessageRouter,
 		errHandler:   opts.ErrHandler,
 		fatalHandler: opts.FatalHandler,
 		token:        token,
@@ -63,7 +63,7 @@ func NewWSConn(token string, opts WSConnOpts) (*WSConn, error) {
 	go c.pinger(interval)
 
 	// Authenticate
-	err = c.underlying.WriteJSON(&WSMessage{
+	err = c.underlying.WriteJSON(&Event{
 		Op: OpcodeIdentify,
 		Data: Data{
 			ClientState: ClientState{
@@ -130,7 +130,7 @@ func (c *WSConn) listen() {
 			break
 		}
 
-		var body WSMessage
+		var body Event
 		if err := json.Unmarshal(b, &body); err != nil {
 			// All messages which don't decode properly are likely caused by the
 			// data object and are ignored for now.
@@ -145,7 +145,7 @@ func (c *WSConn) listen() {
 			}
 			if body.EventName == EventNameMessageCreate ||
 				body.EventName == EventNameMessageUpdate {
-				c.chatHandler(body.EventName, body.Data.Message)
+				c.msgRouter.process(body.Data.Message, body.EventName)
 			}
 		case OpcodeInvalidSession:
 			c.Close()
@@ -167,7 +167,7 @@ func (c *WSConn) pinger(interval time.Duration) {
 	go func() {
 		defer t.Stop()
 		for c.state&StateActive == StateActive {
-			err := c.underlying.WriteJSON(&WSMessage{
+			err := c.underlying.WriteJSON(&Event{
 				Op: OpcodeHeartbeat,
 			})
 			if err != nil {
@@ -187,7 +187,7 @@ func (c *WSConn) readHello() (time.Duration, error) {
 		return 0, fmt.Errorf("error while reading message from websocket: %v", err)
 	}
 
-	var body WSMessage
+	var body Event
 	if err := json.Unmarshal(b, &body); err != nil {
 		return 0, fmt.Errorf("error while unmarshalling incoming websocket message: %v", err)
 	}
@@ -209,7 +209,7 @@ func (c *WSConn) resume() error {
 
 	*c = WSConn{
 		underlying:   conn,
-		chatHandler:  c.chatHandler,
+		msgRouter:    c.msgRouter,
 		errHandler:   c.errHandler,
 		fatalHandler: c.fatalHandler,
 		token:        c.token,
@@ -223,7 +223,7 @@ func (c *WSConn) resume() error {
 	go c.pinger(interval)
 
 	// Authenticate with old session.
-	err = c.underlying.WriteJSON(&WSMessage{
+	err = c.underlying.WriteJSON(&Event{
 		Op: OpcodeResume,
 		Data: Data{
 			Identify: Identify{

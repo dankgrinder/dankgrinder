@@ -16,10 +16,10 @@ import (
 )
 
 var (
-	cfg   = config.MustLoad()
-	user  discord.User
-	auth  = discord.Authorization{Token: cfg.Token}
-	sched = startNewScheduler()
+	cfg  = config.MustLoad()
+	auth = discord.Authorization{Token: cfg.Token}
+	sdlr = startNewScheduler()
+	user discord.User
 )
 
 func main() {
@@ -42,36 +42,36 @@ func main() {
 
 	connWS()
 
-	sched.schedule <- &command{
+	sdlr.schedule <- &command{
 		content:  "pls beg",
 		interval: sec(cfg.Compat.Cooldown.Beg + cfg.Compat.Cooldown.Margin),
 	}
 	if cfg.Features.Commands.Fish {
-		sched.schedule <- &command{
+		sdlr.schedule <- &command{
 			content:  "pls fish",
 			interval: sec(cfg.Compat.Cooldown.Fish + cfg.Compat.Cooldown.Margin),
 		}
 	}
 	if cfg.Features.Commands.Hunt {
-		sched.schedule <- &command{
+		sdlr.schedule <- &command{
 			content:  "pls hunt",
 			interval: sec(cfg.Compat.Cooldown.Hunt + cfg.Compat.Cooldown.Margin),
 		}
 	}
-	sched.schedule <- &command{
+	sdlr.schedule <- &command{
 		content:  "pls pm",
 		interval: sec(cfg.Compat.Cooldown.Postmeme + cfg.Compat.Cooldown.Margin),
 	}
-	sched.schedule <- &command{
+	sdlr.schedule <- &command{
 		content:  "pls search",
 		interval: sec(cfg.Compat.Cooldown.Search + cfg.Compat.Cooldown.Margin),
 	}
-	sched.schedule <- &command{
+	sdlr.schedule <- &command{
 		content:  "pls hl",
 		interval: sec(cfg.Compat.Cooldown.Highlow + cfg.Compat.Cooldown.Margin),
 	}
 	if cfg.Features.BalanceCheck {
-		sched.schedule <- &command{
+		sdlr.schedule <- &command{
 			content:  "pls bal",
 			interval: 2 * time.Minute,
 		}
