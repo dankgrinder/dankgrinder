@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"runtime"
 	"time"
 )
 
@@ -62,6 +63,13 @@ func NewWSConn(token string, opts WSConnOpts) (*WSConn, error) {
 	}
 	go c.pinger(interval)
 
+	var os string
+	switch runtime.GOOS {
+	case "linux": os = "Linux"
+	case "darwin": os = "Mac OS X"
+	case "windows": os = "Windows"
+	}
+
 	// Authenticate
 	err = c.underlying.WriteJSON(&Event{
 		Op: OpcodeIdentify,
@@ -74,7 +82,7 @@ func NewWSConn(token string, opts WSConnOpts) (*WSConn, error) {
 			Identify: Identify{
 				Token: token,
 				Properties: Properties{
-					OS:                "Linux",
+					OS:                os,
 					Browser:           "Chrome",
 					BrowserUserAgent:  "Chrome/86.0.4240.75",
 					BrowserVersion:    "86.0.4240.75",
