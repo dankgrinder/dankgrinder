@@ -7,6 +7,7 @@
 package main
 
 import (
+	"github.com/dankgrinder/dankgrinder/config"
 	"math"
 	"math/rand"
 	"regexp"
@@ -53,6 +54,17 @@ func delay() time.Duration {
 	d := ms(cfg.SuspicionAvoidance.MessageDelay.Base)
 	if cfg.SuspicionAvoidance.MessageDelay.Variance > 0 {
 		d += ms(rand.Intn(cfg.SuspicionAvoidance.MessageDelay.Variance))
+	}
+	return d
+}
+
+func shiftDur(shift config.Shift) time.Duration {
+	if shift.Duration.Base <= 0 {
+		return time.Duration(math.MaxInt64)
+	}
+	d := sec(shift.Duration.Base)
+	if shift.Duration.Variance > 0 {
+		d += sec(rand.Intn(shift.Duration.Variance))
 	}
 	return d
 }

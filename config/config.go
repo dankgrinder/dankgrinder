@@ -14,6 +14,11 @@ import (
 	"path"
 )
 
+const (
+	ShiftStateActive  = "active"
+	ShiftStateDormant = "dormant"
+)
+
 type Config struct {
 	Token              string             `yaml:"token"`
 	ChannelID          string             `yaml:"channel_id"`
@@ -41,6 +46,7 @@ type Cooldown struct {
 type Features struct {
 	Commands     Commands `yaml:"commands"`
 	AutoBuy      AutoBuy  `yaml:"auto_buy"`
+	AutoSell     AutoSell `yaml:"auto_sell"`
 	BalanceCheck bool     `yaml:"balance_check"`
 }
 
@@ -48,6 +54,19 @@ type AutoBuy struct {
 	FishingPole  bool `yaml:"fishing_pole"`
 	HuntingRifle bool `yaml:"hunting_rifle"`
 	Laptop       bool `yaml:"laptop"`
+}
+
+type AutoSell struct {
+	Boar          bool `yaml:"boar"`
+	Dragon        bool `yaml:"dragon"`
+	Duck          bool `yaml:"duck"`
+	Fish          bool `yaml:"fish"`
+	ExoticFish    bool `yaml:"exotic_fish"`
+	LegendaryFish bool `yaml:"legendary_fish"`
+	Rabbit        bool `yaml:"rabbit"`
+	RareFish      bool `yaml:"rare_fish"`
+	Skunk         bool `yaml:"skunk"`
+	Interval      int  `yaml:"interval"`
 }
 
 type Commands struct {
@@ -58,17 +77,32 @@ type Commands struct {
 type SuspicionAvoidance struct {
 	Typing       Typing       `yaml:"typing"`
 	MessageDelay MessageDelay `yaml:"message_delay"`
+	Shifts       []Shift      `yaml:"shifts"`
 }
 
 type Typing struct {
-	Base     int `yaml:"base"`
-	Speed    int `yaml:"speed"`
-	Variance int `yaml:"variance"`
+	Base     int `yaml:"base"`     // A base duration in milliseconds.
+	Speed    int `yaml:"speed"`    // Speed in keystrokes per minute.
+	Variance int `yaml:"variance"` // A random value in milliseconds from [0,n) added to the base.
 }
 
+// MessageDelay is used to
 type MessageDelay struct {
-	Base     int `yaml:"base"`
-	Variance int `yaml:"variance"`
+	Base     int `yaml:"base"`     // A base duration in milliseconds.
+	Variance int `yaml:"variance"` // A random value in milliseconds from [0,n) added to the base.
+}
+
+// Shift indicates an application state (active or dormant) for a duration.
+type Shift struct {
+	State    string   `yaml:"state"`
+	Duration Duration `yaml:"duration"`
+}
+
+// Duration is not related to a time.Duration. It is a structure used in a Shift
+// type.
+type Duration struct {
+	Base     int `yaml:"base"`     // A base duration in seconds.
+	Variance int `yaml:"variance"` // A random value in seconds from [0,n) added to the base.
 }
 
 func configDir() (string, error) {
@@ -83,7 +117,7 @@ func configDir() (string, error) {
 func MustLoad() Config {
 	c, err := Load()
 	if err != nil {
-		logrus.Fatalf("%v", err)
+		logrus.Fatalf("could not load config: %v", err)
 	}
 	return c
 }
@@ -92,7 +126,7 @@ func MustLoad() Config {
 func Load() (Config, error) {
 	dir, err := configDir()
 	if err != nil {
-		return Config{}, err
+		return Config{}, fmt.Errorf("error while getting config dir: %v", err)
 	}
 	f, err := os.Open(path.Join(dir, "config.yml"))
 	if err != nil {
@@ -101,7 +135,7 @@ func Load() (Config, error) {
 
 	var cfg Config
 	if err := yaml.NewDecoder(f).Decode(&cfg); err != nil {
-		return Config{}, fmt.Errorf("error while unmarshalling config: %v", err)
+		return Config{}, fmt.Errorf("error while decoding config: %v", err)
 	}
 
 	return cfg, nil
