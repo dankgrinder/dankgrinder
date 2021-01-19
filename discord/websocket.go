@@ -16,9 +16,9 @@ import (
 const gatewayURL = "wss://gateway.discord.gg/?encoding=json&v=8"
 
 const (
-	StateListening = 1 << iota
-	StatePinging
-	StateActive
+	wsStateListening = 1 << iota
+	wsStatePinging
+	wsStateActive
 )
 
 type WSConn struct {
@@ -97,7 +97,7 @@ func NewWSConn(token string, opts WSConnOpts) (*WSConn, error) {
 	}
 
 	go c.listen()
-	c.state |= StateActive
+	c.state |= wsStateActive
 	return &c, nil
 }
 
@@ -105,12 +105,12 @@ func NewWSConn(token string, opts WSConnOpts) (*WSConn, error) {
 // and should therefore be run as a goroutine. Panics if called while WSConn
 // instance is already listening.
 func (c *WSConn) listen() {
-	if c.state&StateListening == StateListening {
+	if c.state&wsStateListening == wsStateListening {
 		panic("listen called but WSConn is already listening")
 	}
-	c.state |= StateListening
+	c.state |= wsStateListening
 
-	for c.state&StateActive == StateActive {
+	for c.state&wsStateActive == wsStateActive {
 		_, b, err := c.underlying.ReadMessage()
 
 		if err != nil {
@@ -159,14 +159,14 @@ func (c *WSConn) listen() {
 // not return and should therefore be run as a goroutine. Panics if called
 // while WSConn instance is already pinging.
 func (c *WSConn) pinger(interval time.Duration) {
-	if c.state&StatePinging == StatePinging {
+	if c.state&wsStatePinging == wsStatePinging {
 		panic("pinger called but WSConn is already pinging")
 	}
 	t := time.NewTicker(interval)
-	c.state |= StatePinging
+	c.state |= wsStatePinging
 	go func() {
 		defer t.Stop()
-		for c.state&StateActive == StateActive {
+		for c.state&wsStateActive == wsStateActive {
 			err := c.underlying.WriteJSON(&Event{
 				Op: OpcodeHeartbeat,
 			})
@@ -238,12 +238,12 @@ func (c *WSConn) resume() error {
 	}
 
 	go c.listen()
-	c.state |= StateActive
+	c.state |= wsStateActive
 	return nil
 }
 
 func (c *WSConn) Close() error {
-	if c.state&StateActive == 0 {
+	if c.state&wsStateActive == 0 {
 		return fmt.Errorf("already closed")
 	}
 	c.state = 0

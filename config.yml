@@ -14,6 +14,20 @@ features:
     fishing_pole: true
     hunting_rifle: true
     laptop: true
+  auto_sell:
+    boar: false
+    dragon: false
+    duck: false
+    exotic_fish: false
+    fish: false
+    legendary_fish: false
+    rabbit: false
+    rare_fish: false
+    skunk: false
+
+    # The interval in seconds that auto sell is executed. This can be set to 0
+    # to only execute once, every time when you start the program.
+    interval: 1800
   balance_check: true
 
 compatibility:
@@ -55,15 +69,15 @@ compatibility:
 suspicion_avoidance:
   typing:
     # This is a base typing duration in milliseconds that is added to the TOTAL
-    # typing time.
+    # typing time. Set to 0 to disable.
     base: 0
 
-    # The typing speed in keys per minute, approx. 350 is fast. Can be set to 0
+    # The typing speed in keystrokes per minute, approx. 350 is fast. Can be set to 0
     # to use only the base and variance.
     speed: 450
 
     # A random value between 0 and this will be added to the TOTAL typing time
-    # in milliseconds.
+    # in milliseconds. Set to 0 to disable.
     variance: 250
 
   # The delay between deciding to send a command and starting to type. Base and
@@ -71,3 +85,29 @@ suspicion_avoidance:
   message_delay:
     base: 100
     variance: 400
+
+  # You can use shifts to make sure the bot is not suspicious because it is too
+  # active. Base and variance are in seconds and work the same as they do with
+  # typing and delay.
+  #
+  # For example, if you would like to have to bot on for 6 hours per day, then
+  # inactive for the remaining 18 you would do something like this (note that
+  # it will loop this, so after completing the last shift it will go back to the
+  # first):
+  #
+  #   - state: "active"
+  #     duration:
+  #       base: 21600
+  #       variance: 0
+  #   - state: "dormant"
+  #     duration:
+  #       base: 64800
+  #       variance: 0
+  #
+  # A base duration of -1 means indefinite. This will be displayed as a large
+  # amount of hours when running the application due to limitations.
+  shifts:
+    - state: "active"
+      duration:
+        base: -1
+        variance: 0

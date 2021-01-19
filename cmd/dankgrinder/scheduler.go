@@ -16,18 +16,23 @@ import (
 type scheduler struct {
 	schedule      chan *command
 	priority      chan *command
-	priorityQueue queue
-	queue         queue
+	priorityQueue *queue
+	queue         *queue
 }
 
 type queue struct {
 	enqueue chan *command
 	dequeue chan *command
+
+	// onEnqueue is a function executed when a new command is queued. Used
+	// currently for sending an abort in the scheduler when a priority command
+	// is enqueued.
+	onEnqueue func()
 	queued  *list.List
 }
 
 type command struct {
-	content string
+	run string
 
 	// If not an empty string, this is what will be displayed by logrus when.
 	// sending the command. The format will be "%v: %v", log, content.
@@ -38,22 +43,25 @@ type command struct {
 	interval time.Duration
 }
 
-func startNewQueue() queue {
-	q := queue{
+func startNewQueue() *queue {
+	q := &queue{
 		enqueue: make(chan *command),
 		dequeue: make(chan *command),
 		queued:  list.New(),
+		onEnqueue: func() {},
 	}
 	go func() {
 		for {
 			if q.queued.Len() == 0 {
 				cmd := <-q.enqueue
 				q.queued.PushBack(cmd)
+				go q.onEnqueue()
 				continue
 			}
 			select {
 			case cmd := <-q.enqueue:
 				q.queued.PushBack(cmd)
+				go q.onEnqueue()
 			case q.dequeue <- q.queued.Front().Value.(*command):
 				q.queued.Remove(q.queued.Front())
 			}
@@ -65,6 +73,20 @@ func startNewQueue() queue {
 func startNewScheduler() scheduler {
 	q := startNewQueue()
 	qp := startNewQueue()
+
+	// An abort will be sent to free up the scheduler for a priority command.
+	abort := make(chan bool, 1)
+	qp.onEnqueue = func() {
+		// Since the abort channel is buffered anyway, we do not want to remain
+		// dormant attempting to send on abort. A scenario might also occur
+		// where many aborts are sent around the same time, because of a busy
+		// priority channel. This approach also prevent that.
+		select {
+		case abort <- true:
+		default:
+		}
+	}
+
 	s := scheduler{
 		priority:      qp.enqueue,
 		schedule:      q.enqueue,
@@ -72,31 +94,19 @@ func startNewScheduler() scheduler {
 		priorityQueue: qp,
 	}
 
-	// An abort will be sent to free up the scheduler for a priority command.
-	abort := make(chan bool)
 	go func() {
 		for {
-			if s.priorityQueue.queued.Len() > 0 {
-				abort <- true
+			// Clear the abort channel. Otherwise a scenario might occur
+			// where an abort is sent during the execution of a priority
+			// command and the next regular command is canceled due to that
+			// abort, even though the priority command was already executed.
+			select {
+			case <-abort:
+			default:
 			}
-			time.Sleep(time.Millisecond)
-		}
-	}()
-
-	go func() {
-		for {
 			if s.priorityQueue.queued.Len() > 0 {
 				cmd := <-s.priorityQueue.dequeue
 				s.send(cmd, nil)
-
-				// Clear the abort channel. Otherwise a scenario might occur
-				// where an abort is sent during the execution of a priority
-				// command and the next regular command is canceled due to that
-				// abort, even though the priority command was already executed.
-				select {
-				case <-abort:
-				default:
-				}
 				continue
 			}
 			var cmd *command
@@ -111,44 +121,39 @@ func startNewScheduler() scheduler {
 	return s
 }
 
-func (s scheduler) send(cmd *command, abort chan bool) {
+func (s *scheduler) send(cmd *command, abort chan bool) {
 	d := delay()
-	tt := typing(cmd.content)
+	tt := typing(cmd.run)
 	info := "sending command"
 	if cmd.log != "" {
 		info = cmd.log
 	}
-	logrus.WithFields(map[string]interface{}{
+	logrus.StandardLogger().WithFields(map[string]interface{}{
 		"delay":  d.String(),
 		"typing": tt.String(),
-	}).Infof("%v: %v", info, cmd.content)
+	}).Infof("%v: %v", info, cmd.run)
 
 	select {
 	case <-abort:
+		logrus.StandardLogger().Infof("aborted execution of command to respond")
+		s.schedule <- cmd
 		return
 	case <-time.After(d):
 	}
-	if err := auth.SendMessage(cmd.content, discord.SendMessageOpts{
+	if err := auth.SendMessage(cmd.run, discord.SendMessageOpts{
 		ChannelID: cfg.ChannelID,
 		Typing:    tt,
 		Abort:     abort,
 	}); err == discord.ErrAborted {
+		logrus.StandardLogger().Infof("aborted execution of command to respond")
 		s.schedule <- cmd
 		return
 	} else if err != nil {
-		logrus.Errorf("%v", err)
+		logrus.StandardLogger().Errorf("%v", err)
 	}
 	if cmd.interval > 0 {
-		s.reschedule(cmd)
+		time.AfterFunc(cmd.interval, func() {
+			s.schedule <- cmd
+		})
 	}
-}
-
-// reschedule is run after a command has been sent by the scheduler to
-// add the command to the back of the queue again. This should only be run
-// by the scheduler!
-func (s scheduler) reschedule(cmd *command) {
-	go func() {
-		time.Sleep(cmd.interval)
-		s.schedule <- cmd
-	}()
 }
