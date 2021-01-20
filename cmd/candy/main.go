@@ -10,7 +10,9 @@ import (
 	"fmt"
 	"github.com/dankgrinder/dankgrinder/config"
 	"github.com/dankgrinder/dankgrinder/discord"
+	"github.com/shiena/ansicolor"
 	"github.com/sirupsen/logrus"
+	"os"
 	"strconv"
 	"time"
 )
@@ -36,6 +38,9 @@ func sendMessage(content string) {
 }
 
 func main() {
+	logrus.StandardLogger().SetFormatter(&logrus.TextFormatter{ForceColors: true})
+	logrus.StandardLogger().SetOutput(ansicolor.NewAnsiColorWriter(os.Stdout))
+
 	if cfg.Token == "" {
 		logrus.Fatalf("no authorization token configured")
 	}
