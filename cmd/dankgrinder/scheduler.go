@@ -28,7 +28,7 @@ type queue struct {
 	// currently for sending an abort in the scheduler when a priority command
 	// is enqueued.
 	onEnqueue func()
-	queued  *list.List
+	queued    *list.List
 }
 
 type command struct {
@@ -45,9 +45,9 @@ type command struct {
 
 func startNewQueue() *queue {
 	q := &queue{
-		enqueue: make(chan *command),
-		dequeue: make(chan *command),
-		queued:  list.New(),
+		enqueue:   make(chan *command),
+		dequeue:   make(chan *command),
+		queued:    list.New(),
 		onEnqueue: func() {},
 	}
 	go func() {

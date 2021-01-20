@@ -74,9 +74,9 @@ func main() {
 		for i, shift := range cfg.SuspicionAvoidance.Shifts {
 			dur := shiftDur(shift)
 			logrus.StandardLogger().WithFields(map[string]interface{}{
-				"state": shift.State,
+				"state":    shift.State,
 				"duration": dur,
-			}).Infof("starting shift %v", i + 1)
+			}).Infof("starting shift %v", i+1)
 			if shift.State == lastState {
 				time.Sleep(dur)
 				continue

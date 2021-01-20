@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
-	"runtime"
 	"time"
 )
 
@@ -61,14 +60,9 @@ func NewWSConn(token string, opts WSConnOpts) (*WSConn, error) {
 	if err != nil {
 		return nil, err
 	}
-	go c.pinger(interval)
 
-	var os string
-	switch runtime.GOOS {
-	case "linux": os = "Linux"
-	case "darwin": os = "Mac OS X"
-	case "windows": os = "Windows"
-	}
+	c.state |= wsStateActive
+	go c.pinger(interval)
 
 	// Authenticate
 	err = c.underlying.WriteJSON(&Event{
@@ -82,7 +76,7 @@ func NewWSConn(token string, opts WSConnOpts) (*WSConn, error) {
 			Identify: Identify{
 				Token: token,
 				Properties: Properties{
-					OS:                os,
+					OS:                "Linux",
 					Browser:           "Chrome",
 					BrowserUserAgent:  "Chrome/86.0.4240.75",
 					BrowserVersion:    "86.0.4240.75",
@@ -105,7 +99,6 @@ func NewWSConn(token string, opts WSConnOpts) (*WSConn, error) {
 	}
 
 	go c.listen()
-	c.state |= wsStateActive
 	return &c, nil
 }
 
@@ -170,9 +163,9 @@ func (c *WSConn) pinger(interval time.Duration) {
 	if c.state&wsStatePinging == wsStatePinging {
 		panic("pinger called but WSConn is already pinging")
 	}
-	t := time.NewTicker(interval)
 	c.state |= wsStatePinging
 	go func() {
+		t := time.NewTicker(interval)
 		defer t.Stop()
 		for c.state&wsStateActive == wsStateActive {
 			err := c.underlying.WriteJSON(&Event{
@@ -228,6 +221,8 @@ func (c *WSConn) resume() error {
 	if err != nil {
 		return err
 	}
+
+	c.state |= wsStateActive
 	go c.pinger(interval)
 
 	// Authenticate with old session.
@@ -246,7 +241,6 @@ func (c *WSConn) resume() error {
 	}
 
 	go c.listen()
-	c.state |= wsStateActive
 	return nil
 }
 
