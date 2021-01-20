@@ -60,6 +60,8 @@ func NewWSConn(token string, opts WSConnOpts) (*WSConn, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	c.state |= wsStateActive
 	go c.pinger(interval)
 
 	// Authenticate
@@ -97,7 +99,6 @@ func NewWSConn(token string, opts WSConnOpts) (*WSConn, error) {
 	}
 
 	go c.listen()
-	c.state |= wsStateActive
 	return &c, nil
 }
 
@@ -164,6 +165,8 @@ func (c *WSConn) pinger(interval time.Duration) {
 	}
 	c.state |= wsStatePinging
 	go func() {
+		t := time.NewTicker(interval)
+		defer t.Stop()
 		for c.state&wsStateActive == wsStateActive {
 			err := c.underlying.WriteJSON(&Event{
 				Op: OpcodeHeartbeat,
@@ -171,7 +174,7 @@ func (c *WSConn) pinger(interval time.Duration) {
 			if err != nil {
 				c.errHandler(fmt.Errorf("error while sending ping: %v", err))
 			}
-			time.Sleep(interval)
+			<-t.C
 		}
 	}()
 }
@@ -218,6 +221,8 @@ func (c *WSConn) resume() error {
 	if err != nil {
 		return err
 	}
+
+	c.state |= wsStateActive
 	go c.pinger(interval)
 
 	// Authenticate with old session.
@@ -236,7 +241,6 @@ func (c *WSConn) resume() error {
 	}
 
 	go c.listen()
-	c.state |= wsStateActive
 	return nil
 }
 
