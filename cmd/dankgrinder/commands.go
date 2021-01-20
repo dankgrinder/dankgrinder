@@ -7,25 +7,25 @@ import "time"
 func commands() (cmds []*command) {
 	cmds = []*command{
 		{run: "pls beg", interval: sec(cfg.Compat.Cooldown.Beg + cfg.Compat.Cooldown.Margin)},
-		{run: "pls pm", interval: sec(cfg.Compat.Cooldown.Beg + cfg.Compat.Cooldown.Margin)},
-		{run: "pls search", interval: sec(cfg.Compat.Cooldown.Beg + cfg.Compat.Cooldown.Margin)},
-		{run: "pls hl", interval: sec(cfg.Compat.Cooldown.Beg + cfg.Compat.Cooldown.Margin)},
+		{run: "pls pm", interval: sec(cfg.Compat.Cooldown.Postmeme + cfg.Compat.Cooldown.Margin)},
+		{run: "pls search", interval: sec(cfg.Compat.Cooldown.Search + cfg.Compat.Cooldown.Margin)},
+		{run: "pls hl", interval: sec(cfg.Compat.Cooldown.Highlow + cfg.Compat.Cooldown.Margin)},
 	}
 	if cfg.Features.Commands.Fish {
 		cmds = append(cmds, &command{
-			run: "pls fish",
-			interval: sec(cfg.Compat.Cooldown.Beg + cfg.Compat.Cooldown.Margin),
+			run:      "pls fish",
+			interval: sec(cfg.Compat.Cooldown.Fish + cfg.Compat.Cooldown.Margin),
 		})
 	}
 	if cfg.Features.Commands.Hunt {
 		cmds = append(cmds, &command{
-			run: "pls hunt",
-			interval: sec(cfg.Compat.Cooldown.Beg + cfg.Compat.Cooldown.Margin),
+			run:      "pls hunt",
+			interval: sec(cfg.Compat.Cooldown.Hunt + cfg.Compat.Cooldown.Margin),
 		})
 	}
 	if cfg.Features.BalanceCheck {
 		cmds = append(cmds, &command{
-			run: "pls bal",
+			run:      "pls bal",
 			interval: time.Minute * 2,
 		})
 	}
@@ -37,55 +37,55 @@ func commands() (cmds []*command) {
 func asCommands() (cmds []*command) {
 	if cfg.Features.AutoSell.Boar {
 		cmds = append(cmds, &command{
-			run: "pls sell boar max",
+			run:      "pls sell boar max",
 			interval: sec(cfg.Features.AutoSell.Interval),
 		})
 	}
 	if cfg.Features.AutoSell.Dragon {
 		cmds = append(cmds, &command{
-			run: "pls sell dragon max",
+			run:      "pls sell dragon max",
 			interval: sec(cfg.Features.AutoSell.Interval),
 		})
 	}
 	if cfg.Features.AutoSell.Duck {
 		cmds = append(cmds, &command{
-			run: "pls sell duck max",
+			run:      "pls sell duck max",
 			interval: sec(cfg.Features.AutoSell.Interval),
 		})
 	}
 	if cfg.Features.AutoSell.Rabbit {
 		cmds = append(cmds, &command{
-			run: "pls sell rabbit max",
+			run:      "pls sell rabbit max",
 			interval: sec(cfg.Features.AutoSell.Interval),
 		})
 	}
 	if cfg.Features.AutoSell.Skunk {
 		cmds = append(cmds, &command{
-			run: "pls sell skunk max",
+			run:      "pls sell skunk max",
 			interval: sec(cfg.Features.AutoSell.Interval),
 		})
 	}
 	if cfg.Features.AutoSell.RareFish {
 		cmds = append(cmds, &command{
-			run: "pls sell rarefish max",
+			run:      "pls sell rarefish max",
 			interval: sec(cfg.Features.AutoSell.Interval),
 		})
 	}
 	if cfg.Features.AutoSell.ExoticFish {
 		cmds = append(cmds, &command{
-			run: "pls sell exoticfish max",
+			run:      "pls sell exoticfish max",
 			interval: sec(cfg.Features.AutoSell.Interval),
 		})
 	}
 	if cfg.Features.AutoSell.LegendaryFish {
 		cmds = append(cmds, &command{
-			run: "pls sell legendaryfish max",
+			run:      "pls sell legendaryfish max",
 			interval: sec(cfg.Features.AutoSell.Interval),
 		})
 	}
 	if cfg.Features.AutoSell.Fish {
 		cmds = append(cmds, &command{
-			run: "pls sell fish max",
+			run:      "pls sell fish max",
 			interval: sec(cfg.Features.AutoSell.Interval),
 		})
 	}
