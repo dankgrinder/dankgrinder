@@ -62,7 +62,6 @@ func NewWSConn(token string, opts WSConnOpts) (*WSConn, error) {
 	}
 
 	c.state |= wsStateActive
-	go c.pinger(interval)
 
 	// Authenticate
 	err = c.underlying.WriteJSON(&Event{
@@ -98,6 +97,7 @@ func NewWSConn(token string, opts WSConnOpts) (*WSConn, error) {
 		return nil, fmt.Errorf("error while sending authentication message: %v", err)
 	}
 
+	go c.pinger(interval)
 	go c.listen()
 	return &c, nil
 }
@@ -223,7 +223,6 @@ func (c *WSConn) resume() error {
 	}
 
 	c.state |= wsStateActive
-	go c.pinger(interval)
 
 	// Authenticate with old session.
 	err = c.underlying.WriteJSON(&Event{
@@ -240,6 +239,7 @@ func (c *WSConn) resume() error {
 		return fmt.Errorf("error while sending resume message: %v", err)
 	}
 
+	go c.pinger(interval)
 	go c.listen()
 	return nil
 }

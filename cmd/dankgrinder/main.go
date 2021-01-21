@@ -36,6 +36,9 @@ func main() {
 	if cfg.Features.AutoSell.Interval < 0 {
 		logrus.StandardLogger().Fatalf("auto sell interval must be greater than or equal to 0")
 	}
+	if len(cfg.SuspicionAvoidance.Shifts) == 0 {
+		logrus.StandardLogger().Fatalf("no shifts configured, at least 1 is required")
+	}
 	for _, shift := range cfg.SuspicionAvoidance.Shifts {
 		if shift.State != config.ShiftStateActive && shift.State != config.ShiftStateDormant {
 			logrus.StandardLogger().Fatalf(
