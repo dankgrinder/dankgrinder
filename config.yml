@@ -14,24 +14,12 @@ features:
     fishing_pole: true
     hunting_rifle: true
     laptop: true
-  auto_sell:
-    boar: false
-    dragon: false
-    duck: false
-    exotic_fish: false
-    fish: false
-    legendary_fish: false
-    rabbit: false
-    rare_fish: false
-    skunk: false
-
-    # The interval in seconds that auto sell is executed. This can be set to 0
-    # to only execute once, every time when you start the program.
-    interval: 1800
   balance_check: true
+  log_to_file: true
+  debug: false
 
 compatibility:
-  postmeme:
+  postmeme_options:
     - "f"
     - "r"
     - "i"
@@ -65,6 +53,14 @@ compatibility:
     # This value in seconds in added to each cooldown to accommodate timing errors.
     margin: 3
 
+  auto_sell:
+    - "boar"
+    - "dragon"
+    - "duck"
+    - "fish"
+    - "deer"
+    - "rabbit"
+    - "skunk"
 
 suspicion_avoidance:
   typing:
@@ -90,10 +86,10 @@ suspicion_avoidance:
   # active. Base and variance are in seconds and work the same as they do with
   # typing and delay.
   #
-  # For example, if you would like to have to bot on for 6 hours per day, then
-  # inactive for the remaining 18 you would do something like this (note that
-  # it will loop this, so after completing the last shift it will go back to the
-  # first):
+  # For example, if you would like to have the bot be active for 6 hours per day,
+  # then inactive for the remaining 18 you would do something like this (note
+  # that it will loop this, so after completing the last shift it will go back
+  # to the first):
   #
   #   - state: "active"
   #     duration:

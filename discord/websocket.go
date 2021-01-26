@@ -1,4 +1,4 @@
-// Copyright (C) 2020 The Dank Grinder authors.
+// Copyright (C) 2021 The Dank Grinder authors.
 //
 // This source code has been released under the GNU Affero General Public
 // License v3.0. A copy of this license is available at
@@ -9,8 +9,9 @@ package discord
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/websocket"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 const gatewayURL = "wss://gateway.discord.gg/?encoding=json&v=8"
@@ -30,7 +31,7 @@ type WSConn struct {
 	// fatalHandler is used for when a fatal error occurs, not when
 	// WSConn.Close() is called.
 	fatalHandler func(err *websocket.CloseError)
-	token        string
+	client       Client
 	seq          int
 	state        uint8
 }
@@ -41,7 +42,7 @@ type WSConnOpts struct {
 	FatalHandler  func(err *websocket.CloseError)
 }
 
-func NewWSConn(token string, opts WSConnOpts) (*WSConn, error) {
+func (client Client) NewWSConn(opts WSConnOpts) (*WSConn, error) {
 	conn, _, err := websocket.DefaultDialer.Dial(gatewayURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error while establishing websocket connection: %v", err)
@@ -52,7 +53,7 @@ func NewWSConn(token string, opts WSConnOpts) (*WSConn, error) {
 		msgRouter:    opts.MessageRouter,
 		errHandler:   opts.ErrHandler,
 		fatalHandler: opts.FatalHandler,
-		token:        token,
+		client:       client,
 	}
 
 	// Receive hello message
@@ -73,7 +74,7 @@ func NewWSConn(token string, opts WSConnOpts) (*WSConn, error) {
 				UserGuildSettingsVersion: -1,
 			},
 			Identify: Identify{
-				Token: token,
+				Token: c.client.Token,
 				Properties: Properties{
 					OS:                "Linux",
 					Browser:           "Chrome",
@@ -114,21 +115,23 @@ func (c *WSConn) listen() {
 	for c.state&wsStateActive == wsStateActive {
 		_, b, err := c.underlying.ReadMessage()
 
-		if err != nil {
-			closeErr, ok := err.(*websocket.CloseError)
-			if !ok {
-				c.errHandler(fmt.Errorf("error while reading incoming websocket message: %v", err))
-				continue
-			}
-			c.Close()
+		if closeErr, ok := err.(*websocket.CloseError); ok {
+			c.forceClose()
 			if closeErr.Code == websocket.CloseGoingAway {
 				if err := c.resume(); err != nil {
+					// Close can be called twice here because the resume function
+					// creates a new connection.
+					c.forceClose()
 					c.fatalHandler(closeErr)
 				}
 				break
 			}
 			c.fatalHandler(closeErr)
 			break
+		}
+		if err != nil {
+			c.errHandler(fmt.Errorf("error while reading incoming websocket message: %v", err))
+			continue
 		}
 
 		var body Event
@@ -146,7 +149,7 @@ func (c *WSConn) listen() {
 			}
 			if body.EventName == EventNameMessageCreate ||
 				body.EventName == EventNameMessageUpdate {
-				c.msgRouter.process(body.Data.Message, body.EventName)
+				go c.msgRouter.process(body.Data.Message, body.EventName)
 			}
 		case OpcodeInvalidSession:
 			c.Close()
@@ -213,7 +216,7 @@ func (c *WSConn) resume() error {
 		msgRouter:    c.msgRouter,
 		errHandler:   c.errHandler,
 		fatalHandler: c.fatalHandler,
-		token:        c.token,
+		client:       c.client,
 		seq:          c.seq,
 	}
 
@@ -229,7 +232,7 @@ func (c *WSConn) resume() error {
 		Op: OpcodeResume,
 		Data: Data{
 			Identify: Identify{
-				Token: c.token,
+				Token: c.client.Token,
 			},
 			SessionID: c.sessionID,
 			Sequence:  c.seq,
@@ -249,6 +252,18 @@ func (c *WSConn) Close() error {
 		return fmt.Errorf("already closed")
 	}
 	c.state = 0
+	err := c.underlying.WriteControl(
+		websocket.CloseGoingAway,
+		websocket.FormatCloseMessage(websocket.CloseGoingAway, ""),
+		time.Now().Add(time.Second*10),
+	)
+	if err != nil {
+		return fmt.Errorf("error while writing close message: %v", err)
+	}
+	return c.underlying.Close()
+}
+
+func (c *WSConn) forceClose() {
+	c.state = 0
 	c.underlying.Close()
-	return nil
 }

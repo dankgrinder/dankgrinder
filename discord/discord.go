@@ -1,4 +1,4 @@
-// Copyright (C) 2020 The Dank Grinder authors.
+// Copyright (C) 2021 The Dank Grinder authors.
 //
 // This source code has been released under the GNU Affero General Public
 // License v3.0. A copy of this license is available at
@@ -14,10 +14,14 @@ import (
 	"time"
 )
 
-var ErrAborted = fmt.Errorf("request for abortion of execution fulfilled")
+var (
+	ErrAborted              = fmt.Errorf("request for abortion of execution fulfilled")
+	ErrInvalidAuthorization = fmt.Errorf("invalid authorization")
+)
 
-type Authorization struct {
+type Client struct {
 	Token string
+	User  User
 }
 
 type SendMessageOpts struct {
@@ -30,8 +34,18 @@ type SendMessageOpts struct {
 	Abort chan bool
 }
 
-func (auth Authorization) SendMessage(content string, opts SendMessageOpts) error {
-	if auth.Token == "" {
+func NewClient(token string) (*Client, error) {
+	c := &Client{Token: token}
+	u, err := c.CurrentUser()
+	if err != nil {
+		return nil, fmt.Errorf("could not get user information: %v", err)
+	}
+	c.User = u
+	return c, nil
+}
+
+func (client Client) SendMessage(content string, opts SendMessageOpts) error {
+	if client.Token == "" {
 		return fmt.Errorf("invalid authorization")
 	}
 	if opts.ChannelID == "" {
@@ -44,7 +58,7 @@ func (auth Authorization) SendMessage(content string, opts SendMessageOpts) erro
 	if opts.Typing != 0 {
 		iterations := int(opts.Typing)/int(time.Second*10) + 1
 		for i := 0; i < iterations; i++ {
-			if err := auth.typing(opts.ChannelID); err != nil {
+			if err := client.typing(opts.ChannelID); err != nil {
 				return err
 			}
 			a := time.After(time.Second * 10)
@@ -73,7 +87,7 @@ func (auth Authorization) SendMessage(content string, opts SendMessageOpts) erro
 	if err != nil {
 		return fmt.Errorf("error while creating http request: %v", err)
 	}
-	req.Header.Add("Authorization", auth.Token)
+	req.Header.Add("Authorization", client.Token)
 	req.Header.Add("User-Agent", "Chrome/86.0.4240.75")
 	req.Header.Add("Accept-Language", "en-GB")
 	req.Header.Add("Content-Type", "application/json")
@@ -89,6 +103,9 @@ func (auth Authorization) SendMessage(content string, opts SendMessageOpts) erro
 		return fmt.Errorf("error while sending http request: %v", err)
 	}
 
+	if res.StatusCode == http.StatusUnauthorized {
+		return ErrInvalidAuthorization
+	}
 	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status code while sending message: %v", res.StatusCode)
 	}
@@ -96,12 +113,16 @@ func (auth Authorization) SendMessage(content string, opts SendMessageOpts) erro
 	return nil
 }
 
-func (auth Authorization) CurrentUser() (User, error) {
+// CurrentUser sends a http request to Discord and returns a User struct based
+// on the response. This method should only be used if the user information was
+// changed between when you created the client and now. Otherwise, this is also
+// available in the User field of the Client struct.
+func (client Client) CurrentUser() (User, error) {
 	req, err := http.NewRequest("GET", "https://discord.com/api/v8/users/@me", nil)
 	if err != nil {
 		return User{}, fmt.Errorf("error while creating http request: %v", err)
 	}
-	auth.headers(req)
+	client.headers(req)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return User{}, fmt.Errorf("error while sending http request: %v", err)
@@ -123,13 +144,13 @@ func (auth Authorization) CurrentUser() (User, error) {
 //
 // Consequently, if you want to make the user type for more than 10 seconds, you
 // must call this function every 10 seconds.
-func (auth Authorization) typing(channelID string) error {
+func (client Client) typing(channelID string) error {
 	reqURL := fmt.Sprintf("https://discord.com/api/v8/channels/%v/typing", channelID)
 	req, err := http.NewRequest("POST", reqURL, nil)
 	if err != nil {
 		return fmt.Errorf("error while creating http request: %v", err)
 	}
-	auth.headers(req)
+	client.headers(req)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error while sending http request: %v", err)
@@ -140,8 +161,8 @@ func (auth Authorization) typing(channelID string) error {
 	return nil
 }
 
-func (auth Authorization) headers(r *http.Request) *http.Request {
-	r.Header.Add("Authorization", auth.Token)
+func (client Client) headers(r *http.Request) *http.Request {
+	r.Header.Add("Authorization", client.Token)
 	r.Header.Add("User-Agent", "Chrome/86.0.4240.75")
 	r.Header.Add("Accept-Language", "en-GB")
 	return r

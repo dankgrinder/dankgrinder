@@ -1,4 +1,4 @@
-// Copyright (C) 2020 The Dank Grinder authors.
+// Copyright (C) 2021 The Dank Grinder authors.
 //
 // This source code has been released under the GNU Affero General Public
 // License v3.0. A copy of this license is available at
@@ -7,72 +7,90 @@
 package main
 
 import (
-	"github.com/dankgrinder/dankgrinder/config"
-	"github.com/dankgrinder/dankgrinder/discord"
-	"github.com/shiena/ansicolor"
-	"github.com/sirupsen/logrus"
+	"fmt"
 	"math/rand"
 	"os"
+	"path"
 	"time"
+
+	"github.com/dankgrinder/dankgrinder/responder"
+
+	"github.com/dankgrinder/dankgrinder/config"
+	"github.com/dankgrinder/dankgrinder/discord"
+	"github.com/dankgrinder/dankgrinder/scheduler"
+	"github.com/shiena/ansicolor"
+	"github.com/sirupsen/logrus"
 )
 
-var (
-	cfg  = config.MustLoad()
-	auth = discord.Authorization{Token: cfg.Token}
-	sdlr = startNewScheduler()
-	user discord.User
-)
+var cfg config.Config
+
+type logFileHook struct {
+	dir string
+}
+
+func (lfh logFileHook) Levels() []logrus.Level {
+	return []logrus.Level{
+		logrus.DebugLevel,
+		logrus.InfoLevel,
+		logrus.WarnLevel,
+		logrus.ErrorLevel,
+		logrus.FatalLevel,
+		logrus.PanicLevel,
+	}
+}
+
+func (lfh logFileHook) Fire(e *logrus.Entry) error {
+	date := time.Now().Format("02-01-2006")
+	name := fmt.Sprintf("dankgrinder-%v.log", date)
+	f, err := os.OpenFile(path.Join(lfh.dir, name), os.O_CREATE|os.O_RDWR|os.O_APPEND, 0755)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	b, err := (&logrus.JSONFormatter{}).Format(e)
+	if err != nil {
+		return err
+	}
+	_, err = f.Write(b)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 func main() {
-	logrus.StandardLogger().SetFormatter(&logrus.TextFormatter{ForceColors: true})
-	logrus.StandardLogger().SetOutput(ansicolor.NewAnsiColorWriter(os.Stdout))
+	logrus.SetFormatter(&logrus.TextFormatter{ForceColors: true})
+	logrus.SetOutput(ansicolor.NewAnsiColorWriter(os.Stdout))
 
-	if cfg.Token == "" {
-		logrus.StandardLogger().Fatalf("no authorization token configured")
+	ex, err := os.Executable()
+	if err != nil {
+		logrus.Fatalf("could not find executable path: %v", err)
 	}
-	if cfg.ChannelID == "" {
-		logrus.StandardLogger().Fatalf("no channel id configured")
+	cfg, err = config.Load(path.Dir(ex))
+	if err != nil {
+		logrus.Fatalf("could not load config: %v", err)
 	}
-	if cfg.Features.AutoSell.Interval < 0 {
-		logrus.StandardLogger().Fatalf("auto sell interval must be greater than or equal to 0")
+	if cfg.Features.Debug {
+		logrus.SetLevel(logrus.DebugLevel)
 	}
-	if len(cfg.SuspicionAvoidance.Shifts) == 0 {
-		logrus.StandardLogger().Fatalf("no shifts configured, at least 1 is required")
+	if cfg.Features.LogToFile {
+		logrus.AddHook(logFileHook{dir: path.Dir(ex)})
 	}
-	for _, shift := range cfg.SuspicionAvoidance.Shifts {
-		if shift.State != config.ShiftStateActive && shift.State != config.ShiftStateDormant {
-			logrus.StandardLogger().Fatalf(
-				"invalid shift state: %v, allowed options are %v and %v",
-				shift.State,
-				config.ShiftStateActive,
-				config.ShiftStateDormant,
-			)
-		}
+	if err = cfg.Validate(); err != nil {
+		logrus.Fatalf("invalid config: %v", err)
 	}
 
 	rand.Seed(time.Now().UnixNano())
-
-	var err error
-	user, err = auth.CurrentUser()
+	client, err := discord.NewClient(cfg.Token)
 	if err != nil {
-		logrus.StandardLogger().Fatalf("error while getting user information: %v", err)
+		logrus.Fatalf("error while creating client: %v", err)
 	}
-	logrus.StandardLogger().Infof("successful authorization as %v", user.Username+"#"+user.Discriminator)
+	logrus.Infof("successful authorization as %v", client.User.Username+"#"+client.User.Discriminator)
 
-	// Connect to the websocket. The *discord.WSConn can be discarded as it would
-	// only be used for closing, but there is no intention to close.
-	_, err = discord.NewWSConn(cfg.Token, discord.WSConnOpts{
-		MessageRouter: router(),
-		ErrHandler:    errHandler,
-		FatalHandler:  fatalHandler,
-	})
-	if err != nil {
-		logrus.StandardLogger().Fatalf("%v", err)
-	}
-	logrus.StandardLogger().Infof("connected to websocket")
-
-	var cmds, asCmds []*command
+	cmds := commands()
 	var lastState string
+	var rspdr *responder.Responder
+	var sdlr *scheduler.Scheduler
 	for {
 		for i, shift := range cfg.SuspicionAvoidance.Shifts {
 			dur := shiftDur(shift)
@@ -85,23 +103,43 @@ func main() {
 				continue
 			}
 			lastState = shift.State
-			if shift.State == config.ShiftStateActive {
-				cmds = commands()
-				asCmds = asCommands()
-				for _, cmd := range cmds {
-					sdlr.schedule <- cmd
+
+			if shift.State == config.ShiftStateDormant {
+				if rspdr != nil {
+					rspdr.Close()
 				}
-				for _, cmd := range asCmds {
-					sdlr.schedule <- cmd
+				if sdlr != nil {
+					sdlr.Close()
 				}
 				time.Sleep(dur)
 				continue
 			}
-			for _, cmd := range cmds {
-				cmd.interval = 0
+			sdlr = &scheduler.Scheduler{
+				Client:       client,
+				ChannelID:    cfg.ChannelID,
+				Typing:       &cfg.SuspicionAvoidance.Typing,
+				MessageDelay: &cfg.SuspicionAvoidance.MessageDelay,
 			}
-			for _, cmd := range asCmds {
-				cmd.interval = 0
+			if err = sdlr.Start(); err != nil {
+				logrus.Fatalf("error while starting scheduler: %v", err)
+			}
+			rspdr = &responder.Responder{
+				Sdlr:   sdlr,
+				Client: client,
+				FatalHandler: func(err error) {
+					logrus.Fatalf("responder fatal: %v", err)
+				},
+				ChannelID:       cfg.ChannelID,
+				PostmemeOpts:    cfg.Compat.PostmemeOpts,
+				AllowedSearches: cfg.Compat.AllowedSearches,
+				BalanceCheck:    cfg.Features.BalanceCheck,
+				AutoBuy:         &cfg.Features.AutoBuy,
+			}
+			if err = rspdr.Start(); err != nil {
+				logrus.Fatalf("error while starting responder: %v", err)
+			}
+			for _, cmd := range cmds {
+				sdlr.Schedule(cmd, false)
 			}
 			time.Sleep(dur)
 		}
