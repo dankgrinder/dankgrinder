@@ -11,6 +11,7 @@ import (
 	"math/rand"
 	"os"
 	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/dankgrinder/dankgrinder/responder"
@@ -58,6 +59,72 @@ func (lfh logFileHook) Fire(e *logrus.Entry) error {
 	return nil
 }
 
+// shiftLoop goes through all the configured shifts. It will never return.
+// After reaching the last shift it will repeat and go back to the first shift.
+func shiftLoop(client *discord.Client) {
+	cmds := commands()
+	var lastState string
+	var rspdr *responder.Responder
+	var sdlr *scheduler.Scheduler
+	for {
+		for i, shift := range cfg.SuspicionAvoidance.Shifts {
+			dur := shiftDur(shift)
+			logrus.StandardLogger().WithFields(map[string]interface{}{
+				"state":    shift.State,
+				"duration": dur,
+			}).Infof("starting shift %v", i+1)
+			if shift.State == lastState {
+				time.Sleep(dur)
+				continue
+			}
+			lastState = shift.State
+
+			if shift.State == config.ShiftStateDormant {
+				if rspdr != nil {
+					if err := rspdr.Close(); err != nil {
+						logrus.Errorf("error while closing responder: %v", err)
+					}
+				}
+				if sdlr != nil {
+					if err := sdlr.Close(); err != nil {
+						logrus.Errorf("error while closing scheduler: %v", err)
+					}
+				}
+				time.Sleep(dur)
+				continue
+			}
+			sdlr = &scheduler.Scheduler{
+				Client:       client,
+				ChannelID:    cfg.ChannelID,
+				Typing:       &cfg.SuspicionAvoidance.Typing,
+				MessageDelay: &cfg.SuspicionAvoidance.MessageDelay,
+			}
+			if err := sdlr.Start(); err != nil {
+				logrus.Fatalf("error while starting scheduler: %v", err)
+			}
+			rspdr = &responder.Responder{
+				Sdlr:   sdlr,
+				Client: client,
+				FatalHandler: func(err error) {
+					logrus.Fatalf("responder fatal: %v", err)
+				},
+				ChannelID:       cfg.ChannelID,
+				PostmemeOpts:    cfg.Compat.PostmemeOpts,
+				AllowedSearches: cfg.Compat.AllowedSearches,
+				BalanceCheck:    cfg.Features.BalanceCheck,
+				AutoBuy:         &cfg.Features.AutoBuy,
+			}
+			if err := rspdr.Start(); err != nil {
+				logrus.Fatalf("error while starting responder: %v", err)
+			}
+			for _, cmd := range cmds {
+				sdlr.Schedule(cmd, false)
+			}
+			time.Sleep(dur)
+		}
+	}
+}
+
 func main() {
 	logrus.SetFormatter(&logrus.TextFormatter{ForceColors: true})
 	logrus.SetOutput(ansicolor.NewAnsiColorWriter(os.Stdout))
@@ -66,6 +133,7 @@ func main() {
 	if err != nil {
 		logrus.Fatalf("could not find executable path: %v", err)
 	}
+	ex = filepath.ToSlash(ex)
 	cfg, err = config.Load(path.Dir(ex))
 	if err != nil {
 		logrus.Fatalf("could not load config: %v", err)
@@ -86,62 +154,5 @@ func main() {
 		logrus.Fatalf("error while creating client: %v", err)
 	}
 	logrus.Infof("successful authorization as %v", client.User.Username+"#"+client.User.Discriminator)
-
-	cmds := commands()
-	var lastState string
-	var rspdr *responder.Responder
-	var sdlr *scheduler.Scheduler
-	for {
-		for i, shift := range cfg.SuspicionAvoidance.Shifts {
-			dur := shiftDur(shift)
-			logrus.StandardLogger().WithFields(map[string]interface{}{
-				"state":    shift.State,
-				"duration": dur,
-			}).Infof("starting shift %v", i+1)
-			if shift.State == lastState {
-				time.Sleep(dur)
-				continue
-			}
-			lastState = shift.State
-
-			if shift.State == config.ShiftStateDormant {
-				if rspdr != nil {
-					rspdr.Close()
-				}
-				if sdlr != nil {
-					sdlr.Close()
-				}
-				time.Sleep(dur)
-				continue
-			}
-			sdlr = &scheduler.Scheduler{
-				Client:       client,
-				ChannelID:    cfg.ChannelID,
-				Typing:       &cfg.SuspicionAvoidance.Typing,
-				MessageDelay: &cfg.SuspicionAvoidance.MessageDelay,
-			}
-			if err = sdlr.Start(); err != nil {
-				logrus.Fatalf("error while starting scheduler: %v", err)
-			}
-			rspdr = &responder.Responder{
-				Sdlr:   sdlr,
-				Client: client,
-				FatalHandler: func(err error) {
-					logrus.Fatalf("responder fatal: %v", err)
-				},
-				ChannelID:       cfg.ChannelID,
-				PostmemeOpts:    cfg.Compat.PostmemeOpts,
-				AllowedSearches: cfg.Compat.AllowedSearches,
-				BalanceCheck:    cfg.Features.BalanceCheck,
-				AutoBuy:         &cfg.Features.AutoBuy,
-			}
-			if err = rspdr.Start(); err != nil {
-				logrus.Fatalf("error while starting responder: %v", err)
-			}
-			for _, cmd := range cmds {
-				sdlr.Schedule(cmd, false)
-			}
-			time.Sleep(dur)
-		}
-	}
+	shiftLoop(client)
 }

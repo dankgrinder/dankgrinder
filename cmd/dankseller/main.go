@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -29,6 +30,7 @@ func main() {
 	if err != nil {
 		logrus.Fatalf("could not find executable path: %v", err)
 	}
+	ex = filepath.ToSlash(ex)
 	cfg, err := config.Load(path.Dir(ex))
 	if err != nil {
 		logrus.Fatalf("could not load config: %v", err)
