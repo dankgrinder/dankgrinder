@@ -1,4 +1,4 @@
-// Copyright (C) 2020 The Dank Grinder authors.
+// Copyright (C) 2021 The Dank Grinder authors.
 //
 // This source code has been released under the GNU Affero General Public
 // License v3.0. A copy of this license is available at
@@ -85,6 +85,7 @@ func (rt *MessageRoute) Channel(id string) *MessageRoute {
 	rt.conds = append(rt.conds, func(msg Message, _ string) bool {
 		return msg.ChannelID == id
 	})
+
 	return rt
 }
 

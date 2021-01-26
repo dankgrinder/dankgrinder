@@ -12,25 +12,26 @@ Want to join the community or need support? [Join our Discord](https://discord.g
 * Reports an average income every 2 minutes
 * Automatically buys a fishing pole, hunting rifle or laptop if they have broken
 * High configurability
+* Can run many bots in one go using swarm mode
 
 ## Getting started
 
 ### Installation
-1. Download the latest release for your operating system [here](https://github.com/dankgrinder/dankgrinder/releases/latest) (darwin is for MacOS), or [build from source](#building-from-source). If you build from source you can delete everything besides the compiled binaries and config.yml.
+1. Download the latest release for your operating system [here](https://github.com/dankgrinder/dankgrinder/releases/latest) (darwin is for macOS), or [build from source](#building-from-source). If you build from source you can delete everything besides the compiled binaries and config.yml.
 2. Extract the archive
-3. [Configure](#configuration), make sure `token` and `channel_id` are set, it will not run otherwise
+3. [Configure](#configuration), make sure `token` and `channel_id` fields are set, it will not run otherwise
 
 #### Windows
-4. Run dankgrinder.exe from the command prompt by opening it, then dragging dankgrinder.exe to it and hitting enter.
-
-#### MacOS
-4. Run by double clicking the dankgrinder binary.
+4. Double click dankgrinder.exe. If the program closes immediately after opening it, open a command prompt and drag the executable to it, then hit enter. You will now be able to see the error
 
 #### Linux
 4. Run the binary:  
    `$ ./dankgrinder`
+
+#### macOS
+4. Run by double clicking the dankgrinder binary
    
-You can use the candy executable (named candy.exe on Windows) to automatically consume a specified amount of candy. Running this also requires `token` and `channel_id` to be [configured](#configuration) in config.yml.
+You can use the dankseller executable to automatically consume a specified amount of candy. Running this also requires `token` and `channel_id` to be [configured](#configuration) in config.yml.
    
 ### Getting an authorization token
 1. Go to Discord, logged into the account you want to use
@@ -41,7 +42,7 @@ You can use the candy executable (named candy.exe on Windows) to automatically c
 6. Expand the "request headers" and look for the value "authorization", that is your token
 
 ### Enabling Discord's developer mode
-To obtain a channel or user ID you will need to have developer mode enabled.
+To obtain a channel id for config.yml, you will need to have developer mode enabled.
 1. Go to your user settings on Discord
 2. Click "appearance" under "app settings"
 3. Scroll down to "advanced" and enable developer mode
@@ -63,7 +64,7 @@ A working Go installation, see https://golang.org/doc/install
 The executables should then be in the `/build` folder.
 
 ## Configuration
-All configuration can be done by editing config.yml. The comments in the file itself provide extra explanation where necessary. [Join our Discord](https://discord.gg/Fjzpq8YPSn) if you have any extra questions.
+All configuration can be done by editing config.yml with your editor of choice (e.g. Visual Studio Code, Sublime Text, Notepad++). The comments in the file itself provide extra explanation where necessary. For the bot to run, you must at least enter an [authorization token](#getting-an-authorization-token) and a [channel id](#enabling-discords-developer-mode). If you are running into issues, you can [join our Discord](https://discord.gg/Fjzpq8YPSn).
 
 ## Disclaimer
 This is a self-bot. Such bots are against Discord's terms of service. Automation of Dank Memer commands also breaks Dank Memer's rules. By using this software you acknowledge that we take no responsibility whatsoever for any action taken against your account, whether by Discord or Dank Memer, for not abiding by their respective rules.

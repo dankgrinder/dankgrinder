@@ -1,4 +1,4 @@
-// Copyright (C) 2020 The Dank Grinder authors.
+// Copyright (C) 2021 The Dank Grinder authors.
 //
 // This source code has been released under the GNU Affero General Public
 // License v3.0. A copy of this license is available at
@@ -8,10 +8,10 @@ package config
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
 	"os"
 	"path"
+
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -25,12 +25,24 @@ type Config struct {
 	Features           Features           `yaml:"features"`
 	Compat             Compat             `yaml:"compatibility"`
 	SuspicionAvoidance SuspicionAvoidance `yaml:"suspicion_avoidance"`
+	Swarm              Swarm              `yaml:"swarm"`
+}
+
+type Swarm struct {
+	Instances []Instance `yaml:"instances"`
+}
+
+type Instance struct {
+	Token     string  `yaml:"token"`
+	ChannelID string  `yaml:"channel_id"`
+	Shifts    []Shift `yaml:"shifts"`
 }
 
 type Compat struct {
-	Postmeme        []string `yaml:"postmeme"`
+	PostmemeOpts    []string `yaml:"postmeme_options"`
 	AllowedSearches []string `yaml:"allowed_searches"`
 	Cooldown        Cooldown `yaml:"cooldown"`
+	AutoSell        []string `yaml:"auto_sell"`
 }
 
 type Cooldown struct {
@@ -46,27 +58,15 @@ type Cooldown struct {
 type Features struct {
 	Commands     Commands `yaml:"commands"`
 	AutoBuy      AutoBuy  `yaml:"auto_buy"`
-	AutoSell     AutoSell `yaml:"auto_sell"`
 	BalanceCheck bool     `yaml:"balance_check"`
+	LogToFile    bool     `yaml:"log_to_file"`
+	Debug        bool     `yaml:"debug"`
 }
 
 type AutoBuy struct {
 	FishingPole  bool `yaml:"fishing_pole"`
 	HuntingRifle bool `yaml:"hunting_rifle"`
 	Laptop       bool `yaml:"laptop"`
-}
-
-type AutoSell struct {
-	Boar          bool `yaml:"boar"`
-	Dragon        bool `yaml:"dragon"`
-	Duck          bool `yaml:"duck"`
-	Fish          bool `yaml:"fish"`
-	ExoticFish    bool `yaml:"exotic_fish"`
-	LegendaryFish bool `yaml:"legendary_fish"`
-	Rabbit        bool `yaml:"rabbit"`
-	RareFish      bool `yaml:"rare_fish"`
-	Skunk         bool `yaml:"skunk"`
-	Interval      int  `yaml:"interval"`
 }
 
 type Commands struct {
@@ -105,29 +105,8 @@ type Duration struct {
 	Variance int `yaml:"variance"` // A random value in seconds from [0,n) added to the base.
 }
 
-func configDir() (string, error) {
-	ex, err := os.Executable()
-	if err != nil {
-		return "", fmt.Errorf("cannot find executable path: %v", err)
-	}
-	return path.Dir(ex), nil
-}
-
-// MustLoad runs Load and calls logrus.Fatalf is an error occurs.
-func MustLoad() Config {
-	c, err := Load()
-	if err != nil {
-		logrus.Fatalf("could not load config: %v", err)
-	}
-	return c
-}
-
 // Load loads the config from the expected path.
-func Load() (Config, error) {
-	dir, err := configDir()
-	if err != nil {
-		return Config{}, fmt.Errorf("error while getting config dir: %v", err)
-	}
+func Load(dir string) (Config, error) {
 	f, err := os.Open(path.Join(dir, "config.yml"))
 	if err != nil {
 		return Config{}, fmt.Errorf("error while opening config file: %v", err)
@@ -139,4 +118,50 @@ func Load() (Config, error) {
 	}
 
 	return cfg, nil
+}
+
+func (c Config) Validate() error {
+	if c.Token == "" {
+		return fmt.Errorf("token: no authorization token")
+	}
+	if c.ChannelID == "" {
+		return fmt.Errorf("channel_id: no channel id")
+	}
+	if len(c.SuspicionAvoidance.Shifts) == 0 {
+		return fmt.Errorf("suspicion_avoidance.shifts: no shifts, at least 1 is required")
+	}
+	if len(c.Compat.PostmemeOpts) == 0 {
+		return fmt.Errorf("compatibility.postmeme: no compatibility options")
+	}
+	if len(c.Compat.AllowedSearches) == 0 {
+		return fmt.Errorf("compatibility.allowed_searches: no compatibility options")
+	}
+	if c.Compat.Cooldown.Postmeme <= 0 {
+		return fmt.Errorf("compatibility.cooldown.postmeme: value must be greater than 0")
+	}
+	if c.Compat.Cooldown.Hunt <= 0 {
+		return fmt.Errorf("compatibility.cooldown.hunt: value must be greater than 0")
+	}
+	if c.Compat.Cooldown.Highlow <= 0 {
+		return fmt.Errorf("compatibility.cooldown.highlow: value must be greater than 0")
+	}
+	if c.Compat.Cooldown.Fish <= 0 {
+		return fmt.Errorf("compatibility.cooldown.fish: value must be greater than 0")
+	}
+	if c.Compat.Cooldown.Search <= 0 {
+		return fmt.Errorf("compatibility.cooldown.search: value must be greater than 0")
+	}
+	if c.Compat.Cooldown.Beg <= 0 {
+		return fmt.Errorf("compatibility.cooldown.beg: value must be greater than 0")
+	}
+	if c.Compat.Cooldown.Margin < 0 {
+		return fmt.Errorf("compatibility.cooldown.margin: value must be greater than or equal to 0")
+	}
+
+	for _, shift := range c.SuspicionAvoidance.Shifts {
+		if shift.State != ShiftStateActive && shift.State != ShiftStateDormant {
+			return fmt.Errorf("invalid shift state: %v", shift.State)
+		}
+	}
+	return nil
 }

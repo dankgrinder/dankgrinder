@@ -7,17 +7,20 @@ mkdir release
 for OS in "windows" "darwin" "linux"; do
   DIR="release/dankgrinder-${VERSION}-${OS}-amd64"
   DANKGRINDER="dankgrinder"
-  CANDY="candy"
+  DANKSELLER="dankseller"
+  DANKSWARM="dankswarm"
 
   if [ "${OS}" = "windows" ]; then
     DANKGRINDER="${DANKGRINDER}.exe"
-    CANDY="${CANDY}.exe"
+    DANKSELLER="${DANKSELLER}.exe"
+    DANKSWARM="${DANKSWARM}.exe"
   fi
 
   mkdir "${DIR}"
   cp config.yml "${DIR}"
-  (cd cmd/dankgrinder || exit; GOOS=${OS} GOARCH=amd64 go build -v -o "../../${DIR}/${DANKGRINDER}" .)
-  (cd cmd/candy || exit; GOOS=${OS} GOARCH=amd64 go build -v -o "../../${DIR}/${CANDY}" .)
+  (cd cmd/dankgrinder || exit; GOOS=${OS} GOARCH=amd64 go build -ldflags "-w -s" -v -o "../../${DIR}/${DANKGRINDER}" .)
+  (cd cmd/dankseller || exit; GOOS=${OS} GOARCH=amd64 go build -ldflags "-w -s" -v -o "../../${DIR}/${DANKSELLER}" .)
+  (cd cmd/dankswarm || exit; GOOS=${OS} GOARCH=amd64 go build -ldflags "-w -s" -v -o "../../${DIR}/${DANKSWARM}" .)
   zip -vr9j "${DIR}".zip "${DIR}"/*
   rm -rf "${DIR}"
 done

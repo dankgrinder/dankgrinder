@@ -3,12 +3,15 @@
 scripts/clean
 mkdir build
 DANKGRINDER="dankgrinder"
-CANDY="candy"
+DANKSELLER="dankseller"
+DANKSWARM="dankswarm"
 
 if [ "${GOOS}" = "windows" ]; then
   DANKGRINDER="${DANKGRINDER}.exe"
-  CANDY="${CANDY}.exe"
+  DANKSELLER="${DANKSELLER}.exe"
+  DANKSWARM="${DANKSWARM}.exe"
 fi
 
 (cd cmd/dankgrinder; go build -v -o "../../build/${DANKGRINDER}" .)
-(cd cmd/candy; go build -v -o "../../build/${CANDY}" .)
+(cd cmd/dankseller; go build -v -o "../../build/${DANKSELLER}" .)
+(cd cmd/dankswarm; go build -v -o "../../build/${DANKSWARM}" .)
