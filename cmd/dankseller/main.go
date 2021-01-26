@@ -11,6 +11,8 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/dankgrinder/dankgrinder/config"
@@ -38,47 +40,72 @@ func main() {
 		logrus.Fatalf("invalid config: %v", err)
 	}
 
-	client, err := discord.NewClient(cfg.Token)
-	if err != nil {
-		logrus.Fatalf("error while creating client: %v", err)
+	fmt.Printf("run in swarm mode [y/N]: ")
+	var s string
+	_, err = fmt.Scanln(&s)
+	instances := []config.Instance{
+		{
+			Token:     cfg.Token,
+			ChannelID: cfg.ChannelID,
+			Shifts:    cfg.SuspicionAvoidance.Shifts,
+		},
+	}
+	if strings.ToLower(s) == "y" {
+		instances = cfg.Swarm.Instances
+		if len(cfg.Swarm.Instances) == 0 {
+			logrus.Fatalf("invalid config: swarm.instances: no instances")
+		}
+		if len(cfg.Swarm.Instances) == 1 {
+			logrus.Warnf("you are using swarm mode with only one instance")
+		}
 	}
 
-	logrus.Infof("successful authorization as %v", client.User.Username+"#"+client.User.Discriminator)
-
 	fmt.Printf("amount of candy to sell (or 0 for none): ")
-	var s string
 	_, err = fmt.Scanln(&s)
 	if err != nil {
 		logrus.Fatalf("error while scanning stdin: %v", err)
 	}
-
 	amount, err := strconv.Atoi(s)
 	if err != nil || amount < 0 {
 		logrus.Infof("invalid input: value must be greater than or equal to 0")
 	}
 
-	for i := 0; i < amount; i++ {
-		logrus.Infof("sending command: pls use candy")
-		if err = client.SendMessage("pls use candy", discord.SendMessageOpts{
-			ChannelID: cfg.ChannelID,
-			Typing:    time.Second * 1,
-			Abort:     nil,
-		}); err != nil {
-			logrus.Errorf("%v", err)
-		}
-		time.Sleep(time.Second * 3)
-	}
+	wg := sync.WaitGroup{}
+	wg.Add(len(instances))
+	for _, instance := range instances {
+		instance := instance
+		go func() {
+			defer wg.Done()
+			client, err := discord.NewClient(instance.Token)
+			if err != nil {
+				logrus.Fatalf("error while creating client: %v", err)
+			}
 
-	for _, cmd := range cfg.Compat.AutoSell {
-		cmd = fmt.Sprintf("pls sell %v max", cmd)
-		logrus.Infof("sending command: %v", cmd)
-		if err = client.SendMessage(cmd, discord.SendMessageOpts{
-			ChannelID: cfg.ChannelID,
-			Typing:    time.Second * 2,
-			Abort:     nil,
-		}); err != nil {
-			logrus.Errorf("%v", err)
-		}
-		time.Sleep(time.Second * 1)
+			logrus.Infof("successful authorization as %v", client.User.Username+"#"+client.User.Discriminator)
+
+			for i := 0; i < amount; i++ {
+				logrus.Infof("sending command: pls use candy")
+				if err = client.SendMessage("pls use candy", discord.SendMessageOpts{
+					ChannelID: instance.ChannelID,
+					Typing:    time.Second * 1,
+				}); err != nil {
+					logrus.Errorf("%v", err)
+				}
+				time.Sleep(time.Second * 3)
+			}
+
+			for _, cmd := range cfg.Compat.AutoSell {
+				cmd = fmt.Sprintf("pls sell %v max", cmd)
+				logrus.Infof("sending command: %v", cmd)
+				if err = client.SendMessage(cmd, discord.SendMessageOpts{
+					ChannelID: instance.ChannelID,
+					Typing:    time.Second * 2,
+				}); err != nil {
+					logrus.Errorf("%v", err)
+				}
+				time.Sleep(time.Second * 1)
+			}
+		}()
 	}
+	wg.Wait()
 }

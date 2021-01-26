@@ -107,3 +107,20 @@ suspicion_avoidance:
       duration:
         base: -1
         variance: 0
+
+# If you would like to use swarm mode, you can configure all of your instances
+# below. Example configuration for an instance:
+#
+#   swarm:
+#     instances:
+#       - token: "tokenplaceholder"
+#         channel_id: "1234567890"
+#         shifts:
+#           - state: "active"
+#             duration:
+#               base: -1
+#               variance: 0
+#
+# The shifts are exactly the same as they are in normal mode. Everything else
+# should be self-explanatory. To run in swarm mode you would obviously run the
+# dankswarm executable instead of dankgrinder.

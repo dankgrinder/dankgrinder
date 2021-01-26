@@ -11,6 +11,7 @@ import (
 	"math/rand"
 	"os"
 	"path"
+	"sync"
 	"time"
 
 	"github.com/dankgrinder/dankgrinder/responder"
@@ -63,9 +64,12 @@ func main() {
 	}
 
 	rand.Seed(time.Now().UnixNano())
+	wg := sync.WaitGroup{}
+	wg.Add(len(cfg.Swarm.Instances))
 	for _, instance := range cfg.Swarm.Instances {
 		instance := instance
 		go func() {
+			defer wg.Done()
 			client, err := discord.NewClient(instance.Token)
 			if err != nil {
 				logrus.Errorf("error while creating client: %v", err)
