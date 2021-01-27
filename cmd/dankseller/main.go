@@ -12,7 +12,6 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -42,39 +41,20 @@ func main() {
 		logrus.Fatalf("invalid config: %v", err)
 	}
 
-	fmt.Printf("run in swarm mode [y/N]: ")
-	var s string
-	_, err = fmt.Scanln(&s)
-	instances := []config.Instance{
-		{
-			Token:     cfg.Token,
-			ChannelID: cfg.ChannelID,
-			Shifts:    cfg.SuspicionAvoidance.Shifts,
-		},
-	}
-	if strings.ToLower(s) == "y" {
-		instances = cfg.Swarm.Instances
-		if len(cfg.Swarm.Instances) == 0 {
-			logrus.Fatalf("invalid config: swarm.instances: no instances")
-		}
-		if len(cfg.Swarm.Instances) == 1 {
-			logrus.Warnf("you are using swarm mode with only one instance")
-		}
-	}
-
 	fmt.Printf("amount of candy to sell (or 0 for none): ")
+	var s string
 	_, err = fmt.Scanln(&s)
 	if err != nil {
 		logrus.Fatalf("error while scanning stdin: %v", err)
 	}
 	amount, err := strconv.Atoi(s)
 	if err != nil || amount < 0 {
-		logrus.Infof("invalid input: value must be greater than or equal to 0")
+		logrus.Fatalf("invalid input: value must be greater than or equal to 0")
 	}
 
-	wg := sync.WaitGroup{}
-	wg.Add(len(instances))
-	for _, instance := range instances {
+	wg := &sync.WaitGroup{}
+	wg.Add(len(cfg.Instances))
+	for _, instance := range cfg.Instances {
 		instance := instance
 		go func() {
 			defer wg.Done()

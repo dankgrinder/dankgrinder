@@ -12,18 +12,36 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
+	"sync"
 	"time"
 
 	"github.com/dankgrinder/dankgrinder/responder"
+	"github.com/shiena/ansicolor"
 
 	"github.com/dankgrinder/dankgrinder/config"
 	"github.com/dankgrinder/dankgrinder/discord"
 	"github.com/dankgrinder/dankgrinder/scheduler"
-	"github.com/shiena/ansicolor"
 	"github.com/sirupsen/logrus"
 )
 
 var cfg config.Config
+
+type fileLogger struct {
+	username string
+	dir      string
+}
+
+func (fl fileLogger) Write(b []byte) (int, error) {
+	date := time.Now().Format("02-01-2006")
+	name := fmt.Sprintf("%v-%v.log", fl.username, date)
+	f, err := os.OpenFile(path.Join(fl.dir, name), os.O_CREATE|os.O_RDWR|os.O_APPEND, 0755)
+	if err != nil {
+		return 0, err
+	}
+	defer f.Close()
+	return f.Write(b)
+}
 
 type logFileHook struct {
 	dir string
@@ -59,20 +77,45 @@ func (lfh logFileHook) Fire(e *logrus.Entry) error {
 	return nil
 }
 
-// shiftLoop goes through all the configured shifts. It will never return.
-// After reaching the last shift it will repeat and go back to the first shift.
-func shiftLoop(client *discord.Client) {
+func startInstances(logDir string) *sync.WaitGroup {
+	wg := &sync.WaitGroup{}
+	wg.Add(len(cfg.Instances))
+	for _, instance := range cfg.Instances {
+		instance := instance
+		go func() {
+			defer wg.Done()
+			client, err := discord.NewClient(instance.Token)
+			if err != nil {
+				logrus.Errorf("error while creating client: %v", err)
+				return
+			}
+			logrus.Infof("successful authorization as %v", client.User.Username+"#"+client.User.Discriminator)
+			logger := logrus.StandardLogger()
+			if len(cfg.Instances) > 1 {
+				logger = newInstanceLogger(client.User.Username, logDir)
+			}
+			shiftLoop(client, instance, logger)
+		}()
+	}
+	return wg
+}
+
+func shiftLoop(client *discord.Client, instance config.Instance, logger *logrus.Logger) {
 	cmds := commands()
-	var lastState string
 	var rspdr *responder.Responder
 	var sdlr *scheduler.Scheduler
+	var lastState string
 	for {
-		for i, shift := range cfg.SuspicionAvoidance.Shifts {
+		for i, shift := range instance.Shifts {
 			dur := shiftDur(shift)
-			logrus.StandardLogger().WithFields(map[string]interface{}{
+			fields := map[string]interface{}{
 				"state":    shift.State,
 				"duration": dur,
-			}).Infof("starting shift %v", i+1)
+			}
+			logrus.WithFields(fields).Infof("starting shift %v for %v", i+1, client.User.Username)
+			if logger != logrus.StandardLogger() {
+				logger.WithFields(fields).Infof("starting shift %v", i+1)
+			}
 			if shift.State == lastState {
 				time.Sleep(dur)
 				continue
@@ -82,40 +125,53 @@ func shiftLoop(client *discord.Client) {
 			if shift.State == config.ShiftStateDormant {
 				if rspdr != nil {
 					if err := rspdr.Close(); err != nil {
-						logrus.Errorf("error while closing responder: %v", err)
+						logger.Errorf("error while closing responder: %v", err)
 					}
 				}
 				if sdlr != nil {
 					if err := sdlr.Close(); err != nil {
-						logrus.Errorf("error while closing scheduler: %v", err)
+						logger.Errorf("error while closing scheduler: %v", err)
 					}
 				}
 				time.Sleep(dur)
 				continue
 			}
+
+			// If this is reached, shift state must be active.
 			sdlr = &scheduler.Scheduler{
 				Client:       client,
-				ChannelID:    cfg.ChannelID,
+				ChannelID:    instance.ChannelID,
 				Typing:       &cfg.SuspicionAvoidance.Typing,
 				MessageDelay: &cfg.SuspicionAvoidance.MessageDelay,
+				Logger:       logger,
 			}
 			if err := sdlr.Start(); err != nil {
-				logrus.Fatalf("error while starting scheduler: %v", err)
+				logrus.Errorf("error while starting scheduler for %v: %v", client.User.Username, err)
+				return
 			}
 			rspdr = &responder.Responder{
 				Sdlr:   sdlr,
 				Client: client,
 				FatalHandler: func(err error) {
-					logrus.Fatalf("responder fatal: %v", err)
+					logrus.Errorf("responder fatal for %v: %v", client.User.Username, err)
+					if logger != logrus.StandardLogger() {
+						logger.Errorf("responder fatal: %v", err)
+					}
+					if err = sdlr.Close(); err != nil {
+						logger.Errorf("error while closing scheduler: %v", err)
+					}
+					runtime.Goexit()
 				},
-				ChannelID:       cfg.ChannelID,
+				ChannelID:       instance.ChannelID,
 				PostmemeOpts:    cfg.Compat.PostmemeOpts,
 				AllowedSearches: cfg.Compat.AllowedSearches,
 				BalanceCheck:    cfg.Features.BalanceCheck,
 				AutoBuy:         &cfg.Features.AutoBuy,
+				Logger:          logger,
 			}
 			if err := rspdr.Start(); err != nil {
-				logrus.Fatalf("error while starting responder: %v", err)
+				logrus.Errorf("error while starting responder for %v: %v", client.User.Username, err)
+				return
 			}
 			for _, cmd := range cmds {
 				sdlr.Schedule(cmd, false)
@@ -123,6 +179,20 @@ func shiftLoop(client *discord.Client) {
 			time.Sleep(dur)
 		}
 	}
+}
+
+func newInstanceLogger(username, dir string) *logrus.Logger  {
+	logger := logrus.New()
+	if cfg.Features.Debug {
+		logger.SetLevel(logrus.DebugLevel)
+	}
+	logger = logrus.New()
+	logger.SetOutput(fileLogger{
+		username: username,
+		dir:      dir,
+	})
+	logger.SetFormatter(&logrus.JSONFormatter{})
+	return logger
 }
 
 func main() {
@@ -147,12 +217,10 @@ func main() {
 	if err = cfg.Validate(); err != nil {
 		logrus.Fatalf("invalid config: %v", err)
 	}
+	if len(cfg.Instances) > 1 {
+		logrus.Infof("more than 1 instance configured, starting in swarm mode")
+	}
 
 	rand.Seed(time.Now().UnixNano())
-	client, err := discord.NewClient(cfg.Token)
-	if err != nil {
-		logrus.Fatalf("error while creating client: %v", err)
-	}
-	logrus.Infof("successful authorization as %v", client.User.Username+"#"+client.User.Discriminator)
-	shiftLoop(client)
+	startInstances(path.Dir(ex)).Wait()
 }
