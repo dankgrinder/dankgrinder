@@ -12,14 +12,15 @@ Want to join the community or need support? [Join our Discord](https://discord.g
 * Reports an average income every 2 minutes
 * Automatically buys a fishing pole, hunting rifle or laptop if they have broken
 * High configurability
-* Can run many bots in one go using swarm mode
+* Can run many instances at once
+* Uses very little system resources
 
 ## Getting started
 
 ### Installation
 1. Download the latest release for your operating system [here](https://github.com/dankgrinder/dankgrinder/releases/latest) (darwin is for macOS), or [build from source](#building-from-source). If you build from source you can delete everything besides the compiled binaries and config.yml.
 2. Extract the archive
-3. [Configure](#configuration), make sure `token` and `channel_id` fields are set, it will not run otherwise
+3. [Configure](#configuration), make sure `token` and `channel_id` fields of the instance are set, it will not run otherwise
 
 #### Windows
 4. Double click dankgrinder.exe. If the program closes immediately after opening it, open a command prompt and drag the executable to it, then hit enter. You will now be able to see the error
@@ -64,7 +65,36 @@ A working Go installation, see https://golang.org/doc/install
 The executables should then be in the `/build` folder.
 
 ## Configuration
-All configuration can be done by editing config.yml with your editor of choice (e.g. Visual Studio Code, Sublime Text, Notepad++). The comments in the file itself provide extra explanation where necessary. For the bot to run, you must at least enter an [authorization token](#getting-an-authorization-token) and a [channel id](#enabling-discords-developer-mode). If you are running into issues, you can [join our Discord](https://discord.gg/Fjzpq8YPSn).
+All configuration can be done by editing config.yml with your editor of choice (e.g. Visual Studio Code, Sublime Text, Notepad++). The comments in the file itself provide extra explanation where necessary. For the bot to run, you must at least enter an [authorization token](#getting-an-authorization-token) and a [channel id](#enabling-discords-developer-mode). If you are running into issues, you can [join our Discord](https://discord.gg/Fjzpq8YPSn). Example configuration for one instance:  
+```yaml
+instances:
+  - token: "bmljZSB0cnkgYnV0IHRoaXMgaXM.bm90IGE.cmVhbCB0b2tlbg"
+    channel_id: "791694339116892202"
+    shifts:
+      - state: "active"
+        duration:
+          base: -1
+          variance: 0
+```
+
+Add more instances to run more bots at once, for example:  
+```yaml
+instances:
+  - token: "bmljZSB0cnkgYnV0IHRoaXMgaXM.bm90IGE.cmVhbCB0b2tlbg"
+    channel_id: "791694339116892202"
+    shifts:
+      - state: "active"
+        duration:
+          base: -1
+          variance: 0
+  - token: "b2YgY291cnNlIHRoaXM.aXNuJ3QgYQ.cmVhbCB0b2tlbiBlaXRoZXIsIHNpbGx5"
+       channel_id: "791694383098495047"
+       shifts:
+          - state: "active"
+            duration:
+               base: -1
+               variance: 0
+```
 
 ## Disclaimer
 This is a self-bot. Such bots are against Discord's terms of service. Automation of Dank Memer commands also breaks Dank Memer's rules. By using this software you acknowledge that we take no responsibility whatsoever for any action taken against your account, whether by Discord or Dank Memer, for not abiding by their respective rules.
