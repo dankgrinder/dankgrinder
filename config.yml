@@ -28,7 +28,8 @@
 #
 # You should configure at least 1 instance. An instance requires a token, a
 # channel id and at least 1 shift. You may configure multiple instances to run
-# more than 1 bot at a time.
+# more than 1 bot at a time. Some extra instructions are provided at
+# https://github.com/dankgrinder/dankgrinder#configuration
 #
 #   instances:
 #     - token: "tokenplaceholder"
