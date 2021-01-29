@@ -57,12 +57,20 @@ features:
     fishing_pole: true
     hunting_rifle: true
     laptop: true
+  auto_sell:
+    - "boar"
+    - "dragon"
+    - "duck"
+    - "fish"
+    - "deer"
+    - "rabbit"
+    - "skunk"
   balance_check: true
   log_to_file: true
   debug: false
 
 compatibility:
-  postmeme_options:
+  postmeme:
     - "f"
     - "r"
     - "i"
@@ -96,14 +104,7 @@ compatibility:
     # This value in seconds in added to each cooldown to accommodate timing errors.
     margin: 3
 
-  auto_sell:
-    - "boar"
-    - "dragon"
-    - "duck"
-    - "fish"
-    - "deer"
-    - "rabbit"
-    - "skunk"
+  await_response_timeout: 3
 
 suspicion_avoidance:
   typing:

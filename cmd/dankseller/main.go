@@ -53,8 +53,8 @@ func main() {
 	}
 
 	wg := &sync.WaitGroup{}
-	wg.Add(len(cfg.Instances))
-	for _, instance := range cfg.Instances {
+	wg.Add(len(cfg.InstancesOpts))
+	for _, instance := range cfg.InstancesOpts {
 		instance := instance
 		go func() {
 			defer wg.Done()
@@ -67,22 +67,16 @@ func main() {
 
 			for i := 0; i < amount; i++ {
 				logrus.Infof("sending command: pls use candy")
-				if err = client.SendMessage("pls use candy", discord.SendMessageOpts{
-					ChannelID: instance.ChannelID,
-					Typing:    time.Second * 1,
-				}); err != nil {
+				if err = client.SendMessage("pls use candy", instance.ChannelID, time.Second*2); err != nil {
 					logrus.Errorf("%v", err)
 				}
 				time.Sleep(time.Second * 3)
 			}
 
-			for _, cmd := range cfg.Compat.AutoSell {
+			for _, cmd := range cfg.Features.AutoSell {
 				cmd = fmt.Sprintf("pls sell %v max", cmd)
 				logrus.Infof("sending command: %v", cmd)
-				if err = client.SendMessage(cmd, discord.SendMessageOpts{
-					ChannelID: instance.ChannelID,
-					Typing:    time.Second * 2,
-				}); err != nil {
+				if err = client.SendMessage(cmd, instance.ChannelID, time.Second*3); err != nil {
 					logrus.Errorf("%v", err)
 				}
 				time.Sleep(time.Second * 1)

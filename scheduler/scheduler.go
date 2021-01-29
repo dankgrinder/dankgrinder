@@ -18,21 +18,24 @@ import (
 )
 
 type Scheduler struct {
-	Client       *discord.Client
-	Logger       *logrus.Logger
-	ChannelID    string
-	Typing       *config.Typing
-	MessageDelay *config.MessageDelay
+	Client             *discord.Client
+	Logger             *logrus.Logger
+	ChannelID          string
+	Typing             *config.Typing
+	MessageDelay       *config.MessageDelay
+	AwaitResumeTimeout time.Duration
+	FatalHandler       func(err error)
 
-	priorityQueue *queue
 	queue         *queue
-	close         chan bool
-	closed bool
-	abort         chan bool
+	priorityQueue *queue
+	close         chan struct{}
+	closed        bool
+	resume        chan *Command
+	awaitResume   bool
 }
 
 type Command struct {
-	Run string
+	Value string
 
 	// If not an empty string, this is what will be displayed by logrus when.
 	// sending the command. The format will be "%v: %v", log, content.
@@ -41,6 +44,10 @@ type Command struct {
 	// The interval at which the command should be rescheduled. Set to 0 to
 	// disable.
 	Interval time.Duration
+
+	// If AwaitResume is true, the scheduler will wait for a resume call before
+	// executing the next command.
+	AwaitResume bool
 }
 
 func (s *Scheduler) Start() error {
@@ -53,67 +60,96 @@ func (s *Scheduler) Start() error {
 	if s.Logger == nil {
 		s.Logger = logrus.StandardLogger()
 	}
+	if s.AwaitResumeTimeout == 0 {
+		s.AwaitResumeTimeout = math.MaxInt64
+	}
+	if s.FatalHandler == nil {
+		s.FatalHandler = func(err error) {}
+	}
 
 	s.queue, s.priorityQueue = newQueue(), newQueue()
-	s.close, s.abort = make(chan bool), make(chan bool, 1)
-
-	s.priorityQueue.onEnqueue = func() {
-		// Since the abort channel is buffered anyway, we do not want to remain
-		// dormant attempting to send on abort. A scenario might also occur
-		// where many aborts are sent around the same time, because of a busy
-		// priority channel. This approach also prevent that.
-		select {
-		case s.abort <- true:
-		default:
-		}
-	}
+	s.close, s.resume = make(chan struct{}), make(chan *Command)
 
 	go func() {
 		for {
-			// Clear the abort channel. Otherwise a scenario might occur
-			// where an abort is sent during the execution of a priority
-			// command and the next regular command is canceled due to that
-			// abort, even though the priority command was already executed.
-			select {
-			case <-s.abort:
-			case <-s.close:
-				return
-			default:
+			if s.awaitResume {
+				select {
+				case cmd := <-s.resume:
+					s.awaitResume = false
+					if cmd != nil {
+						s.send(cmd)
+						continue
+					}
+				case <-time.After(s.AwaitResumeTimeout):
+					s.awaitResume = false
+				case <-s.close:
+					return
+				}
 			}
 			if s.priorityQueue.queued.Len() > 0 {
 				cmd := <-s.priorityQueue.dequeue
-				s.send(cmd, nil)
+				s.send(cmd)
 				continue
 			}
-			var cmd *Command
 			select {
 			case <-s.close:
 				return
-			case cmd = <-s.priorityQueue.dequeue:
-				s.send(cmd, nil)
-			case cmd = <-s.queue.dequeue:
-				s.send(cmd, s.abort)
+			case cmd := <-s.priorityQueue.dequeue:
+				s.send(cmd)
+			case cmd := <-s.queue.dequeue:
+				s.send(cmd)
 			}
+
 		}
 	}()
 	return nil
 }
 
-func (s *Scheduler) Schedule(cmd *Command, priority bool) {
+func (s *Scheduler) Schedule(cmd *Command) {
 	if s.closed {
-		return
-	}
-	if priority {
-		s.priorityQueue.enqueue <- cmd
 		return
 	}
 	s.queue.enqueue <- cmd
 }
 
+func (s *Scheduler) PrioritySchedule(cmd *Command) {
+	if s.closed {
+		return
+	}
+	s.priorityQueue.enqueue <- cmd
+}
+
+// Resume makes a scheduler continue after being paused by a command with
+// an AwaitResume value of true. Will block until scheduler has received the
+// resume call.
+func (s *Scheduler) Resume() error {
+	if s.closed {
+		return nil
+	}
+	if !s.awaitResume {
+		return fmt.Errorf("scheduler is not awaiting a resume")
+	}
+	s.resume <- nil
+	return nil
+}
+
+// ResumeWithCommand is the same as Resume but executes the passed command
+// immediately after resuming. Additionally, if the scheduler is not awaiting a
+// resume, it will schedule the command in the priority queue instead.
+func (s *Scheduler) ResumeWithCommand(cmd *Command) {
+	if s.closed {
+		return
+	}
+	if !s.awaitResume {
+		s.PrioritySchedule(cmd)
+	}
+	s.resume <- cmd
+}
+
 // Close closes the scheduler.
 func (s *Scheduler) Close() error {
 	s.closed = true
-	s.close <- true
+	s.close <- struct{}{}
 	close(s.close)
 	if err := s.queue.Close(); err != nil {
 		return err
@@ -121,14 +157,13 @@ func (s *Scheduler) Close() error {
 	if err := s.priorityQueue.Close(); err != nil {
 		return err
 	}
-	close(s.abort)
-	<-s.abort
+	close(s.resume)
 	return nil
 }
 
-func (s *Scheduler) send(cmd *Command, abort chan bool) {
+func (s *Scheduler) send(cmd *Command) {
 	d := delay(s.MessageDelay)
-	tt := typing(cmd.Run, s.Typing)
+	tt := typing(cmd.Value, s.Typing)
 	info := "sending command"
 	if cmd.Log != "" {
 		info = cmd.Log
@@ -136,30 +171,29 @@ func (s *Scheduler) send(cmd *Command, abort chan bool) {
 	s.Logger.WithFields(map[string]interface{}{
 		"delay":  d.String(),
 		"typing": tt.String(),
-	}).Infof("%v: %v", info, cmd.Run)
+	}).Infof("%v: %v", info, cmd.Value)
 
-	select {
-	case <-abort:
-		s.Logger.Infof("honoring abort of command: %v", cmd.Run)
-		s.Schedule(cmd, false)
-		return
-	case <-time.After(d):
-	}
-	if err := s.Client.SendMessage(cmd.Run, discord.SendMessageOpts{
-		ChannelID: s.ChannelID,
-		Typing:    tt,
-		Abort:     abort,
-	}); err == discord.ErrAborted {
-		s.Logger.Infof("honoring abort of command: %v", cmd.Run)
-		s.Schedule(cmd, false)
+	if err := s.Client.SendMessage(cmd.Value, s.ChannelID, tt); err == discord.ErrForbidden || err == discord.ErrInvalidAuthorization {
+		s.FatalHandler(err)
+		// Ran in a goroutine because otherwise the scheduler's goroutine would
+		// be attempting to send a message to itself via its close channel which
+		// just causes a permanently dormant goroutine.
+		go s.Close()
+
+		// Set to true to make sure the scheduler doesn't loop back around so
+		// fast that it hasn't been closed yet by the goroutine created previously.
+		s.awaitResume = true
 		return
 	} else if err != nil {
 		s.Logger.Errorf("%v", err)
 	}
 	if cmd.Interval > 0 {
 		time.AfterFunc(cmd.Interval, func() {
-			s.Schedule(cmd, false)
+			s.Schedule(cmd)
 		})
+	}
+	if cmd.AwaitResume {
+		s.awaitResume = true
 	}
 }
 

@@ -60,15 +60,12 @@ func (r *Responder) Start() error {
 		r.FatalHandler = func(err error) {}
 	}
 
-	ws, err := r.Client.NewWSConn(discord.WSConnOpts{
-		MessageRouter: r.router(),
-		ErrHandler:    r.wsErrHandler,
-		FatalHandler:  r.wsFatalHandler,
-	})
+	ws, err := r.Client.NewWSConn(r.router(), r.wsFatalHandler)
 	if err != nil {
 		return fmt.Errorf("error while starting websocket connection: %v", err)
 	}
 	r.ws = ws
+	r.Logger.Infof("websocket ready")
 	return nil
 }
 
@@ -79,24 +76,15 @@ func (r *Responder) Close() error {
 	return nil
 }
 
-func (r *Responder) wsErrHandler(err error) {
-	r.Logger.Errorf("websocket error: %v", err)
-}
-
-func (r *Responder) wsFatalHandler(cerr *websocket.CloseError) {
-	if cerr.Code == 4004 {
+func (r *Responder) wsFatalHandler(err error) {
+	if closeErr, ok := err.(*websocket.CloseError); ok && closeErr.Code == 4004 {
 		r.FatalHandler(fmt.Errorf("websocket closed: authentication failed, try using a new token"))
 		r.Close()
 		return
 	}
-	r.Logger.Errorf("websocket closed: %v", cerr)
+	r.Logger.Errorf("websocket closed: %v", err)
 
-	var err error
-	r.ws, err = r.Client.NewWSConn(discord.WSConnOpts{
-		MessageRouter: r.router(),
-		ErrHandler:    r.wsErrHandler,
-		FatalHandler:  r.wsFatalHandler,
-	})
+	r.ws, err = r.Client.NewWSConn(r.router(), r.wsFatalHandler)
 	if err != nil {
 		r.FatalHandler(fmt.Errorf("error while connecting to websocket: %v", err))
 		r.Close()

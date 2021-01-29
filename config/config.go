@@ -20,23 +20,23 @@ const (
 )
 
 type Config struct {
-	Instances []Instance `yaml:"instances"`
+	InstancesOpts      []InstanceOpts     `yaml:"instances"`
 	Features           Features           `yaml:"features"`
 	Compat             Compat             `yaml:"compatibility"`
 	SuspicionAvoidance SuspicionAvoidance `yaml:"suspicion_avoidance"`
 }
 
-type Instance struct {
+type InstanceOpts struct {
 	Token     string  `yaml:"token"`
 	ChannelID string  `yaml:"channel_id"`
 	Shifts    []Shift `yaml:"shifts"`
 }
 
 type Compat struct {
-	PostmemeOpts    []string `yaml:"postmeme_options"`
+	PostmemeOpts    []string `yaml:"postmeme"`
 	AllowedSearches []string `yaml:"allowed_searches"`
 	Cooldown        Cooldown `yaml:"cooldown"`
-	AutoSell        []string `yaml:"auto_sell"`
+	AwaitResponseTimeout int `yaml:"await_response_timeout"`
 }
 
 type Cooldown struct {
@@ -52,6 +52,7 @@ type Cooldown struct {
 type Features struct {
 	Commands     Commands `yaml:"commands"`
 	AutoBuy      AutoBuy  `yaml:"auto_buy"`
+	AutoSell        []string `yaml:"auto_sell"`
 	BalanceCheck bool     `yaml:"balance_check"`
 	LogToFile    bool     `yaml:"log_to_file"`
 	Debug        bool     `yaml:"debug"`
@@ -114,7 +115,7 @@ func Load(dir string) (Config, error) {
 }
 
 func (c Config) Validate() error {
-	if len(c.Instances) == 0 {
+	if len(c.InstancesOpts) == 0 {
 		return fmt.Errorf("instances: no instances, at least 1 is required")
 	}
 	if len(c.Compat.PostmemeOpts) == 0 {
@@ -144,8 +145,11 @@ func (c Config) Validate() error {
 	if c.Compat.Cooldown.Margin < 0 {
 		return fmt.Errorf("compatibility.cooldown.margin: value must be greater than or equal to 0")
 	}
+	if c.Compat.AwaitResponseTimeout < 0 {
+		return fmt.Errorf("compatibility.await_response_timeout: value must be greater than 0")
+	}
 
-	for i, instance := range c.Instances {
+	for i, instance := range c.InstancesOpts {
 		if instance.Token == "" {
 			return fmt.Errorf("instances[%v]: no token", i)
 		}

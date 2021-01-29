@@ -19,7 +19,7 @@ type queue struct {
 	// is enqueued.
 	onEnqueue func()
 	queued    *list.List
-	close     chan bool
+	close     chan struct{}
 }
 
 func newQueue() *queue {
@@ -28,7 +28,7 @@ func newQueue() *queue {
 		dequeue:   make(chan *Command),
 		queued:    list.New(),
 		onEnqueue: func() {},
-		close: make(chan bool),
+		close: make(chan struct{}),
 	}
 	go func() {
 		for {
@@ -57,7 +57,7 @@ func newQueue() *queue {
 }
 
 func (q *queue) Close() error {
-	q.close <- true
+	q.close <- struct{}{}
 	close(q.close)
 
 	// Make sure that all goroutines currently sending on q.enqueue don't panic

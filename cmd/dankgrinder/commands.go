@@ -16,26 +16,43 @@ import (
 // executed periodically. It contains all commands as configured.
 func commands() (cmds []*scheduler.Command) {
 	cmds = []*scheduler.Command{
-		{Run: "pls beg", Interval: sec(cfg.Compat.Cooldown.Beg + cfg.Compat.Cooldown.Margin)},
-		{Run: "pls pm", Interval: sec(cfg.Compat.Cooldown.Postmeme + cfg.Compat.Cooldown.Margin)},
-		{Run: "pls search", Interval: sec(cfg.Compat.Cooldown.Search + cfg.Compat.Cooldown.Margin)},
-		{Run: "pls hl", Interval: sec(cfg.Compat.Cooldown.Highlow + cfg.Compat.Cooldown.Margin)},
+		{
+			Value: "pls beg",
+			Interval: sec(cfg.Compat.Cooldown.Beg + cfg.Compat.Cooldown.Margin),
+		},
+		{
+			Value: "pls pm",
+			Interval: sec(cfg.Compat.Cooldown.Postmeme + cfg.Compat.Cooldown.Margin),
+			AwaitResume: true,
+		},
+		{
+			Value: "pls search",
+			Interval: sec(cfg.Compat.Cooldown.Search + cfg.Compat.Cooldown.Margin),
+			AwaitResume: true,
+		},
+		{
+			Value: "pls hl",
+			Interval: sec(cfg.Compat.Cooldown.Highlow + cfg.Compat.Cooldown.Margin),
+			AwaitResume: true,
+		},
 	}
 	if cfg.Features.Commands.Fish {
 		cmds = append(cmds, &scheduler.Command{
-			Run:      "pls fish",
+			Value:    "pls fish",
 			Interval: sec(cfg.Compat.Cooldown.Fish + cfg.Compat.Cooldown.Margin),
+			AwaitResume: true,
 		})
 	}
 	if cfg.Features.Commands.Hunt {
 		cmds = append(cmds, &scheduler.Command{
-			Run:      "pls hunt",
+			Value:    "pls hunt",
 			Interval: sec(cfg.Compat.Cooldown.Hunt + cfg.Compat.Cooldown.Margin),
+			AwaitResume: true,
 		})
 	}
 	if cfg.Features.BalanceCheck {
 		cmds = append(cmds, &scheduler.Command{
-			Run:      "pls bal",
+			Value:    "pls bal",
 			Interval: time.Minute * 2,
 		})
 	}

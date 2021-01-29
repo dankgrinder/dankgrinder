@@ -15,23 +15,13 @@ import (
 )
 
 var (
-	ErrAborted              = fmt.Errorf("request for abortion of execution fulfilled")
-	ErrInvalidAuthorization = fmt.Errorf("invalid authorization")
+	ErrInvalidAuthorization = fmt.Errorf("invalid authorization, try using a new token")
+	ErrForbidden            = fmt.Errorf("forbidden, your ip address may have been blocked or your account might need verification")
 )
 
 type Client struct {
 	Token string
 	User  User
-}
-
-type SendMessageOpts struct {
-	ChannelID string
-	Typing    time.Duration
-
-	// If a bool is sent on this channel before the http request is sent (i.e.
-	// when it is still typing or just after typing) execution will be aborted
-	// and an ErrAborted will be returned.
-	Abort chan bool
 }
 
 func NewClient(token string) (*Client, error) {
@@ -44,36 +34,32 @@ func NewClient(token string) (*Client, error) {
 	return c, nil
 }
 
-func (client Client) SendMessage(content string, opts SendMessageOpts) error {
+func (client Client) SendMessage(content, channelID string, typing time.Duration) error {
 	if client.Token == "" {
 		return fmt.Errorf("invalid authorization")
 	}
-	if opts.ChannelID == "" {
+	if channelID == "" {
 		return fmt.Errorf("no channel id provided")
 	}
 	if content == "" {
 		return fmt.Errorf("no content provided")
 	}
 
-	if opts.Typing != 0 {
-		iterations := int(opts.Typing)/int(time.Second*10) + 1
+	if typing != 0 {
+		iterations := int(typing)/int(time.Second*10) + 1
 		for i := 0; i < iterations; i++ {
-			if err := client.typing(opts.ChannelID); err != nil {
+			if err := client.typing(channelID); err != nil {
 				return err
 			}
-			a := time.After(time.Second * 10)
+			s := time.Second * 10
 			if i == iterations-1 { // If this is the last iteration.
-				a = time.After(opts.Typing % (time.Second * 10))
+				s = typing % (time.Second * 10)
 			}
-			select {
-			case <-opts.Abort:
-				return ErrAborted
-			case <-a:
-			}
+			time.Sleep(s)
 		}
 	}
 
-	reqURL := fmt.Sprintf("https://discord.com/api/v8/channels/%v/messages", opts.ChannelID)
+	reqURL := fmt.Sprintf("https://discord.com/api/v8/channels/%v/messages", channelID)
 
 	body, err := json.Marshal(&map[string]interface{}{
 		"content": content,
@@ -92,12 +78,6 @@ func (client Client) SendMessage(content string, opts SendMessageOpts) error {
 	req.Header.Add("Accept-Language", "en-GB")
 	req.Header.Add("Content-Type", "application/json")
 
-	select {
-	case <-opts.Abort:
-		return ErrAborted
-	default:
-	}
-
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error while sending http request: %v", err)
@@ -105,6 +85,9 @@ func (client Client) SendMessage(content string, opts SendMessageOpts) error {
 
 	if res.StatusCode == http.StatusUnauthorized {
 		return ErrInvalidAuthorization
+	}
+	if res.StatusCode == http.StatusForbidden {
+		return ErrForbidden
 	}
 	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status code while sending message: %v", res.StatusCode)
@@ -128,6 +111,12 @@ func (client Client) CurrentUser() (User, error) {
 		return User{}, fmt.Errorf("error while sending http request: %v", err)
 	}
 
+	if res.StatusCode == http.StatusUnauthorized {
+		return User{}, ErrInvalidAuthorization
+	}
+	if res.StatusCode == http.StatusForbidden {
+		return User{}, ErrForbidden
+	}
 	if res.StatusCode != http.StatusOK {
 		return User{}, fmt.Errorf("unexpected status code while sending message: %v", res.StatusCode)
 	}
@@ -154,6 +143,12 @@ func (client Client) typing(channelID string) error {
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error while sending http request: %v", err)
+	}
+	if res.StatusCode == http.StatusUnauthorized {
+		return ErrInvalidAuthorization
+	}
+	if res.StatusCode == http.StatusForbidden {
+		return ErrForbidden
 	}
 	if res.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("unexpected response code while sending typing message: %v", res.StatusCode)
