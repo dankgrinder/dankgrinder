@@ -16,33 +16,25 @@ import (
 
 const gatewayURL = "wss://gateway.discord.gg/?encoding=json&v=8"
 
-const (
-	wsStateListening = 1 << iota
-	wsStatePinging
-	wsStateActive
-)
-
 type WSConn struct {
 	underlying *websocket.Conn
 	sessionID  string
-	msgRouter  *MessageRouter
-	errHandler func(err error)
+	rtr        *MessageRouter
 
 	// fatalHandler is used for when a fatal error occurs, not when
 	// WSConn.Close() is called.
-	fatalHandler func(err *websocket.CloseError)
+	fatalHandler func(err error)
 	client       Client
 	seq          int
-	state        uint8
+	closePinger  chan struct{}
 }
 
 type WSConnOpts struct {
 	MessageRouter *MessageRouter
-	ErrHandler    func(err error)
 	FatalHandler  func(err *websocket.CloseError)
 }
 
-func (client Client) NewWSConn(opts WSConnOpts) (*WSConn, error) {
+func (client Client) NewWSConn(rtr *MessageRouter, fatalHandler func(err error)) (*WSConn, error) {
 	conn, _, err := websocket.DefaultDialer.Dial(gatewayURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error while establishing websocket connection: %v", err)
@@ -50,19 +42,18 @@ func (client Client) NewWSConn(opts WSConnOpts) (*WSConn, error) {
 
 	c := WSConn{
 		underlying:   conn,
-		msgRouter:    opts.MessageRouter,
-		errHandler:   opts.ErrHandler,
-		fatalHandler: opts.FatalHandler,
+		rtr:          rtr,
+		fatalHandler: fatalHandler,
 		client:       client,
+		closePinger:  make(chan struct{}),
 	}
 
 	// Receive hello message
 	interval, err := c.readHello()
 	if err != nil {
+		c.underlying.Close()
 		return nil, err
 	}
-
-	c.state |= wsStateActive
 
 	// Authenticate
 	err = c.underlying.WriteJSON(&Event{
@@ -95,43 +86,41 @@ func (client Client) NewWSConn(opts WSConnOpts) (*WSConn, error) {
 			},
 		}})
 	if err != nil {
+		c.underlying.Close()
 		return nil, fmt.Errorf("error while sending authentication message: %v", err)
 	}
 
-	go c.pinger(interval)
+	if err = c.awaitEvent(EventNameReady); err != nil {
+		c.underlying.Close()
+		return nil, fmt.Errorf("error while awaiting ready message: %v", err)
+	}
+
+	go c.ping(interval)
 	go c.listen()
 	return &c, nil
 }
+
+func n() {}
 
 // listen handles incoming websocket messages. This function will not return
 // and should therefore be run as a goroutine. Panics if called while WSConn
 // instance is already listening.
 func (c *WSConn) listen() {
-	if c.state&wsStateListening == wsStateListening {
-		panic("listen called but WSConn is already listening")
-	}
-	c.state |= wsStateListening
-
-	for c.state&wsStateActive == wsStateActive {
+	for {
 		_, b, err := c.underlying.ReadMessage()
 
-		if closeErr, ok := err.(*websocket.CloseError); ok {
-			c.forceClose()
-			if closeErr.Code == websocket.CloseGoingAway {
-				if err := c.resume(); err != nil {
-					// Close can be called twice here because the resume function
-					// creates a new connection.
-					c.forceClose()
-					c.fatalHandler(closeErr)
-				}
-				break
+		if closeErr, ok := err.(*websocket.CloseError); ok && closeErr.Code == websocket.CloseGoingAway {
+			c.closePinger <- struct{}{}
+			c.underlying.Close()
+			if err = c.resume(); err != nil {
+				c.fatalHandler(err)
 			}
-			c.fatalHandler(closeErr)
 			break
-		}
-		if err != nil {
-			c.errHandler(fmt.Errorf("error while reading incoming websocket message: %v", err))
-			continue
+		} else if err != nil {
+			c.closePinger <- struct{}{}
+			c.underlying.Close()
+			c.fatalHandler(err)
+			break
 		}
 
 		var body Event
@@ -149,35 +138,32 @@ func (c *WSConn) listen() {
 			}
 			if body.EventName == EventNameMessageCreate ||
 				body.EventName == EventNameMessageUpdate {
-				go c.msgRouter.process(body.Data.Message, body.EventName)
+				go c.rtr.process(body.Data.Message, body.EventName)
 			}
 		case OpcodeInvalidSession:
 			c.Close()
-			c.fatalHandler(&websocket.CloseError{Text: "session invalidated"})
+			c.fatalHandler(fmt.Errorf("session invalidated"))
 			break
 		}
 	}
 }
 
-// pinger periodically sends a heartbeat websocket message. This function will
+// ping periodically sends a heartbeat websocket message. This function will
 // not return and should therefore be run as a goroutine. Panics if called
 // while WSConn instance is already pinging.
-func (c *WSConn) pinger(interval time.Duration) {
-	if c.state&wsStatePinging == wsStatePinging {
-		panic("pinger called but WSConn is already pinging")
-	}
-	c.state |= wsStatePinging
+func (c *WSConn) ping(interval time.Duration) {
 	go func() {
 		t := time.NewTicker(interval)
 		defer t.Stop()
-		for c.state&wsStateActive == wsStateActive {
-			err := c.underlying.WriteJSON(&Event{
+		for {
+			select {
+			case <-c.closePinger:
+				return
+			case <-t.C:
+			}
+			_ = c.underlying.WriteJSON(&Event{
 				Op: OpcodeHeartbeat,
 			})
-			if err != nil {
-				c.errHandler(fmt.Errorf("error while sending ping: %v", err))
-			}
-			<-t.C
 		}
 	}()
 }
@@ -205,6 +191,25 @@ func (c *WSConn) readHello() (time.Duration, error) {
 	return time.Millisecond * time.Duration(body.Data.HeartbeatInterval), nil
 }
 
+// awaitEvent will block until the gateway sends a message with the passed event.
+// An error is returned if the next message received from the server is not of
+// the correct event name.
+func (c *WSConn) awaitEvent(e string) error {
+	_, b, err := c.underlying.ReadMessage()
+	if err != nil {
+		return fmt.Errorf("error while reading message from websocket: %v", err)
+	}
+
+	var body Event
+	if err = json.Unmarshal(b, &body); err != nil {
+		return fmt.Errorf("error while unmarshalling incoming websocket message: %v", err)
+	}
+	if body.EventName != e {
+		return fmt.Errorf("unexpected event name for received websocket message: %v, expected %v", body.EventName, e)
+	}
+	return nil
+}
+
 func (c *WSConn) resume() error {
 	conn, _, err := websocket.DefaultDialer.Dial(gatewayURL, nil)
 	if err != nil {
@@ -213,8 +218,7 @@ func (c *WSConn) resume() error {
 
 	*c = WSConn{
 		underlying:   conn,
-		msgRouter:    c.msgRouter,
-		errHandler:   c.errHandler,
+		rtr:          c.rtr,
 		fatalHandler: c.fatalHandler,
 		client:       c.client,
 		seq:          c.seq,
@@ -222,10 +226,9 @@ func (c *WSConn) resume() error {
 
 	interval, err := c.readHello()
 	if err != nil {
+		c.underlying.Close()
 		return err
 	}
-
-	c.state |= wsStateActive
 
 	// Authenticate with old session.
 	err = c.underlying.WriteJSON(&Event{
@@ -239,31 +242,30 @@ func (c *WSConn) resume() error {
 		},
 	})
 	if err != nil {
+		c.underlying.Close()
 		return fmt.Errorf("error while sending resume message: %v", err)
 	}
 
-	go c.pinger(interval)
+	if err = c.awaitEvent(EventNameResumed); err != nil {
+		c.underlying.Close()
+		return fmt.Errorf("error while awaiting ready message: %v", err)
+	}
+
+	go c.ping(interval)
 	go c.listen()
 	return nil
 }
 
 func (c *WSConn) Close() error {
-	if c.state&wsStateActive == 0 {
-		return fmt.Errorf("already closed")
-	}
-	c.state = 0
+	c.fatalHandler = func(err error) {}
+	c.closePinger <- struct{}{}
 	err := c.underlying.WriteControl(
-		websocket.CloseGoingAway,
-		websocket.FormatCloseMessage(websocket.CloseGoingAway, ""),
+		websocket.CloseMessage,
+		websocket.FormatCloseMessage(websocket.CloseGoingAway, "going away"),
 		time.Now().Add(time.Second*10),
 	)
 	if err != nil {
-		return fmt.Errorf("error while writing close message: %v", err)
+		c.underlying.Close()
 	}
-	return c.underlying.Close()
-}
-
-func (c *WSConn) forceClose() {
-	c.state = 0
-	c.underlying.Close()
+	return nil
 }

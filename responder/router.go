@@ -34,26 +34,26 @@ var numFmt = message.NewPrinter(language.English)
 
 func (r *Responder) fh(msg discord.Message) {
 	res := exp.fh.FindStringSubmatch(msg.Content)[2]
-	r.Sdlr.Schedule(&scheduler.Command{
-		Run: clean(res),
-		Log: "responding to fishing or hunting event",
-	}, true)
+	r.Sdlr.ResumeWithCommand(&scheduler.Command{
+		Value: clean(res),
+		Log:   "responding to fishing or hunting event",
+	})
 }
 
 func (r *Responder) pm(_ discord.Message) {
 	res := r.PostmemeOpts[rand.Intn(len(r.PostmemeOpts))]
-	r.Sdlr.Schedule(&scheduler.Command{
-		Run: res,
-		Log: "responding to postmeme",
-	}, true)
+	r.Sdlr.ResumeWithCommand(&scheduler.Command{
+		Value: res,
+		Log:   "responding to postmeme",
+	})
 }
 
 func (r *Responder) event(msg discord.Message) {
 	res := exp.event.FindStringSubmatch(msg.Content)[2]
-	r.Sdlr.Schedule(&scheduler.Command{
-		Run: clean(res),
-		Log: "responding to global event",
-	}, true)
+	r.Sdlr.PrioritySchedule(&scheduler.Command{
+		Value: clean(res),
+		Log:   "responding to global event",
+	})
 }
 
 func (r *Responder) search(msg discord.Message) {
@@ -61,16 +61,16 @@ func (r *Responder) search(msg discord.Message) {
 	for _, choice := range choices {
 		for _, allowed := range r.AllowedSearches {
 			if choice == allowed {
-				r.Sdlr.Schedule(&scheduler.Command{
-					Run: choice,
-					Log: "responding to search",
-				}, true)
+				r.Sdlr.ResumeWithCommand(&scheduler.Command{
+					Value: choice,
+					Log:   "responding to search",
+				})
 				return
 			}
 		}
 	}
-	r.Sdlr.Schedule(&scheduler.Command{
-		Run: []string{
+	r.Sdlr.ResumeWithCommand(&scheduler.Command{
+		Value: []string{
 			"trash options",
 			"tf is this",
 			"f off",
@@ -79,7 +79,7 @@ func (r *Responder) search(msg discord.Message) {
 			"i dont wanna die",
 		}[rand.Intn(6)], // Update this number to be the length of the slice!
 		Log: "no allowed search options provided, responding",
-	}, true)
+	})
 }
 
 func (r *Responder) hl(msg discord.Message) {
@@ -96,10 +96,10 @@ func (r *Responder) hl(msg discord.Message) {
 	if n > 50 {
 		res = "low"
 	}
-	r.Sdlr.Schedule(&scheduler.Command{
-		Run: res,
-		Log: "responding to highlow",
-	}, true)
+	r.Sdlr.ResumeWithCommand(&scheduler.Command{
+		Value: res,
+		Log:   "responding to highlow",
+	})
 }
 
 func (r *Responder) balCheck(msg discord.Message) {
@@ -137,30 +137,30 @@ func (r *Responder) abLaptop(_ discord.Message) {
 	if !r.AutoBuy.Laptop {
 		return
 	}
-	r.Sdlr.Schedule(&scheduler.Command{
-		Run: "pls buy laptop",
-		Log: "no laptop, buying a new one",
-	}, true)
+	r.Sdlr.PrioritySchedule(&scheduler.Command{
+		Value: "pls buy laptop",
+		Log:   "no laptop, buying a new one",
+	})
 }
 
 func (r *Responder) abHuntingRifle(_ discord.Message) {
 	if !r.AutoBuy.HuntingRifle {
 		return
 	}
-	r.Sdlr.Schedule(&scheduler.Command{
-		Run: "pls buy rifle",
-		Log: "no hunting rifle, buying a new one",
-	}, true)
+	r.Sdlr.PrioritySchedule(&scheduler.Command{
+		Value: "pls buy rifle",
+		Log:   "no hunting rifle, buying a new one",
+	})
 }
 
 func (r *Responder) abFishingPole(_ discord.Message) {
 	if !r.AutoBuy.FishingPole {
 		return
 	}
-	r.Sdlr.Schedule(&scheduler.Command{
-		Run: "pls buy fishing pole",
-		Log: "no fishing pole, buying a new one",
-	}, true)
+	r.Sdlr.PrioritySchedule(&scheduler.Command{
+		Value: "pls buy fishing pole",
+		Log:   "no fishing pole, buying a new one",
+	})
 }
 
 // clean removes all characters except for ASCII characters [32, 126] (basically
@@ -247,5 +247,6 @@ func (r *Responder) router() *discord.MessageRouter {
 		ContentContains("You don't have a hunting rifle").
 		Mentions(r.Client.User.ID).
 		Handler(r.abHuntingRifle)
+
 	return rtr
 }

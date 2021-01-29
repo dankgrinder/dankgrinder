@@ -7,65 +7,33 @@
 package main
 
 import (
-	"fmt"
+	"github.com/shiena/ansicolor"
 	"math/rand"
 	"os"
 	"path"
+	"path/filepath"
+	"sync"
 	"time"
-
-	"github.com/dankgrinder/dankgrinder/responder"
 
 	"github.com/dankgrinder/dankgrinder/config"
 	"github.com/dankgrinder/dankgrinder/discord"
-	"github.com/dankgrinder/dankgrinder/scheduler"
-	"github.com/shiena/ansicolor"
 	"github.com/sirupsen/logrus"
 )
 
 var cfg config.Config
-
-type logFileHook struct {
-	dir string
-}
-
-func (lfh logFileHook) Levels() []logrus.Level {
-	return []logrus.Level{
-		logrus.DebugLevel,
-		logrus.InfoLevel,
-		logrus.WarnLevel,
-		logrus.ErrorLevel,
-		logrus.FatalLevel,
-		logrus.PanicLevel,
-	}
-}
-
-func (lfh logFileHook) Fire(e *logrus.Entry) error {
-	date := time.Now().Format("02-01-2006")
-	name := fmt.Sprintf("dankgrinder-%v.log", date)
-	f, err := os.OpenFile(path.Join(lfh.dir, name), os.O_CREATE|os.O_RDWR|os.O_APPEND, 0755)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	b, err := (&logrus.JSONFormatter{}).Format(e)
-	if err != nil {
-		return err
-	}
-	_, err = f.Write(b)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+var ins []*instance
+var ex string
 
 func main() {
 	logrus.SetFormatter(&logrus.TextFormatter{ForceColors: true})
 	logrus.SetOutput(ansicolor.NewAnsiColorWriter(os.Stdout))
 
-	ex, err := os.Executable()
+	var err error
+	ex, err = os.Executable()
 	if err != nil {
 		logrus.Fatalf("could not find executable path: %v", err)
 	}
+	ex = filepath.ToSlash(ex)
 	cfg, err = config.Load(path.Dir(ex))
 	if err != nil {
 		logrus.Fatalf("could not load config: %v", err)
@@ -79,69 +47,36 @@ func main() {
 	if err = cfg.Validate(); err != nil {
 		logrus.Fatalf("invalid config: %v", err)
 	}
+	if cfg.Compat.AwaitResponseTimeout < 3 {
+		logrus.Warnf("await response timeout is less than 3, this might cause stability issues for responses")
+	}
+	if len(cfg.InstancesOpts) > 1 {
+		logrus.Infof("more than 1 instance configured, starting in swarm mode")
+	}
 
 	rand.Seed(time.Now().UnixNano())
-	client, err := discord.NewClient(cfg.Token)
-	if err != nil {
-		logrus.Fatalf("error while creating client: %v", err)
+
+	wg := &sync.WaitGroup{}
+	for _, opts := range cfg.InstancesOpts {
+		client, err := discord.NewClient(opts.Token)
+		if err != nil {
+			logrus.Errorf("error while creating client: %v", err)
+			continue
+		}
+		logrus.Infof("successful authorization as %v", client.User.Username+"#"+client.User.Discriminator)
+		ins = append(ins, &instance{
+			client: client,
+			channelID: opts.ChannelID,
+			cmds:      commands(),
+			shifts:    opts.Shifts,
+			wg: wg,
+		})
 	}
-	logrus.Infof("successful authorization as %v", client.User.Username+"#"+client.User.Discriminator)
 
-	cmds := commands()
-	var lastState string
-	var rspdr *responder.Responder
-	var sdlr *scheduler.Scheduler
-	for {
-		for i, shift := range cfg.SuspicionAvoidance.Shifts {
-			dur := shiftDur(shift)
-			logrus.StandardLogger().WithFields(map[string]interface{}{
-				"state":    shift.State,
-				"duration": dur,
-			}).Infof("starting shift %v", i+1)
-			if shift.State == lastState {
-				time.Sleep(dur)
-				continue
-			}
-			lastState = shift.State
-
-			if shift.State == config.ShiftStateDormant {
-				if rspdr != nil {
-					rspdr.Close()
-				}
-				if sdlr != nil {
-					sdlr.Close()
-				}
-				time.Sleep(dur)
-				continue
-			}
-			sdlr = &scheduler.Scheduler{
-				Client:       client,
-				ChannelID:    cfg.ChannelID,
-				Typing:       &cfg.SuspicionAvoidance.Typing,
-				MessageDelay: &cfg.SuspicionAvoidance.MessageDelay,
-			}
-			if err = sdlr.Start(); err != nil {
-				logrus.Fatalf("error while starting scheduler: %v", err)
-			}
-			rspdr = &responder.Responder{
-				Sdlr:   sdlr,
-				Client: client,
-				FatalHandler: func(err error) {
-					logrus.Fatalf("responder fatal: %v", err)
-				},
-				ChannelID:       cfg.ChannelID,
-				PostmemeOpts:    cfg.Compat.PostmemeOpts,
-				AllowedSearches: cfg.Compat.AllowedSearches,
-				BalanceCheck:    cfg.Features.BalanceCheck,
-				AutoBuy:         &cfg.Features.AutoBuy,
-			}
-			if err = rspdr.Start(); err != nil {
-				logrus.Fatalf("error while starting responder: %v", err)
-			}
-			for _, cmd := range cmds {
-				sdlr.Schedule(cmd, false)
-			}
-			time.Sleep(dur)
+	for _, in := range ins {
+		if err = in.start(); err != nil {
+			logrus.Fatalf("error while starting instance: %v", err)
 		}
 	}
+	wg.Wait()
 }

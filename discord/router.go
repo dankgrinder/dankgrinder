@@ -14,19 +14,25 @@ import (
 
 type MessageRouter struct {
 	routes []*MessageRoute
+	middleware []func(h HandlerFunc) HandlerFunc
 }
 
 type MessageRoute struct {
 	conds   []condFunc
-	handler func(msg Message)
+	handler HandlerFunc
 }
 
+type HandlerFunc func(msg Message)
 type condFunc func(msg Message, eventType string) bool
 
 func (rtr *MessageRouter) process(msg Message, eventType string) {
 	for _, rt := range rtr.routes {
 		if rt.matches(msg, eventType) {
-			rt.handler(msg)
+			h := rt.handler
+			for _, mw := range rtr.middleware {
+				h = mw(h)
+			}
+			h(msg)
 		}
 	}
 }
@@ -41,9 +47,15 @@ func (rt *MessageRoute) matches(msg Message, eventType string) bool {
 }
 
 func (rtr *MessageRouter) NewRoute() *MessageRoute {
-	rt := &MessageRoute{}
+	rt := &MessageRoute{
+		handler: func(msg Message) {}, // To avoid nil pointer dereference.
+	}
 	rtr.routes = append(rtr.routes, rt)
 	return rt
+}
+
+func (rtr *MessageRouter) Middleware(mw func(h HandlerFunc) HandlerFunc) {
+	rtr.middleware = append(rtr.middleware, mw)
 }
 
 func (rt *MessageRoute) EventType(et string) *MessageRoute {

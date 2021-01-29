@@ -20,29 +20,23 @@ const (
 )
 
 type Config struct {
-	Token              string             `yaml:"token"`
-	ChannelID          string             `yaml:"channel_id"`
+	InstancesOpts      []InstanceOpts     `yaml:"instances"`
 	Features           Features           `yaml:"features"`
 	Compat             Compat             `yaml:"compatibility"`
 	SuspicionAvoidance SuspicionAvoidance `yaml:"suspicion_avoidance"`
-	Swarm              Swarm              `yaml:"swarm"`
 }
 
-type Swarm struct {
-	Instances []Instance `yaml:"instances"`
-}
-
-type Instance struct {
+type InstanceOpts struct {
 	Token     string  `yaml:"token"`
 	ChannelID string  `yaml:"channel_id"`
 	Shifts    []Shift `yaml:"shifts"`
 }
 
 type Compat struct {
-	PostmemeOpts    []string `yaml:"postmeme_options"`
+	PostmemeOpts    []string `yaml:"postmeme"`
 	AllowedSearches []string `yaml:"allowed_searches"`
 	Cooldown        Cooldown `yaml:"cooldown"`
-	AutoSell        []string `yaml:"auto_sell"`
+	AwaitResponseTimeout int `yaml:"await_response_timeout"`
 }
 
 type Cooldown struct {
@@ -58,6 +52,7 @@ type Cooldown struct {
 type Features struct {
 	Commands     Commands `yaml:"commands"`
 	AutoBuy      AutoBuy  `yaml:"auto_buy"`
+	AutoSell        []string `yaml:"auto_sell"`
 	BalanceCheck bool     `yaml:"balance_check"`
 	LogToFile    bool     `yaml:"log_to_file"`
 	Debug        bool     `yaml:"debug"`
@@ -77,7 +72,6 @@ type Commands struct {
 type SuspicionAvoidance struct {
 	Typing       Typing       `yaml:"typing"`
 	MessageDelay MessageDelay `yaml:"message_delay"`
-	Shifts       []Shift      `yaml:"shifts"`
 }
 
 type Typing struct {
@@ -121,14 +115,8 @@ func Load(dir string) (Config, error) {
 }
 
 func (c Config) Validate() error {
-	if c.Token == "" {
-		return fmt.Errorf("token: no authorization token")
-	}
-	if c.ChannelID == "" {
-		return fmt.Errorf("channel_id: no channel id")
-	}
-	if len(c.SuspicionAvoidance.Shifts) == 0 {
-		return fmt.Errorf("suspicion_avoidance.shifts: no shifts, at least 1 is required")
+	if len(c.InstancesOpts) == 0 {
+		return fmt.Errorf("instances: no instances, at least 1 is required")
 	}
 	if len(c.Compat.PostmemeOpts) == 0 {
 		return fmt.Errorf("compatibility.postmeme: no compatibility options")
@@ -157,10 +145,24 @@ func (c Config) Validate() error {
 	if c.Compat.Cooldown.Margin < 0 {
 		return fmt.Errorf("compatibility.cooldown.margin: value must be greater than or equal to 0")
 	}
+	if c.Compat.AwaitResponseTimeout < 0 {
+		return fmt.Errorf("compatibility.await_response_timeout: value must be greater than 0")
+	}
 
-	for _, shift := range c.SuspicionAvoidance.Shifts {
-		if shift.State != ShiftStateActive && shift.State != ShiftStateDormant {
-			return fmt.Errorf("invalid shift state: %v", shift.State)
+	for i, instance := range c.InstancesOpts {
+		if instance.Token == "" {
+			return fmt.Errorf("instances[%v]: no token", i)
+		}
+		if instance.ChannelID == "" {
+			return fmt.Errorf("instances[%v]: no channel id", i)
+		}
+		if len(instance.Shifts) == 0 {
+			return fmt.Errorf("instances[%v]: no shifts", i)
+		}
+		for j, shift := range instance.Shifts {
+			if shift.State != ShiftStateActive && shift.State != ShiftStateDormant {
+				return fmt.Errorf("instances[%v].shifts[%v]: invalid shift state: %v", i, j, shift.State)
+			}
 		}
 	}
 	return nil

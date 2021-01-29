@@ -1,10 +1,54 @@
 # See https://github.com/dankgrinder/dankgrinder#getting-an-authorization-token
 # for instructions on how to get a token.
-token: ""
-
+#
 # See https://github.com/dankgrinder/dankgrinder#enabling-discords-developer-mode
-# for instructions on how to get a channel ID.
-channel_id: ""
+# for instructions on how to get a channel id.
+#
+# You can use shifts to make sure the bot is not suspicious because it is too
+# active. Base and variance are in seconds and work the same as they do with
+# typing and delay.
+#
+# For example, if you would like to have the bot be active for 6 hours per day,
+# then inactive for the remaining 18 you would do something like this (note
+# that it will loop this, so after completing the last shift it will go back
+# to the first):
+#
+#  shifts:
+#     - state: "active"
+#       duration:
+#         base: 21600
+#         variance: 0
+#     - state: "dormant"
+#       duration:
+#         base: 64800
+#         variance: 0
+#
+# A base duration of -1 means indefinite. This will be displayed as a large
+# amount of hours when running the application due to limitations.
+#
+# You should configure at least 1 instance. An instance requires a token, a
+# channel id and at least 1 shift. You may configure multiple instances to run
+# more than 1 bot at a time. Some extra instructions are provided at
+# https://github.com/dankgrinder/dankgrinder#configuration
+#
+#   instances:
+#     - token: "tokenplaceholder"
+#       channel_id: "1234567890"
+#       shifts:
+#         - state: "active"
+#           duration:
+#             base: -1
+#             variance: 0
+#
+
+instances:
+  - token: ""
+    channel_id: ""
+    shifts:
+      - state: "active"
+        duration:
+          base: -1
+          variance: 0
 
 features:
   commands:
@@ -14,12 +58,20 @@ features:
     fishing_pole: true
     hunting_rifle: true
     laptop: true
+  auto_sell:
+    - "boar"
+    - "dragon"
+    - "duck"
+    - "fish"
+    - "deer"
+    - "rabbit"
+    - "skunk"
   balance_check: true
   log_to_file: true
   debug: false
 
 compatibility:
-  postmeme_options:
+  postmeme:
     - "f"
     - "r"
     - "i"
@@ -53,14 +105,7 @@ compatibility:
     # This value in seconds in added to each cooldown to accommodate timing errors.
     margin: 3
 
-  auto_sell:
-    - "boar"
-    - "dragon"
-    - "duck"
-    - "fish"
-    - "deer"
-    - "rabbit"
-    - "skunk"
+  await_response_timeout: 3
 
 suspicion_avoidance:
   typing:
@@ -81,46 +126,3 @@ suspicion_avoidance:
   message_delay:
     base: 100
     variance: 400
-
-  # You can use shifts to make sure the bot is not suspicious because it is too
-  # active. Base and variance are in seconds and work the same as they do with
-  # typing and delay.
-  #
-  # For example, if you would like to have the bot be active for 6 hours per day,
-  # then inactive for the remaining 18 you would do something like this (note
-  # that it will loop this, so after completing the last shift it will go back
-  # to the first):
-  #
-  #   - state: "active"
-  #     duration:
-  #       base: 21600
-  #       variance: 0
-  #   - state: "dormant"
-  #     duration:
-  #       base: 64800
-  #       variance: 0
-  #
-  # A base duration of -1 means indefinite. This will be displayed as a large
-  # amount of hours when running the application due to limitations.
-  shifts:
-    - state: "active"
-      duration:
-        base: -1
-        variance: 0
-
-# If you would like to use swarm mode, you can configure all of your instances
-# below. Example configuration for an instance:
-#
-#   swarm:
-#     instances:
-#       - token: "tokenplaceholder"
-#         channel_id: "1234567890"
-#         shifts:
-#           - state: "active"
-#             duration:
-#               base: -1
-#               variance: 0
-#
-# The shifts are exactly the same as they are in normal mode. Everything else
-# should be self-explanatory. To run in swarm mode you would obviously run the
-# dankswarm executable instead of dankgrinder.
