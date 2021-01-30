@@ -27,21 +27,6 @@ type instance struct {
 	wg        *sync.WaitGroup
 }
 
-func newInstanceLogger(username, dir string) *logrus.Logger {
-	logger := logrus.New()
-	if cfg.Features.Debug {
-		logger.SetLevel(logrus.DebugLevel)
-	}
-	logger = logrus.New()
-	logger.SetOutput(fileLogger{
-		username: username,
-		dir:      dir,
-	})
-	logger.SetFormatter(&logrus.JSONFormatter{})
-	logger.AddHook(stdLoggerHook{})
-	return logger
-}
-
 func (in *instance) sleep(dur time.Duration) {
 	select {
 	case err := <-in.fatal:
@@ -52,8 +37,17 @@ func (in *instance) sleep(dur time.Duration) {
 }
 
 func (in *instance) start() error {
-	if err := in.validate(); err != nil {
-		return err
+	if in.client == nil {
+		return fmt.Errorf("no client")
+	}
+	if in.channelID == "" {
+		return fmt.Errorf("no channel id")
+	}
+	if len(in.shifts) == 0 {
+		return fmt.Errorf("no shifts")
+	}
+	if in.wg == nil {
+		return fmt.Errorf("no waitgroup")
 	}
 	in.fatal = make(chan error)
 	in.logger = logrus.StandardLogger()
@@ -141,22 +135,6 @@ func (in *instance) startInterface() error {
 	}
 	if err := in.rspdr.Start(); err != nil {
 		return fmt.Errorf("error while starting responder: %v", err)
-	}
-	return nil
-}
-
-func (in *instance) validate() error {
-	if in.client == nil {
-		return fmt.Errorf("no client")
-	}
-	if in.channelID == "" {
-		return fmt.Errorf("no channel id")
-	}
-	if len(in.shifts) == 0 {
-		return fmt.Errorf("no shifts")
-	}
-	if in.wg == nil {
-		return fmt.Errorf("no waitgroup")
 	}
 	return nil
 }

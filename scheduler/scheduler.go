@@ -37,7 +37,7 @@ type Scheduler struct {
 type Command struct {
 	Value string
 
-	// If not an empty string, this is what will be displayed by logrus when.
+	// If not an empty string, this is what will be logged to the logger when
 	// sending the command. The format will be "%v: %v", log, content.
 	Log string
 
@@ -48,6 +48,19 @@ type Command struct {
 	// If AwaitResume is true, the scheduler will wait for a resume call before
 	// executing the next command.
 	AwaitResume bool
+
+	// Next is a pointer to the command that will be rescheduled if interval is
+	// not 0. If this is nil this command itself will be rescheduled. Using this
+	// feature might be useful when you want to create a chain of commands that
+	// work together but have, for example, different values for Command.Value.
+	Next *Command
+
+	// The amount of times to reschedule the command in total. Set to 0 to
+	// reschedule indefinitely. To run a command once, the interval should be
+	// set to 0, not the amount.
+	Amount uint
+
+	execs uint
 }
 
 func (s *Scheduler) Start() error {
@@ -109,6 +122,9 @@ func (s *Scheduler) Schedule(cmd *Command) {
 	if s.closed {
 		return
 	}
+	if cmd.Next == nil {
+		cmd.Next = cmd
+	}
 	s.queue.enqueue <- cmd
 }
 
@@ -161,6 +177,25 @@ func (s *Scheduler) Close() error {
 	return nil
 }
 
+// reschedule reschedules the command if the conditions for this are met. If so
+// it will reschedule with the appropriate next command, based on the value of
+// Command.Next.
+func (s *Scheduler) reschedule(cmd *Command) {
+	cmd.execs++
+	if cmd.Amount != 0 && cmd.execs >= cmd.Amount {
+		return
+	}
+	if cmd.Interval > 0 {
+		time.AfterFunc(cmd.Interval, func() {
+			if cmd.Next == nil {
+				s.Schedule(cmd)
+				return
+			}
+			s.Schedule(cmd.Next)
+		})
+	}
+}
+
 func (s *Scheduler) send(cmd *Command) {
 	d := delay(s.MessageDelay)
 	tt := typing(cmd.Value, s.Typing)
@@ -187,11 +222,7 @@ func (s *Scheduler) send(cmd *Command) {
 	} else if err != nil {
 		s.Logger.Errorf("%v", err)
 	}
-	if cmd.Interval > 0 {
-		time.AfterFunc(cmd.Interval, func() {
-			s.Schedule(cmd)
-		})
-	}
+	s.reschedule(cmd)
 	if cmd.AwaitResume {
 		s.awaitResume = true
 	}

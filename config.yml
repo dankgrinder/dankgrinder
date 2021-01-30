@@ -59,13 +59,16 @@ features:
     hunting_rifle: true
     laptop: true
   auto_sell:
-    - "boar"
-    - "dragon"
-    - "duck"
-    - "fish"
-    - "deer"
-    - "rabbit"
-    - "skunk"
+    enable: true
+    interval: 3600
+    items:
+      - "boar"
+      - "dragon"
+      - "duck"
+      - "fish"
+      - "deer"
+      - "rabbit"
+      - "skunk"
   balance_check: true
   log_to_file: true
   debug: false

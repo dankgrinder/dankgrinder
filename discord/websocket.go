@@ -100,8 +100,6 @@ func (client Client) NewWSConn(rtr *MessageRouter, fatalHandler func(err error))
 	return &c, nil
 }
 
-func n() {}
-
 // listen handles incoming websocket messages. This function will not return
 // and should therefore be run as a goroutine. Panics if called while WSConn
 // instance is already listening.
