@@ -31,9 +31,7 @@ Want to join the community or need support? [Join our Discord](https://discord.g
 
 #### macOS
 4. Run by double clicking the dankgrinder binary
-   
-You can use the dankseller executable to automatically consume a specified amount of candy. Running this also requires `token` and `channel_id` to be [configured](#configuration) in config.yml.
-   
+
 ### Getting an authorization token
 1. Go to Discord, logged into the account you want to use
 2. Open the inspector by pressing `ctrl` + `shift` + `i`
