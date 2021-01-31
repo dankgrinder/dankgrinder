@@ -52,7 +52,7 @@ type Cooldown struct {
 type Features struct {
 	Commands     Commands `yaml:"commands"`
 	AutoBuy      AutoBuy  `yaml:"auto_buy"`
-	AutoSell        []string `yaml:"auto_sell"`
+	AutoSell        AutoSell `yaml:"auto_sell"`
 	BalanceCheck bool     `yaml:"balance_check"`
 	LogToFile    bool     `yaml:"log_to_file"`
 	Debug        bool     `yaml:"debug"`
@@ -62,6 +62,12 @@ type AutoBuy struct {
 	FishingPole  bool `yaml:"fishing_pole"`
 	HuntingRifle bool `yaml:"hunting_rifle"`
 	Laptop       bool `yaml:"laptop"`
+}
+
+type AutoSell struct {
+	Enable bool
+	Interval int
+	Items []string
 }
 
 type Commands struct {
@@ -147,6 +153,12 @@ func (c Config) Validate() error {
 	}
 	if c.Compat.AwaitResponseTimeout < 0 {
 		return fmt.Errorf("compatibility.await_response_timeout: value must be greater than 0")
+	}
+	if c.Features.AutoSell.Interval <= 0 {
+		return fmt.Errorf("features.auto_sell.interval: value must be greater than 0")
+	}
+	if c.Features.AutoSell.Enable && len(c.Features.AutoSell.Items) == 0 {
+		return fmt.Errorf("features.auto_sell: auto_sell enabled but no items configured")
 	}
 
 	for i, instance := range c.InstancesOpts {

@@ -73,3 +73,18 @@ func (slh stdLoggerHook) Fire(e *logrus.Entry) error {
 	logrus.WithFields(e.Data).Log(e.Level, e.Message)
 	return nil
 }
+
+func newInstanceLogger(username, dir string) *logrus.Logger {
+	logger := logrus.New()
+	if cfg.Features.Debug {
+		logger.SetLevel(logrus.DebugLevel)
+	}
+	logger = logrus.New()
+	logger.SetOutput(fileLogger{
+		username: username,
+		dir:      dir,
+	})
+	logger.SetFormatter(&logrus.JSONFormatter{})
+	logger.AddHook(stdLoggerHook{})
+	return logger
+}

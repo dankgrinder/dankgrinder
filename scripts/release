@@ -7,17 +7,17 @@ mkdir release
 for OS in "windows" "darwin" "linux"; do
   DIR="release/dankgrinder-${VERSION}-${OS}-amd64"
   DANKGRINDER="dankgrinder"
-  DANKSELLER="dankseller"
+  DANKCURATOR="dankcurator"
 
   if [ "${OS}" = "windows" ]; then
     DANKGRINDER="${DANKGRINDER}.exe"
-    DANKSELLER="${DANKSELLER}.exe"
+    DANKCURATOR="${DANKCURATOR}.exe"
   fi
 
   mkdir "${DIR}"
   cp config.yml "${DIR}"
   (cd cmd/dankgrinder || exit; GOOS=${OS} GOARCH=amd64 go build -ldflags "-w -s" -v -o "../../${DIR}/${DANKGRINDER}" .)
-  (cd cmd/dankseller || exit; GOOS=${OS} GOARCH=amd64 go build -ldflags "-w -s" -v -o "../../${DIR}/${DANKSELLER}" .)
+  (cd cmd/dankcurator || exit; GOOS=${OS} GOARCH=amd64 go build -ldflags "-w -s" -v -o "../../${DIR}/${DANKCURATOR}" .)
   zip -vr9j "${DIR}".zip "${DIR}"/*
   rm -rf "${DIR}"
 done

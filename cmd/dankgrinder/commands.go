@@ -7,6 +7,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/dankgrinder/dankgrinder/scheduler"
@@ -55,6 +56,23 @@ func commands() (cmds []*scheduler.Command) {
 			Value:    "pls bal",
 			Interval: time.Minute * 2,
 		})
+	}
+	if cfg.Features.AutoSell.Enable {
+		var sellCmds []*scheduler.Command
+		for i, item := range cfg.Features.AutoSell.Items {
+			sellCmds = append(sellCmds, &scheduler.Command{
+				Value: fmt.Sprintf("pls sell %v max", item),
+				Interval: time.Second * 5,
+			})
+			if i != 0 {
+				sellCmds[i - 1].Next = sellCmds[i]
+			}
+			if i == len(cfg.Features.AutoSell.Items) - 1 {
+				sellCmds[i].Next = sellCmds[0]
+				sellCmds[i].Interval = sec(cfg.Features.AutoSell.Interval)
+			}
+		}
+		cmds = append(cmds, sellCmds[0])
 	}
 	return
 }

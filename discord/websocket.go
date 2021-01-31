@@ -100,8 +100,6 @@ func (client Client) NewWSConn(rtr *MessageRouter, fatalHandler func(err error))
 	return &c, nil
 }
 
-func n() {}
-
 // listen handles incoming websocket messages. This function will not return
 // and should therefore be run as a goroutine. Panics if called while WSConn
 // instance is already listening.
@@ -141,9 +139,8 @@ func (c *WSConn) listen() {
 				go c.rtr.process(body.Data.Message, body.EventName)
 			}
 		case OpcodeInvalidSession:
-			c.Close()
 			c.fatalHandler(fmt.Errorf("session invalidated"))
-			break
+			c.Close()
 		}
 	}
 }
@@ -248,7 +245,7 @@ func (c *WSConn) resume() error {
 
 	if err = c.awaitEvent(EventNameResumed); err != nil {
 		c.underlying.Close()
-		return fmt.Errorf("error while awaiting ready message: %v", err)
+		return fmt.Errorf("error while awaiting resumed message: %v", err)
 	}
 
 	go c.ping(interval)
