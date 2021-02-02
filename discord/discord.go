@@ -150,7 +150,7 @@ func (client Client) typing(channelID string) error {
 	if res.StatusCode == http.StatusForbidden {
 		return ErrForbidden
 	}
-	if res.StatusCode != http.StatusNoContent {
+	if res.StatusCode != http.StatusNoContent && res.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected response code while sending typing message: %v", res.StatusCode)
 	}
 	return nil
