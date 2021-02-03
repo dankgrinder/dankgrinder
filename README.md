@@ -3,7 +3,10 @@ The most feature-rich, advanced Dank Memer automation tool.
 
 Want to join the community or need support? [Join our Discord](https://discord.gg/Fjzpq8YPSn). Have a question? [Create a question issue](https://github.com/dankgrinder/dankgrinder/issues/new?assignees=&labels=question&template=question.md&title=). Want to suggest a feature? [Create a suggestion issue](https://github.com/dankgrinder/dankgrinder/issues/new?assignees=&labels=suggestion&template=suggestion.md&title=). Encountered a bug? [Report a bug](https://github.com/dankgrinder/dankgrinder/issues/new?assignees=&labels=bug&template=bug-report.md&title=). Want to contribute? [Read our contribution guidelines](https://github.com/dankgrinder/dankgrinder/blob/master/CONTRIBUTING.md).
 
-![](https://i.imgur.com/6a7XETo.png)
+<center>
+<img src="https://i.imgur.com/VSYIKaX.png" alt="logo" style="margin-top:10px" />
+</center>
+
 ## Features
 * Cycles through currency commands to earn approximately 150,000 coins per hour
 * Responds to fishing and hunting events (i.e. captures the dragon, etc.)
