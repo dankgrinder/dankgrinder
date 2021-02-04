@@ -89,12 +89,12 @@ instances:
           base: -1
           variance: 0
   - token: "b2YgY291cnNlIHRoaXM.aXNuJ3QgYQ.cmVhbCB0b2tlbiBlaXRoZXIsIHNpbGx5"
-       channel_id: "791694383098495047"
-       shifts:
-          - state: "active"
-            duration:
-               base: -1
-               variance: 0
+    channel_id: "791694383098495047"
+    shifts:
+       - state: "active"
+         duration:
+            base: -1
+            variance: 0
 ```
 
 ## Disclaimer
