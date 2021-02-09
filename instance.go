@@ -135,6 +135,7 @@ func (in *instance) startInterface() error {
 		ChannelID:       in.channelID,
 		PostmemeOpts:    cfg.Compat.PostmemeOpts,
 		AllowedSearches: cfg.Compat.AllowedSearches,
+		SearchCancel: cfg.Compat.SearchCancel,
 		BalanceCheck:    cfg.Features.BalanceCheck,
 		AutoBuy:         &cfg.Features.AutoBuy,
 		Logger:          in.logger,
