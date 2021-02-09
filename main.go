@@ -7,6 +7,7 @@
 package main
 
 import (
+	main2 "github.com/dankgrinder/dankgrinder"
 	"github.com/shiena/ansicolor"
 	"math/rand"
 	"os"
@@ -21,7 +22,7 @@ import (
 )
 
 var cfg config.Config
-var ins []*instance
+var ins []*main2.instance
 var ex string
 
 func main() {
@@ -42,7 +43,7 @@ func main() {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
 	if cfg.Features.LogToFile {
-		logrus.AddHook(logFileHook{dir: path.Dir(ex)})
+		logrus.AddHook(main2.logFileHook{dir: path.Dir(ex)})
 	}
 	if err = cfg.Validate(); err != nil {
 		logrus.Fatalf("invalid config: %v", err)
@@ -64,12 +65,12 @@ func main() {
 			continue
 		}
 		logrus.Infof("successful authorization as %v", client.User.Username+"#"+client.User.Discriminator)
-		ins = append(ins, &instance{
-			client: client,
+		ins = append(ins, &main2.instance{
+			client:    client,
 			channelID: opts.ChannelID,
-			cmds:      commands(),
+			cmds:      main2.commands(),
 			shifts:    opts.Shifts,
-			wg: wg,
+			wg:        wg,
 		})
 	}
 
@@ -79,4 +80,5 @@ func main() {
 		}
 	}
 	wg.Wait()
+	logrus.Fatalf("no running instances left")
 }

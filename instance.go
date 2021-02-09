@@ -1,7 +1,8 @@
-package main
+package dankgrinder
 
 import (
 	"fmt"
+	"github.com/dankgrinder/dankgrinder"
 	"path"
 	"runtime"
 	"sync"
@@ -51,8 +52,8 @@ func (in *instance) start() error {
 	}
 	in.fatal = make(chan error)
 	in.logger = logrus.StandardLogger()
-	if len(cfg.InstancesOpts) > 1 {
-		in.logger = newInstanceLogger(in.client.User.Username, path.Dir(ex))
+	if len(main.cfg.InstancesOpts) > 1 {
+		in.logger = newInstanceLogger(in.client.User.Username, path.Dir(main.ex))
 	}
 	in.wg.Add(1)
 	go func() {
@@ -63,7 +64,7 @@ func (in *instance) start() error {
 				in.logger.WithFields(map[string]interface{}{
 					"state":    shift.State,
 					"duration": dur,
-				}).Infof("starting shift %v for %v", i+1, in.client.User.Username)
+				}).Infof("starting shift %v", i+1)
 				if shift.State == in.prevState {
 					in.sleep(dur)
 					continue
@@ -101,17 +102,17 @@ func (in *instance) startInterface() error {
 	in.sdlr = &scheduler.Scheduler{
 		Client:             in.client,
 		ChannelID:          in.channelID,
-		Typing:             &cfg.SuspicionAvoidance.Typing,
-		MessageDelay:       &cfg.SuspicionAvoidance.MessageDelay,
+		Typing:             &main.cfg.SuspicionAvoidance.Typing,
+		MessageDelay:       &main.cfg.SuspicionAvoidance.MessageDelay,
 		Logger:             in.logger,
-		AwaitResumeTimeout: sec(cfg.Compat.AwaitResponseTimeout),
+		AwaitResumeTimeout: sec(main.cfg.Compat.AwaitResponseTimeout),
 		FatalHandler: func(ferr error) {
 			if in.rspdr != nil {
 				if err := in.rspdr.Close(); err != nil {
 					in.logger.Errorf("error while closing responder: %v", err)
 				}
 			}
-			in.fatal <- fmt.Errorf("scheduler fatal for %v: %v", in.client.User.Username, ferr)
+			in.fatal <- fmt.Errorf("scheduler fatal: %v", ferr)
 		},
 	}
 	if err := in.sdlr.Start(); err != nil {
@@ -127,10 +128,10 @@ func (in *instance) startInterface() error {
 			in.fatal <- fmt.Errorf("responder fatal for %v: %v", in.client.User.Username, ferr)
 		},
 		ChannelID:       in.channelID,
-		PostmemeOpts:    cfg.Compat.PostmemeOpts,
-		AllowedSearches: cfg.Compat.AllowedSearches,
-		BalanceCheck:    cfg.Features.BalanceCheck,
-		AutoBuy:         &cfg.Features.AutoBuy,
+		PostmemeOpts:    main.cfg.Compat.PostmemeOpts,
+		AllowedSearches: main.cfg.Compat.AllowedSearches,
+		BalanceCheck:    main.cfg.Features.BalanceCheck,
+		AutoBuy:         &main.cfg.Features.AutoBuy,
 		Logger:          in.logger,
 	}
 	if err := in.rspdr.Start(); err != nil {
