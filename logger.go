@@ -1,12 +1,18 @@
-package dankgrinder
+// Copyright (C) 2021 The Dank Grinder authors.
+//
+// This source code has been released under the GNU Affero General Public
+// License v3.0. A copy of this license is available at
+// https://www.gnu.org/licenses/agpl-3.0.en.html
+
+package main
 
 import (
 	"fmt"
-	"github.com/dankgrinder/dankgrinder"
-	"github.com/sirupsen/logrus"
 	"os"
 	"path"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 type fileLogger struct {
@@ -95,7 +101,7 @@ func (slh stdLoggerHook) Fire(e *logrus.Entry) error {
 
 func newInstanceLogger(username, dir string) *logrus.Logger {
 	logger := logrus.New()
-	if main.cfg.Features.Debug {
+	if cfg.Features.Debug {
 		logger.SetLevel(logrus.DebugLevel)
 	}
 	logger = logrus.New()

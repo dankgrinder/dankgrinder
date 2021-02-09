@@ -1,8 +1,13 @@
-package dankgrinder
+// Copyright (C) 2021 The Dank Grinder authors.
+//
+// This source code has been released under the GNU Affero General Public
+// License v3.0. A copy of this license is available at
+// https://www.gnu.org/licenses/agpl-3.0.en.html
+
+package main
 
 import (
 	"fmt"
-	"github.com/dankgrinder/dankgrinder"
 	"path"
 	"runtime"
 	"sync"
@@ -52,8 +57,8 @@ func (in *instance) start() error {
 	}
 	in.fatal = make(chan error)
 	in.logger = logrus.StandardLogger()
-	if len(main.cfg.InstancesOpts) > 1 {
-		in.logger = newInstanceLogger(in.client.User.Username, path.Dir(main.ex))
+	if len(cfg.InstancesOpts) > 1 {
+		in.logger = newInstanceLogger(in.client.User.Username, path.Dir(ex))
 	}
 	in.wg.Add(1)
 	go func() {
@@ -102,10 +107,10 @@ func (in *instance) startInterface() error {
 	in.sdlr = &scheduler.Scheduler{
 		Client:             in.client,
 		ChannelID:          in.channelID,
-		Typing:             &main.cfg.SuspicionAvoidance.Typing,
-		MessageDelay:       &main.cfg.SuspicionAvoidance.MessageDelay,
+		Typing:             &cfg.SuspicionAvoidance.Typing,
+		MessageDelay:       &cfg.SuspicionAvoidance.MessageDelay,
 		Logger:             in.logger,
-		AwaitResumeTimeout: sec(main.cfg.Compat.AwaitResponseTimeout),
+		AwaitResumeTimeout: sec(cfg.Compat.AwaitResponseTimeout),
 		FatalHandler: func(ferr error) {
 			if in.rspdr != nil {
 				if err := in.rspdr.Close(); err != nil {
@@ -128,10 +133,10 @@ func (in *instance) startInterface() error {
 			in.fatal <- fmt.Errorf("responder fatal for %v: %v", in.client.User.Username, ferr)
 		},
 		ChannelID:       in.channelID,
-		PostmemeOpts:    main.cfg.Compat.PostmemeOpts,
-		AllowedSearches: main.cfg.Compat.AllowedSearches,
-		BalanceCheck:    main.cfg.Features.BalanceCheck,
-		AutoBuy:         &main.cfg.Features.AutoBuy,
+		PostmemeOpts:    cfg.Compat.PostmemeOpts,
+		AllowedSearches: cfg.Compat.AllowedSearches,
+		BalanceCheck:    cfg.Features.BalanceCheck,
+		AutoBuy:         &cfg.Features.AutoBuy,
 		Logger:          in.logger,
 	}
 	if err := in.rspdr.Start(); err != nil {

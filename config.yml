@@ -23,7 +23,7 @@
 #         base: 64800
 #         variance: 0
 #
-# A base duration of -1 means indefinite. This will be displayed as a large
+# A base duration of 0 means indefinite. This will be displayed as a large
 # amount of hours when running the application due to limitations.
 #
 # You should configure at least 1 instance. An instance requires a token, a
@@ -37,7 +37,7 @@
 #       shifts:
 #         - state: "active"
 #           duration:
-#             base: -1
+#             base: 0
 #             variance: 0
 #
 
@@ -47,20 +47,44 @@ instances:
     shifts:
       - state: "active"
         duration:
-          base: -1
+          base: 0
           variance: 0
 
 features:
   commands:
     fish: true
     hunt: true
+
+  # Configure custom commands. Value is the command itself. The interval is
+  # in seconds and dictates how often the command is run. The amount is how many
+  # times per active shift the command should be run. A value of 0 for the
+  # interval means it will run once in the beginning every active shift. A value
+  # of 0 for amount means there isn't a limit on how many times the command should
+  # be run. Example:
+  #
+  #   custom_commands:
+  #     - value: "pls command1"
+  #       interval: 60
+  #       amount: 0
+  #     - value: "pls command2"
+  #       interval: 300
+  #       amount: 5
+  #
+  # In example custom command 1, the value is sent every 60 seconds for infinite times,
+  # until the program enters the dormant state.
+  #
+  # In example custom command 2, the value is sent every 5 minutes for a total of 5 times
+  # per active shift.
+  custom_commands:
+
   auto_buy:
     fishing_pole: true
     hunting_rifle: true
     laptop: true
+
   auto_sell:
     enable: true
-    interval: 3600
+    interval: 3600 # If 0, it will run once at the beginning of every active shift.
     items:
       - "boar"
       - "dragon"
@@ -96,6 +120,14 @@ compatibility:
     - "sink"
     - "car"
 
+  # Used to cancel a search when no allowed options are provided by Dank Memer.
+  search_cancel:
+    - "no"
+    - "bad options"
+    - "i don't want to die"
+    - "stop"
+    - "."
+
   # Cooldown values in seconds for each command. Default is non-donator.
   cooldown:
     beg: 45
@@ -105,9 +137,12 @@ compatibility:
     fish: 60
     hunt: 60
 
-    # This value in seconds in added to each cooldown to accommodate timing errors.
+    # This value in seconds in added to each cooldown to account for timing
+    # errors.
     margin: 3
 
+  # If Dank Memer takes a long time to respond to commands, increase this value.
+  # A value of less than 3 seconds is not recommended.
   await_response_timeout: 3
 
 suspicion_avoidance:

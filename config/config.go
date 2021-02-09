@@ -33,10 +33,11 @@ type InstanceOpts struct {
 }
 
 type Compat struct {
-	PostmemeOpts    []string `yaml:"postmeme"`
-	AllowedSearches []string `yaml:"allowed_searches"`
-	Cooldown        Cooldown `yaml:"cooldown"`
-	AwaitResponseTimeout int `yaml:"await_response_timeout"`
+	PostmemeOpts         []string `yaml:"postmeme"`
+	AllowedSearches      []string `yaml:"allowed_searches"`
+	SearchCancel         []string `yaml:"search_cancel"`
+	Cooldown             Cooldown `yaml:"cooldown"`
+	AwaitResponseTimeout int      `yaml:"await_response_timeout"`
 }
 
 type Cooldown struct {
@@ -50,12 +51,19 @@ type Cooldown struct {
 }
 
 type Features struct {
-	Commands     Commands `yaml:"commands"`
-	AutoBuy      AutoBuy  `yaml:"auto_buy"`
-	AutoSell        AutoSell `yaml:"auto_sell"`
-	BalanceCheck bool     `yaml:"balance_check"`
-	LogToFile    bool     `yaml:"log_to_file"`
-	Debug        bool     `yaml:"debug"`
+	Commands       Commands        `yaml:"commands"`
+	CustomCommands []CustomCommand `yaml:"custom_commands"`
+	AutoBuy        AutoBuy         `yaml:"auto_buy"`
+	AutoSell       AutoSell        `yaml:"auto_sell"`
+	BalanceCheck   bool            `yaml:"balance_check"`
+	LogToFile      bool            `yaml:"log_to_file"`
+	Debug          bool            `yaml:"debug"`
+}
+
+type CustomCommand struct {
+	Value    string `yaml:"value"`
+	Interval int `yaml:"interval"`
+	Amount   int `yaml:"amount"`
 }
 
 type AutoBuy struct {
@@ -65,9 +73,9 @@ type AutoBuy struct {
 }
 
 type AutoSell struct {
-	Enable bool
-	Interval int
-	Items []string
+	Enable   bool     `yaml:"enable"`
+	Interval int      `yaml:"interval"`
+	Items    []string `yaml:"items"`
 }
 
 type Commands struct {
@@ -86,7 +94,6 @@ type Typing struct {
 	Variance int `yaml:"variance"` // A random value in milliseconds from [0,n) added to the base.
 }
 
-// MessageDelay is used to
 type MessageDelay struct {
 	Base     int `yaml:"base"`     // A base duration in milliseconds.
 	Variance int `yaml:"variance"` // A random value in milliseconds from [0,n) added to the base.
@@ -130,6 +137,9 @@ func (c Config) Validate() error {
 	if len(c.Compat.AllowedSearches) == 0 {
 		return fmt.Errorf("compatibility.allowed_searches: no compatibility options")
 	}
+	if len(c.Compat.SearchCancel) == 0 {
+		return fmt.Errorf("compatibility.search_cancel: no compatibility options")
+	}
 	if c.Compat.Cooldown.Postmeme <= 0 {
 		return fmt.Errorf("compatibility.cooldown.postmeme: value must be greater than 0")
 	}
@@ -160,6 +170,16 @@ func (c Config) Validate() error {
 	if c.Features.AutoSell.Enable && len(c.Features.AutoSell.Items) == 0 {
 		return fmt.Errorf("features.auto_sell: auto_sell enabled but no items configured")
 	}
+
+	for i, cmd := range c.Features.CustomCommands {
+		if cmd.Value == "" {
+			return fmt.Errorf("features.custom_commands[%v].value: no value", i)
+		}
+		if cmd.Amount < 0 {
+			return fmt.Errorf("features.custom_commands[%v].amount: value must be greater than or equal to 0", i)
+		}
+	}
+
 
 	for i, instance := range c.InstancesOpts {
 		if instance.Token == "" {

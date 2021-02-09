@@ -13,7 +13,7 @@ import (
 )
 
 type MessageRouter struct {
-	routes []*MessageRoute
+	routes     []*MessageRoute
 	middleware []func(h HandlerFunc) HandlerFunc
 }
 

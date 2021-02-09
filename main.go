@@ -7,8 +7,6 @@
 package main
 
 import (
-	main2 "github.com/dankgrinder/dankgrinder"
-	"github.com/shiena/ansicolor"
 	"math/rand"
 	"os"
 	"path"
@@ -16,13 +14,15 @@ import (
 	"sync"
 	"time"
 
+	"github.com/shiena/ansicolor"
+
 	"github.com/dankgrinder/dankgrinder/config"
 	"github.com/dankgrinder/dankgrinder/discord"
 	"github.com/sirupsen/logrus"
 )
 
 var cfg config.Config
-var ins []*main2.instance
+var ins []*instance
 var ex string
 
 func main() {
@@ -43,7 +43,7 @@ func main() {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
 	if cfg.Features.LogToFile {
-		logrus.AddHook(main2.logFileHook{dir: path.Dir(ex)})
+		logrus.AddHook(logFileHook{dir: path.Dir(ex)})
 	}
 	if err = cfg.Validate(); err != nil {
 		logrus.Fatalf("invalid config: %v", err)
@@ -65,10 +65,10 @@ func main() {
 			continue
 		}
 		logrus.Infof("successful authorization as %v", client.User.Username+"#"+client.User.Discriminator)
-		ins = append(ins, &main2.instance{
+		ins = append(ins, &instance{
 			client:    client,
 			channelID: opts.ChannelID,
-			cmds:      main2.commands(),
+			cmds:      commands(),
 			shifts:    opts.Shifts,
 			wg:        wg,
 		})
