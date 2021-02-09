@@ -14,7 +14,7 @@ Want to join the community or need support? [Join our Discord](https://discord.g
 * Automation of highlow
 * Reports an average income every 2 minutes
 * Automatically buys a fishing pole, hunting rifle or laptop if they have broken
-* High configurability
+* High configurability; configure custom commands and much more
 * Can run many instances at once
 * Uses very little system resources
 
@@ -23,7 +23,7 @@ Want to join the community or need support? [Join our Discord](https://discord.g
 ### Installation
 1. Download the latest release for your operating system [here](https://github.com/dankgrinder/dankgrinder/releases/latest) (darwin is for macOS), or [build from source](#building-from-source). If you build from source you can delete everything besides the compiled binaries and config.yml.
 2. Extract the archive
-3. [Configure](#configuration), make sure `token` and `channel_id` fields of the instance are set, it will not run otherwise
+3. [Configure](#configuration). Make sure `token` and `channel_id` fields of the instance are set, it will not run otherwise
 
 #### Windows
 4. Double click dankgrinder.exe. If the program closes immediately after opening it, open a command prompt and drag the executable to it, then hit enter. You will now be able to see the error
