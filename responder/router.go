@@ -70,14 +70,7 @@ func (r *Responder) search(msg discord.Message) {
 		}
 	}
 	r.Sdlr.ResumeWithCommand(&scheduler.Command{
-		Value: []string{
-			"trash options",
-			"tf is this",
-			"f off",
-			"wth is this",
-			"why no good opts?",
-			"i dont wanna die",
-		}[rand.Intn(6)], // Update this number to be the length of the slice!
+		Value: r.SearchCancel[rand.Intn(len(r.SearchCancel))],
 		Log: "no allowed search options provided, responding",
 	})
 }

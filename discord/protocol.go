@@ -23,8 +23,8 @@ const (
 const (
 	EventNameMessageCreate = "MESSAGE_CREATE"
 	EventNameMessageUpdate = "MESSAGE_UPDATE"
-	EventNameReady = "READY"
-	EventNameResumed = "RESUMED"
+	EventNameReady         = "READY"
+	EventNameResumed       = "RESUMED"
 )
 
 const (

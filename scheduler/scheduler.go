@@ -221,6 +221,8 @@ func (s *Scheduler) send(cmd *Command) {
 		return
 	} else if err != nil {
 		s.Logger.Errorf("%v", err)
+		s.Schedule(cmd)
+		return
 	}
 	s.reschedule(cmd)
 	if cmd.AwaitResume {

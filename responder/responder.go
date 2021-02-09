@@ -26,10 +26,11 @@ type Responder struct {
 	ChannelID       string
 	PostmemeOpts    []string
 	AllowedSearches []string
+	SearchCancel    []string
 	BalanceCheck    bool
 	AutoBuy         *config.AutoBuy
 
-	ws *discord.WSConn
+	ws           *discord.WSConn
 	startingBal  int
 	startingTime time.Time
 }

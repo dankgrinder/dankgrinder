@@ -7,13 +7,14 @@
 package main
 
 import (
-	"github.com/shiena/ansicolor"
 	"math/rand"
 	"os"
 	"path"
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/shiena/ansicolor"
 
 	"github.com/dankgrinder/dankgrinder/config"
 	"github.com/dankgrinder/dankgrinder/discord"
@@ -65,11 +66,11 @@ func main() {
 		}
 		logrus.Infof("successful authorization as %v", client.User.Username+"#"+client.User.Discriminator)
 		ins = append(ins, &instance{
-			client: client,
+			client:    client,
 			channelID: opts.ChannelID,
 			cmds:      commands(),
 			shifts:    opts.Shifts,
-			wg: wg,
+			wg:        wg,
 		})
 	}
 
@@ -79,4 +80,5 @@ func main() {
 		}
 	}
 	wg.Wait()
+	logrus.Fatalf("no running instances left")
 }

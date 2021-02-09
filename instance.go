@@ -1,3 +1,9 @@
+// Copyright (C) 2021 The Dank Grinder authors.
+//
+// This source code has been released under the GNU Affero General Public
+// License v3.0. A copy of this license is available at
+// https://www.gnu.org/licenses/agpl-3.0.en.html
+
 package main
 
 import (
@@ -63,7 +69,7 @@ func (in *instance) start() error {
 				in.logger.WithFields(map[string]interface{}{
 					"state":    shift.State,
 					"duration": dur,
-				}).Infof("starting shift %v for %v", i+1, in.client.User.Username)
+				}).Infof("starting shift %v", i+1)
 				if shift.State == in.prevState {
 					in.sleep(dur)
 					continue
@@ -111,7 +117,7 @@ func (in *instance) startInterface() error {
 					in.logger.Errorf("error while closing responder: %v", err)
 				}
 			}
-			in.fatal <- fmt.Errorf("scheduler fatal for %v: %v", in.client.User.Username, ferr)
+			in.fatal <- fmt.Errorf("scheduler fatal: %v", ferr)
 		},
 	}
 	if err := in.sdlr.Start(); err != nil {

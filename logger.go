@@ -1,11 +1,18 @@
+// Copyright (C) 2021 The Dank Grinder authors.
+//
+// This source code has been released under the GNU Affero General Public
+// License v3.0. A copy of this license is available at
+// https://www.gnu.org/licenses/agpl-3.0.en.html
+
 package main
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"os"
 	"path"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 type fileLogger struct {
@@ -17,11 +24,20 @@ type logFileHook struct {
 	dir string
 }
 
-type stdLoggerHook struct {}
+type stdLoggerHook struct {
+	username string
+}
 
 func (fl fileLogger) Write(b []byte) (int, error) {
+	if _, err := os.Stat("logs"); err != nil {
+		if os.IsNotExist(err) {
+			if err = os.Mkdir("logs", 0755); err != nil {
+				return 0, fmt.Errorf("error while creating logs dir: %v", err)
+			}
+		}
+	}
 	date := time.Now().Format("02-01-2006")
-	name := fmt.Sprintf("%v-%v.log", fl.username, date)
+	name := fmt.Sprintf("logs/%v-%v.log", fl.username, date)
 	f, err := os.OpenFile(path.Join(fl.dir, name), os.O_CREATE|os.O_RDWR|os.O_APPEND, 0755)
 	if err != nil {
 		return 0, err
@@ -42,8 +58,15 @@ func (lfh logFileHook) Levels() []logrus.Level {
 }
 
 func (lfh logFileHook) Fire(e *logrus.Entry) error {
+	if _, err := os.Stat("logs"); err != nil {
+		if os.IsNotExist(err) {
+			if err = os.Mkdir("logs", 0755); err != nil {
+				return fmt.Errorf("error while creating logs dir: %v", err)
+			}
+		}
+	}
 	date := time.Now().Format("02-01-2006")
-	name := fmt.Sprintf("dankgrinder-%v.log", date)
+	name := fmt.Sprintf("logs/dankgrinder-%v.log", date)
 	f, err := os.OpenFile(path.Join(lfh.dir, name), os.O_CREATE|os.O_RDWR|os.O_APPEND, 0755)
 	if err != nil {
 		return err
@@ -70,7 +93,9 @@ func (slh stdLoggerHook) Levels() []logrus.Level {
 }
 
 func (slh stdLoggerHook) Fire(e *logrus.Entry) error {
-	logrus.WithFields(e.Data).Log(e.Level, e.Message)
+	fields := e.Data
+	fields["instance"] = slh.username
+	logrus.WithFields(fields).Log(e.Level, e.Message)
 	return nil
 }
 

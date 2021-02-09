@@ -46,7 +46,7 @@ func (client Client) SendMessage(content, channelID string, typing time.Duration
 	}
 
 	if typing != 0 {
-		iterations := int(typing)/int(time.Second*10) + 1
+		iterations := int(int64(typing)/int64(time.Second*10)) + 1
 		for i := 0; i < iterations; i++ {
 			if err := client.typing(channelID); err != nil {
 				return err

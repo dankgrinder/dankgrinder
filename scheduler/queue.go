@@ -28,7 +28,7 @@ func newQueue() *queue {
 		dequeue:   make(chan *Command),
 		queued:    list.New(),
 		onEnqueue: func() {},
-		close: make(chan struct{}),
+		close:     make(chan struct{}),
 	}
 	go func() {
 		for {
