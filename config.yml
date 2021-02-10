@@ -37,12 +37,6 @@ features:
       - "deer"
       - "rabbit"
       - "skunk"
-  auto_gift:
-    enable: false
-    to: ""
-    interval: 0
-    items:
-      - ""
   balance_check: true
   log_to_file: true
   debug: false
