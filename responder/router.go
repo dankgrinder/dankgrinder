@@ -34,7 +34,7 @@ var numFmt = message.NewPrinter(language.English)
 
 func (r *Responder) fh(msg discord.Message) {
 	res := exp.fh.FindStringSubmatch(msg.Content)[2]
-	r.Sdlr.ResumeWithCommand(&scheduler.Command{
+	r.Sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
 		Value: clean(res),
 		Log:   "responding to fishing or hunting event",
 	})
@@ -42,7 +42,7 @@ func (r *Responder) fh(msg discord.Message) {
 
 func (r *Responder) pm(_ discord.Message) {
 	res := r.PostmemeOpts[rand.Intn(len(r.PostmemeOpts))]
-	r.Sdlr.ResumeWithCommand(&scheduler.Command{
+	r.Sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
 		Value: res,
 		Log:   "responding to postmeme",
 	})
@@ -61,7 +61,7 @@ func (r *Responder) search(msg discord.Message) {
 	for _, choice := range choices {
 		for _, allowed := range r.AllowedSearches {
 			if choice == allowed {
-				r.Sdlr.ResumeWithCommand(&scheduler.Command{
+				r.Sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
 					Value: choice,
 					Log:   "responding to search",
 				})
@@ -69,9 +69,9 @@ func (r *Responder) search(msg discord.Message) {
 			}
 		}
 	}
-	r.Sdlr.ResumeWithCommand(&scheduler.Command{
+	r.Sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
 		Value: r.SearchCancel[rand.Intn(len(r.SearchCancel))],
-		Log: "no allowed search options provided, responding",
+		Log:   "no allowed search options provided, responding",
 	})
 }
 
@@ -89,7 +89,7 @@ func (r *Responder) hl(msg discord.Message) {
 	if n > 50 {
 		res = "low"
 	}
-	r.Sdlr.ResumeWithCommand(&scheduler.Command{
+	r.Sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
 		Value: res,
 		Log:   "responding to highlow",
 	})

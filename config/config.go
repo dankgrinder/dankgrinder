@@ -62,8 +62,8 @@ type Features struct {
 
 type CustomCommand struct {
 	Value    string `yaml:"value"`
-	Interval int `yaml:"interval"`
-	Amount   int `yaml:"amount"`
+	Interval int    `yaml:"interval"`
+	Amount   int    `yaml:"amount"`
 }
 
 type AutoBuy struct {
@@ -179,7 +179,6 @@ func (c Config) Validate() error {
 			return fmt.Errorf("features.custom_commands[%v].amount: value must be greater than or equal to 0", i)
 		}
 	}
-
 
 	for i, instance := range c.InstancesOpts {
 		if instance.Token == "" {

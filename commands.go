@@ -75,7 +75,6 @@ func commands() (cmds []*scheduler.Command) {
 		cmds = append(cmds, sellCmds[0])
 	}
 
-
 	for _, cmd := range cfg.Features.CustomCommands {
 		// cmd.Value and cmd.Amount are not checked for correct values here
 		// because they were checked when the application started using
