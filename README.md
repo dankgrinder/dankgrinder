@@ -112,7 +112,7 @@ Name | Type | Description
 Name | Type | Description
 ---- | ---- | ----
 `value` | string | The value of the command, for example: `pls dep max`
-`interval` | integer | The interval at which this command will be resent in seconds. Time may vary depending on other commands and responses. If `0` the command will only run once in the beginning of every active shift
+`interval` | integer | The interval at which this command will be re-sent in seconds. Time may vary depending on other commands and responses. If `0` the command will only run once in the beginning of every active shift
 `amount` | unsigned integer | The amount of times this command will be run in total every active shift. Set to `0` for no limit
 
 ### Auto-buy object
@@ -141,12 +141,12 @@ Name | Type | Description
 ### Cooldown object
 Name | Type | Description
 ---- | ---- | ----
-`beg` | integer | Interval at which the beg command will be resent
-`search` | integer | Interval at which the search command will be resent
-`highlow` | integer | Interval at which the highlow command will be resent
-`postmeme` | integer | Interval at which the postmeme command will be resent
-`fish` | integer | Interval at which the fish command will be resent
-`hunt` | integer | Interval at which the hunt command will be resent
+`beg` | integer | Interval at which the beg command will be re-sent
+`search` | integer | Interval at which the search command will be re-sent
+`highlow` | integer | Interval at which the highlow command will be re-sent
+`postmeme` | integer | Interval at which the postmeme command will be re-sent
+`fish` | integer | Interval at which the fish command will be re-sent
+`hunt` | integer | Interval at which the hunt command will be re-sent
 `margin` | integer | A positive value which is added to every value in this object to account for timing errors
 
 ### Suspicion avoidance object
