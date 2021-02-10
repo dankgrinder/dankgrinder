@@ -71,7 +71,7 @@ func (r *Responder) search(msg discord.Message) {
 	}
 	r.Sdlr.ResumeWithCommand(&scheduler.Command{
 		Value: r.SearchCancel[rand.Intn(len(r.SearchCancel))],
-		Log: "no allowed search options provided, responding",
+		Log:   "no allowed search options provided, responding",
 	})
 }
 
