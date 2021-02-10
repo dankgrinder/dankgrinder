@@ -149,15 +149,27 @@ func (s *Scheduler) Resume() error {
 	return nil
 }
 
-// ResumeWithCommand is the same as Resume but executes the passed command
-// immediately after resuming. Additionally, if the scheduler is not awaiting a
-// resume, it will schedule the command in the priority queue instead.
-func (s *Scheduler) ResumeWithCommand(cmd *Command) {
+// ResumeWithCommandOrPrioritySchedule is the same as ResumeWithCommand, but if
+// the scheduler is not awaiting a resume, it will schedule the command in the
+// priority queue instead.
+func (s *Scheduler) ResumeWithCommandOrPrioritySchedule(cmd *Command) {
 	if s.closed {
 		return
 	}
 	if !s.awaitResume {
 		s.PrioritySchedule(cmd)
+	}
+	s.resume <- cmd
+}
+
+// ResumeWithCommand is the same as Resume but executes the passed command
+// immediately after resuming.
+func (s *Scheduler) ResumeWithCommand(cmd *Command) {
+	if s.closed {
+		return
+	}
+	if !s.awaitResume {
+		return
 	}
 	s.resume <- cmd
 }
