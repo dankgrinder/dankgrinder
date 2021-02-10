@@ -94,10 +94,10 @@ Name | Type | Description
 ### Features object
 Name | Type | Description
 ---- | ---- | ----
-`commands` | [commands object]() | Enable or disable certain commands
-`custom_commands` | [custom commands object]() | Configure your own, custom commands for the program to use
-`auto_buy` | [auto buy object]() | Options for the automatic buying of certain items if it is detected that they are not available
-`auto_sell` | [auto sell object]() | Options for the automatic, periodic selling of certain items
+`commands` | [commands object](#commands-object) | Enable or disable certain commands
+`custom_commands` | array of [custom command object](#custom-command-object) | Configure your own, custom commands for the program to use
+`auto_buy` | [auto buy object](#auto-buy-object) | Options for the automatic buying of certain items if it is detected that they are not available
+`auto_sell` | [auto sell object](#auto-sell-object) | Options for the automatic, periodic selling of certain items
 `balance_check` | boolean | Enable checking the balance of the instance occasionally. Will also report an average income per hour for the active, current shift
 `log_to_file` | boolean | Whether or not to log errors and information to a file. If running multiple instances a log file for each instance will always be created, regardless of the value of this property
 `debug` | boolean | Enable logging debug level information. Currently has no effect
@@ -135,7 +135,7 @@ Name | Type | Description
 `postmeme` | array of strings | What options can be chosen for the postmeme command. The program will pick one randomly
 `allowed_searches` | array of strings | The searches the application is allowed to pick. Items higher/earlier in the list have higher priority
 `search_cancel` | array of strings | List of things the program will say to cancel a search when no allowed searches are provided. It will pick one randomly
-`cooldown` | [cooldown object]() | Cooldowns of commands (not custom commands)
+`cooldown` | [cooldown object](#cooldown-object) | Cooldowns of commands (not custom commands)
 `await_response_timeout` | integer | The time that the program will wait for a response when it is expecting one. Set to a higher value when Dank Memer is slow to respond and this causes issues. Values below `3` are not recommended
 
 ### Cooldown object
