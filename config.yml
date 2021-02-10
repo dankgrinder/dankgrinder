@@ -4,43 +4,10 @@
 # See https://github.com/dankgrinder/dankgrinder#enabling-discords-developer-mode
 # for instructions on how to get a channel id.
 #
-# You can use shifts to make sure the bot is not suspicious because it is too
-# active. Base and variance are in seconds and work the same as they do with
-# typing and delay.
-#
-# For example, if you would like to have the bot be active for 6 hours per day,
-# then inactive for the remaining 18 you would do something like this (note
-# that it will loop this, so after completing the last shift it will go back
-# to the first):
-#
-#  shifts:
-#     - state: "active"
-#       duration:
-#         base: 21600
-#         variance: 0
-#     - state: "dormant"
-#       duration:
-#         base: 64800
-#         variance: 0
-#
-# A base duration of 0 means indefinite. This will be displayed as a large
-# amount of hours when running the application due to limitations.
-#
-# You should configure at least 1 instance. An instance requires a token, a
-# channel id and at least 1 shift. You may configure multiple instances to run
-# more than 1 bot at a time. Some extra instructions are provided at
-# https://github.com/dankgrinder/dankgrinder#configuration
-#
-#   instances:
-#     - token: "tokenplaceholder"
-#       channel_id: "1234567890"
-#       shifts:
-#         - state: "active"
-#           duration:
-#             base: 0
-#             variance: 0
-#
-
+# Detailed instructions on this config are available at
+# https://github.com/dankgrinder/dankgrinder#configuration.
+# Make sure you have read that as well as the frequently asked questions before
+# asking for support on GitHub or Discord.
 instances:
   - token: ""
     channel_id: ""
@@ -54,37 +21,14 @@ features:
   commands:
     fish: true
     hunt: true
-
-  # Configure custom commands. Value is the command itself. The interval is
-  # in seconds and dictates how often the command is run. The amount is how many
-  # times per active shift the command should be run. A value of 0 for the
-  # interval means it will run once in the beginning every active shift. A value
-  # of 0 for amount means there isn't a limit on how many times the command should
-  # be run. Example:
-  #
-  #   custom_commands:
-  #     - value: "pls command1"
-  #       interval: 60
-  #       amount: 0
-  #     - value: "pls command2"
-  #       interval: 300
-  #       amount: 5
-  #
-  # In example custom command 1, the value is sent every 60 seconds for infinite times,
-  # until the program enters the dormant state.
-  #
-  # In example custom command 2, the value is sent every 5 minutes for a total of 5 times
-  # per active shift.
   custom_commands:
-
   auto_buy:
     fishing_pole: true
     hunting_rifle: true
     laptop: true
-
   auto_sell:
     enable: true
-    interval: 3600 # If 0, it will run once at the beginning of every active shift.
+    interval: 3600
     items:
       - "boar"
       - "dragon"
@@ -93,6 +37,12 @@ features:
       - "deer"
       - "rabbit"
       - "skunk"
+  auto_gift:
+    enable: false
+    to: ""
+    interval: 0
+    items:
+      - ""
   balance_check: true
   log_to_file: true
   debug: false
@@ -104,9 +54,6 @@ compatibility:
     - "i"
     - "c"
     - "k"
-
-  # Search options the bot will pick if provided to it. It will prefer options
-  # which are higher in the list.
   allowed_searches:
     - "bus"
     - "coat"
@@ -119,16 +66,12 @@ compatibility:
     - "shoe"
     - "sink"
     - "car"
-
-  # Used to cancel a search when no allowed options are provided by Dank Memer.
   search_cancel:
     - "no"
     - "bad options"
     - "i don't want to die"
     - "stop"
     - "."
-
-  # Cooldown values in seconds for each command. Default is non-donator.
   cooldown:
     beg: 45
     search: 30
@@ -136,31 +79,14 @@ compatibility:
     postmeme: 60
     fish: 60
     hunt: 60
-
-    # This value in seconds in added to each cooldown to account for timing
-    # errors.
     margin: 3
-
-  # If Dank Memer takes a long time to respond to commands, increase this value.
-  # A value of less than 3 seconds is not recommended.
   await_response_timeout: 3
 
 suspicion_avoidance:
   typing:
-    # This is a base typing duration in milliseconds that is added to the TOTAL
-    # typing time. Set to 0 to disable.
     base: 0
-
-    # The typing speed in keystrokes per minute, approx. 350 is fast. Can be set to 0
-    # to use only the base and variance.
-    speed: 450
-
-    # A random value between 0 and this will be added to the TOTAL typing time
-    # in milliseconds. Set to 0 to disable.
     variance: 250
-
-  # The delay between deciding to send a command and starting to type. Base and
-  # variance work just like they do in typing.
+    speed: 450
   message_delay:
     base: 100
     variance: 400

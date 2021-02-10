@@ -215,10 +215,12 @@ func (c *WSConn) resume() error {
 
 	*c = WSConn{
 		underlying:   conn,
+		sessionID:    c.sessionID,
 		rtr:          c.rtr,
 		fatalHandler: c.fatalHandler,
 		client:       c.client,
 		seq:          c.seq,
+		closePinger:  make(chan struct{}),
 	}
 
 	interval, err := c.readHello()

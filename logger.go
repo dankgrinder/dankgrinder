@@ -110,6 +110,6 @@ func newInstanceLogger(username, dir string) *logrus.Logger {
 		dir:      dir,
 	})
 	logger.SetFormatter(&logrus.JSONFormatter{})
-	logger.AddHook(stdLoggerHook{})
+	logger.AddHook(stdLoggerHook{username: username})
 	return logger
 }
