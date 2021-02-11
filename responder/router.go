@@ -169,6 +169,10 @@ func (r *Responder) gift(msg discord.Message) {
 	if !strings.Contains(trigger, "shop") {
 		return
 	}
+	if r.Client.User.ID == r.AutoGift.To {
+		r.Sdlr.Resume()
+		return
+	}
 	if !exp.gift.Match([]byte(msg.Embeds[0].Title)) || !exp.shop.Match([]byte(trigger)) {
 		r.Sdlr.Resume()
 		return
