@@ -32,7 +32,7 @@ var exp = struct {
 	bal:    regexp.MustCompile(`\*\*Wallet\*\*: \x60?⏣?\s?([0-9,]+)\x60?`),
 	event:  regexp.MustCompile(`^(Attack the boss by typing|Type) \x60(.+)\x60`),
 	gift:   regexp.MustCompile(`[a-zA-Z\s]* \(([0-9]+) owned\)`),
-	shop:  regexp.MustCompile(`pls shop ([a-zA-Z\s]+)`),
+	shop:   regexp.MustCompile(`pls shop ([a-zA-Z\s]+)`),
 }
 
 var numFmt = message.NewPrinter(language.English)
@@ -177,7 +177,7 @@ func (r *Responder) gift(msg discord.Message) {
 	item := exp.shop.FindStringSubmatch(trigger)[1]
 	r.Sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
 		Value: fmt.Sprintf("pls gift %v %v <@%v>", amount, item, r.AutoGift.To),
-		Log: "gifting items",
+		Log:   "gifting items",
 	})
 }
 

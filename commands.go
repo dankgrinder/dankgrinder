@@ -81,8 +81,8 @@ func cmds() (cmds []*scheduler.Command) {
 		var giftCmds []*scheduler.Command
 		for i, item := range cfg.Features.AutoGift.Items {
 			giftCmds = append(giftCmds, &scheduler.Command{
-				Value:    fmt.Sprintf("pls shop %v", item),
-				Interval: time.Second * 25,
+				Value:       fmt.Sprintf("pls shop %v", item),
+				Interval:    time.Second * 25,
 				AwaitResume: true,
 			})
 			if i != 0 {

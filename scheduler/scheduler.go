@@ -26,12 +26,12 @@ type Scheduler struct {
 	AwaitResumeTimeout time.Duration
 	FatalHandler       func(err error)
 
-	queue         *queue
-	priorityQueue *queue
-	close         chan struct{}
-	closed        bool
-	resume        chan *Command
-	awaitResume   bool
+	queue              *queue
+	priorityQueue      *queue
+	close              chan struct{}
+	closed             bool
+	resume             chan *Command
+	awaitResume        bool
 	awaitResumeTrigger string
 }
 
