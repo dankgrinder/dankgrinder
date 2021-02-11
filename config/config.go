@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 )
@@ -201,6 +202,12 @@ func (c Config) Validate() error {
 	for i, cmd := range c.Features.CustomCommands {
 		if cmd.Value == "" {
 			return fmt.Errorf("features.custom_commands[%v].value: no value", i)
+		}
+		if strings.Contains(cmd.Value, "pls shop") {
+			return fmt.Errorf("features.custom_commands[%v].value: this custom command is disallowed, use auto-gift instead")
+		}
+		if strings.Contains(cmd.Value, "pls sell") {
+			return fmt.Errorf("features.custom_commands[%v].value: this custom command is disallowed, use auto-sell instead")
 		}
 		if cmd.Amount < 0 {
 			return fmt.Errorf("features.custom_commands[%v].amount: value must be greater than or equal to 0", i)
