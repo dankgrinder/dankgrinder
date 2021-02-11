@@ -68,7 +68,7 @@ func main() {
 		ins = append(ins, &instance{
 			client:    client,
 			channelID: opts.ChannelID,
-			cmds:      commands(),
+			cmds:      cmds(),
 			shifts:    opts.Shifts,
 			wg:        wg,
 		})

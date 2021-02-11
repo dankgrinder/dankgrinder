@@ -1,6 +1,7 @@
 package responder
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"regexp"
@@ -21,13 +22,17 @@ var exp = struct {
 	fh,
 	hl,
 	bal,
+	gift,
+	shop,
 	event *regexp.Regexp
 }{
-	search: regexp.MustCompile(`Pick from the list below and type the name in chat\.\s\x60(?P<m1>.+)\x60,\s\x60(?P<m2>.+)\x60,\s\x60(?P<m3>.+)\x60`),
-	fh:     regexp.MustCompile(`10\sseconds.*\s?([Tt]yping|[Tt]ype)\s\x60(?P<m1>.+)\x60`),
-	hl:     regexp.MustCompile(`Your hint is \*\*(?P<m1>[0-9]+)\*\*`),
-	bal:    regexp.MustCompile(`\*\*Wallet\*\*: \x60?⏣?\s?(?P<m1>[0-9,]+)\x60?`),
-	event:  regexp.MustCompile(`^(Attack the boss by typing|Type) \x60(?P<m1>.+)\x60`),
+	search: regexp.MustCompile(`Pick from the list below and type the name in chat\.\s\x60(.+)\x60,\s\x60(.+)\x60,\s\x60(.+)\x60`),
+	fh:     regexp.MustCompile(`10\sseconds.*\s?([Tt]yping|[Tt]ype)\s\x60(.+)\x60`),
+	hl:     regexp.MustCompile(`Your hint is \*\*([0-9]+)\*\*`),
+	bal:    regexp.MustCompile(`\*\*Wallet\*\*: \x60?⏣?\s?([0-9,]+)\x60?`),
+	event:  regexp.MustCompile(`^(Attack the boss by typing|Type) \x60(.+)\x60`),
+	gift:   regexp.MustCompile(`[a-zA-Z\s]* \(([0-9]+) owned\)`),
+	shop:  regexp.MustCompile(`pls shop ([a-zA-Z\s]+)`),
 }
 
 var numFmt = message.NewPrinter(language.English)
@@ -156,6 +161,26 @@ func (r *Responder) abFishingPole(_ discord.Message) {
 	})
 }
 
+func (r *Responder) gift(msg discord.Message) {
+	if !r.AutoGift.Enable {
+		return
+	}
+	trigger := r.Sdlr.AwaitResumeTrigger()
+	if !strings.Contains(trigger, "shop") {
+		return
+	}
+	if !exp.gift.Match([]byte(msg.Embeds[0].Title)) || !exp.shop.Match([]byte(trigger)) {
+		r.Sdlr.Resume()
+		return
+	}
+	amount := exp.gift.FindStringSubmatch(msg.Embeds[0].Title)[1]
+	item := exp.shop.FindStringSubmatch(trigger)[1]
+	r.Sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
+		Value: fmt.Sprintf("pls gift %v %v <@%v>", amount, item, r.AutoGift.To),
+		Log: "gifting items",
+	})
+}
+
 // clean removes all characters except for ASCII characters [32, 126] (basically
 // all keys you would find on a US keyboard).
 func clean(s string) string {
@@ -217,7 +242,7 @@ func (r *Responder) router() *discord.MessageRouter {
 		HasEmbeds(true).
 		Handler(r.balCheck)
 
-	// Auto buy laptop.
+	// Auto-buy laptop.
 	rtr.NewRoute().
 		Channel(r.ChannelID).
 		Author(DMID).
@@ -225,7 +250,7 @@ func (r *Responder) router() *discord.MessageRouter {
 		Mentions(r.Client.User.ID).
 		Handler(r.abLaptop)
 
-	// Auto buy fishing pole.
+	// Auto-buy fishing pole.
 	rtr.NewRoute().
 		Channel(r.ChannelID).
 		Author(DMID).
@@ -233,13 +258,20 @@ func (r *Responder) router() *discord.MessageRouter {
 		Mentions(r.Client.User.ID).
 		Handler(r.abFishingPole)
 
-	// Auto buy hunting rifle.
+	// Auto-buy hunting rifle.
 	rtr.NewRoute().
 		Channel(r.ChannelID).
 		Author(DMID).
 		ContentContains("You don't have a hunting rifle").
 		Mentions(r.Client.User.ID).
 		Handler(r.abHuntingRifle)
+
+	// Auto-gift
+	rtr.NewRoute().
+		Channel(r.ChannelID).
+		Author(DMID).
+		HasEmbeds(true).
+		Handler(r.gift)
 
 	return rtr
 }

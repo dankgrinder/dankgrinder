@@ -29,6 +29,7 @@ type Responder struct {
 	SearchCancel    []string
 	BalanceCheck    bool
 	AutoBuy         *config.AutoBuy
+	AutoGift        *config.AutoGift
 
 	ws           *discord.WSConn
 	startingBal  int

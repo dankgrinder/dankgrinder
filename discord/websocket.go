@@ -84,7 +84,7 @@ func (client Client) NewWSConn(rtr *MessageRouter, fatalHandler func(err error))
 				},
 				Compress: false,
 			},
-		}})
+	}})
 	if err != nil {
 		c.underlying.Close()
 		return nil, fmt.Errorf("error while sending authentication message: %v", err)

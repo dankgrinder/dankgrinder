@@ -138,6 +138,7 @@ func (in *instance) startInterface() error {
 		SearchCancel:    cfg.Compat.SearchCancel,
 		BalanceCheck:    cfg.Features.BalanceCheck,
 		AutoBuy:         &cfg.Features.AutoBuy,
+		AutoGift: &cfg.Features.AutoGift,
 		Logger:          in.logger,
 	}
 	if err := in.rspdr.Start(); err != nil {
