@@ -107,14 +107,7 @@ func (c *WSConn) listen() {
 	for {
 		_, b, err := c.underlying.ReadMessage()
 
-		if closeErr, ok := err.(*websocket.CloseError); ok && closeErr.Code == websocket.CloseGoingAway {
-			c.closePinger <- struct{}{}
-			c.underlying.Close()
-			if err = c.resume(); err != nil {
-				c.fatalHandler(err)
-			}
-			break
-		} else if err != nil {
+		if err != nil {
 			c.closePinger <- struct{}{}
 			c.underlying.Close()
 			c.fatalHandler(err)
@@ -204,54 +197,6 @@ func (c *WSConn) awaitEvent(e string) error {
 	if body.EventName != e {
 		return fmt.Errorf("unexpected event name for received websocket message: %v, expected %v", body.EventName, e)
 	}
-	return nil
-}
-
-func (c *WSConn) resume() error {
-	conn, _, err := websocket.DefaultDialer.Dial(gatewayURL, nil)
-	if err != nil {
-		return fmt.Errorf("error while establishing websocket connection: %v", err)
-	}
-
-	*c = WSConn{
-		underlying:   conn,
-		sessionID:    c.sessionID,
-		rtr:          c.rtr,
-		fatalHandler: c.fatalHandler,
-		client:       c.client,
-		seq:          c.seq,
-		closePinger:  make(chan struct{}),
-	}
-
-	interval, err := c.readHello()
-	if err != nil {
-		c.underlying.Close()
-		return err
-	}
-
-	// Authenticate with old session.
-	err = c.underlying.WriteJSON(&Event{
-		Op: OpcodeResume,
-		Data: Data{
-			Identify: Identify{
-				Token: c.client.Token,
-			},
-			SessionID: c.sessionID,
-			Sequence:  c.seq,
-		},
-	})
-	if err != nil {
-		c.underlying.Close()
-		return fmt.Errorf("error while sending resume message: %v", err)
-	}
-
-	if err = c.awaitEvent(EventNameResumed); err != nil {
-		c.underlying.Close()
-		return fmt.Errorf("error while awaiting resumed message: %v", err)
-	}
-
-	go c.ping(interval)
-	go c.listen()
 	return nil
 }
 
