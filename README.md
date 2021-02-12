@@ -96,8 +96,9 @@ Name | Type | Description
 ---- | ---- | ----
 `commands` | [commands object](#commands-object) | Enable or disable certain commands
 `custom_commands` | array of [custom command object](#custom-command-object) | Configure your own, custom commands for the program to use
-`auto_buy` | [auto buy object](#auto-buy-object) | Options for the automatic buying of certain items if it is detected that they are not available
-`auto_sell` | [auto sell object](#auto-sell-object) | Options for the automatic, periodic selling of certain items
+`auto_buy` | [auto-buy object](#auto-buy-object) | Options for the automatic buying of certain items if it is detected that they are not available
+`auto_sell` | [auto-sell object](#auto-sell-object) | Options for the automatic, periodic selling of certain items
+`auto_gift` | [auto-gift object](#auto-gift-object) | Options for the automatic, periodic gifting of certain items to a specified user id
 `balance_check` | boolean | Enable checking the balance of the instance occasionally. Will also report an average income per hour for the active, current shift
 `log_to_file` | boolean | Whether or not to log errors and information to a file. If running multiple instances a log file for each instance will always be created, regardless of the value of this property
 `debug` | boolean | Enable logging debug level information. Currently has no effect
@@ -126,8 +127,16 @@ Name | Type | Description
 Name | Type | Description
 ---- | ---- | ----
 `enable` | boolean | Whether or not to enable automatic selling
-`interval` | integer | The interval at which items will be sold during an active shift
+`interval` | integer | The interval at which items will be sold during an active shift. If set to 0, items will only be sold once at the beginning of every active shift
 `items` | array of strings | The Dank Memer item ids of the items to sell
+
+### Auto-gift object
+Name | Type | Description
+---- | ---- | ----
+`enable` | boolean | Whether or not to enable automatic gifting
+`to` | string | The user id of the account you want the instances to gift the items to
+`interval` | integer | The interval at which items will be gifted during an active shift. If set to 0, items will only be gifted once at the beginning of every active shift
+`items` | array of strings | The Dank Memer item ids of the items to gift
 
 ### Compatibility object
 Name | Type | Description
