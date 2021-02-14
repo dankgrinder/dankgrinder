@@ -27,8 +27,8 @@ features:
     hunting_rifle: true
     laptop: true
   auto_sell:
-    enable: true
-    interval: 3600
+    enable: false
+    interval: 0
     items:
       - "boar"
       - "dragon"
@@ -37,6 +37,13 @@ features:
       - "deer"
       - "rabbit"
       - "skunk"
+  auto_gift:
+    enable: false
+    to: ""
+    interval: 0
+    items:
+      - "kn"
+      - "zz"
   balance_check: true
   log_to_file: true
   debug: false
@@ -74,7 +81,7 @@ compatibility:
     fish: 60
     hunt: 60
     margin: 3
-  await_response_timeout: 3
+  await_response_timeout: 4
 
 suspicion_avoidance:
   typing:

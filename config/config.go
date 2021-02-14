@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"regexp"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 )
@@ -55,9 +57,17 @@ type Features struct {
 	CustomCommands []CustomCommand `yaml:"custom_commands"`
 	AutoBuy        AutoBuy         `yaml:"auto_buy"`
 	AutoSell       AutoSell        `yaml:"auto_sell"`
+	AutoGift       AutoGift        `yaml:"auto_gift"`
 	BalanceCheck   bool            `yaml:"balance_check"`
 	LogToFile      bool            `yaml:"log_to_file"`
 	Debug          bool            `yaml:"debug"`
+}
+
+type AutoGift struct {
+	Enable   bool     `yaml:"enable"`
+	To       string   `yaml:"to"`
+	Interval int      `yaml:"interval"`
+	Items    []string `yaml:"items"`
 }
 
 type CustomCommand struct {
@@ -164,16 +174,40 @@ func (c Config) Validate() error {
 	if c.Compat.AwaitResponseTimeout < 0 {
 		return fmt.Errorf("compatibility.await_response_timeout: value must be greater than 0")
 	}
-	if c.Features.AutoSell.Interval <= 0 {
-		return fmt.Errorf("features.auto_sell.interval: value must be greater than 0")
+
+	if c.Features.AutoSell.Enable {
+		if c.Features.AutoSell.Interval < 0 {
+			return fmt.Errorf("features.auto_sell.interval: value must be greater than or equal to 0")
+		}
+		if len(c.Features.AutoSell.Items) == 0 {
+			return fmt.Errorf("features.auto_sell.items: auto_sell enabled but no items configured")
+		}
 	}
-	if c.Features.AutoSell.Enable && len(c.Features.AutoSell.Items) == 0 {
-		return fmt.Errorf("features.auto_sell: auto_sell enabled but no items configured")
+
+	if c.Features.AutoGift.Enable {
+		if c.Features.AutoGift.Interval < 0 {
+			return fmt.Errorf("features.auto_gift.interval: value must be greater than or equal to 0")
+		}
+		if len(c.Features.AutoGift.Items) == 0 {
+			return fmt.Errorf("features.auto_gift.items: auto_gift enabled but no items configured")
+		}
+		if c.Features.AutoGift.To == "" {
+			return fmt.Errorf("features.auto_gift.to: no recipient id")
+		}
+		if !validID(c.Features.AutoGift.To) {
+			return fmt.Errorf("features.auto_gift.to: invalid id")
+		}
 	}
 
 	for i, cmd := range c.Features.CustomCommands {
 		if cmd.Value == "" {
 			return fmt.Errorf("features.custom_commands[%v].value: no value", i)
+		}
+		if strings.Contains(cmd.Value, "pls shop") {
+			return fmt.Errorf("features.custom_commands[%v].value: this custom command is disallowed, use auto-gift instead")
+		}
+		if strings.Contains(cmd.Value, "pls sell") {
+			return fmt.Errorf("features.custom_commands[%v].value: this custom command is disallowed, use auto-sell instead")
 		}
 		if cmd.Amount < 0 {
 			return fmt.Errorf("features.custom_commands[%v].amount: value must be greater than or equal to 0", i)
@@ -187,6 +221,9 @@ func (c Config) Validate() error {
 		if instance.ChannelID == "" {
 			return fmt.Errorf("instances[%v]: no channel id", i)
 		}
+		if !validID(instance.ChannelID) {
+			return fmt.Errorf("instances[%v]: invalid channel id", i)
+		}
 		if len(instance.Shifts) == 0 {
 			return fmt.Errorf("instances[%v]: no shifts", i)
 		}
@@ -197,4 +234,8 @@ func (c Config) Validate() error {
 		}
 	}
 	return nil
+}
+
+func validID(id string) bool {
+	return regexp.MustCompile(`^[0-9]+$`).Match([]byte(id))
 }

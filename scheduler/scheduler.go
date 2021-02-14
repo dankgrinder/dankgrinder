@@ -26,12 +26,13 @@ type Scheduler struct {
 	AwaitResumeTimeout time.Duration
 	FatalHandler       func(err error)
 
-	queue         *queue
-	priorityQueue *queue
-	close         chan struct{}
-	closed        bool
-	resume        chan *Command
-	awaitResume   bool
+	queue              *queue
+	priorityQueue      *queue
+	close              chan struct{}
+	closed             bool
+	resume             chan *Command
+	awaitResume        bool
+	awaitResumeTrigger string
 }
 
 type Command struct {
@@ -118,6 +119,16 @@ func (s *Scheduler) Start() error {
 	return nil
 }
 
+// AwaitResumeTrigger returns the value of the command that caused the await
+// resume state. An empty string will be returned if the scheduler is not awaiting
+// a resume at the time this method is called.
+func (s *Scheduler) AwaitResumeTrigger() string {
+	if !s.awaitResume {
+		return ""
+	}
+	return s.awaitResumeTrigger
+}
+
 func (s *Scheduler) Schedule(cmd *Command) {
 	if s.closed {
 		return
@@ -138,15 +149,14 @@ func (s *Scheduler) PrioritySchedule(cmd *Command) {
 // Resume makes a scheduler continue after being paused by a command with
 // an AwaitResume value of true. Will block until scheduler has received the
 // resume call.
-func (s *Scheduler) Resume() error {
+func (s *Scheduler) Resume() {
 	if s.closed {
-		return nil
+		return
 	}
 	if !s.awaitResume {
-		return fmt.Errorf("scheduler is not awaiting a resume")
+		return
 	}
 	s.resume <- nil
-	return nil
 }
 
 // ResumeWithCommandOrPrioritySchedule is the same as ResumeWithCommand, but if
@@ -238,6 +248,7 @@ func (s *Scheduler) send(cmd *Command) {
 	}
 	s.reschedule(cmd)
 	if cmd.AwaitResume {
+		s.awaitResumeTrigger = cmd.Value
 		s.awaitResume = true
 	}
 }

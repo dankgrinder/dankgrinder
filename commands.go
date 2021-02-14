@@ -15,7 +15,7 @@ import (
 
 // commands returns a command pointer slice with all commands that should be
 // executed periodically. It contains all commands as configured.
-func commands() (cmds []*scheduler.Command) {
+func cmds() (cmds []*scheduler.Command) {
 	cmds = []*scheduler.Command{
 		{
 			Value:    "pls beg",
@@ -57,6 +57,8 @@ func commands() (cmds []*scheduler.Command) {
 			Interval: time.Minute * 2,
 		})
 	}
+
+	// TODO: DRY with auto-sell and auto-gift
 	if cfg.Features.AutoSell.Enable {
 		var sellCmds []*scheduler.Command
 		for i, item := range cfg.Features.AutoSell.Items {
@@ -73,6 +75,25 @@ func commands() (cmds []*scheduler.Command) {
 			}
 		}
 		cmds = append(cmds, sellCmds[0])
+	}
+
+	if cfg.Features.AutoGift.Enable {
+		var giftCmds []*scheduler.Command
+		for i, item := range cfg.Features.AutoGift.Items {
+			giftCmds = append(giftCmds, &scheduler.Command{
+				Value:       fmt.Sprintf("pls shop %v", item),
+				Interval:    time.Second * 25,
+				AwaitResume: true,
+			})
+			if i != 0 {
+				giftCmds[i-1].Next = giftCmds[i]
+			}
+			if i == len(cfg.Features.AutoGift.Items)-1 {
+				giftCmds[i].Next = giftCmds[0]
+				giftCmds[i].Interval = sec(cfg.Features.AutoGift.Interval)
+			}
+		}
+		cmds = append(cmds, giftCmds[0])
 	}
 
 	for _, cmd := range cfg.Features.CustomCommands {

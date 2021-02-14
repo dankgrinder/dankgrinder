@@ -90,7 +90,7 @@ func (in *instance) start() error {
 					continue
 				}
 				if err := in.startInterface(); err != nil {
-					in.logger.Errorf("%v", err)
+					in.logger.Errorf("instance fatal: %v", err)
 					return
 				}
 				for _, cmd := range in.cmds {
@@ -138,6 +138,7 @@ func (in *instance) startInterface() error {
 		SearchCancel:    cfg.Compat.SearchCancel,
 		BalanceCheck:    cfg.Features.BalanceCheck,
 		AutoBuy:         &cfg.Features.AutoBuy,
+		AutoGift:        &cfg.Features.AutoGift,
 		Logger:          in.logger,
 	}
 	if err := in.rspdr.Start(); err != nil {
