@@ -90,7 +90,7 @@ func (in *instance) start() error {
 					continue
 				}
 				if err := in.startInterface(); err != nil {
-					in.logger.Errorf("%v", err)
+					in.logger.Errorf("instance fatal: %v", err)
 					return
 				}
 				for _, cmd := range in.cmds {
