@@ -3,9 +3,10 @@
 // This source code has been released under the GNU Affero General Public
 // License v3.0. A copy of this license is available at
 // https://www.gnu.org/licenses/agpl-3.0.en.html
-
+//DO
 package discord
 
+//DO
 import (
 	"fmt"
 	"regexp"

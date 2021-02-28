@@ -3,7 +3,7 @@
 // This source code has been released under the GNU Affero General Public
 // License v3.0. A copy of this license is available at
 // https://www.gnu.org/licenses/agpl-3.0.en.html
-
+//discord !!!!!!!!!!!!!!!!!!!!!!̊͑̅̓!̴͉̰̲͙̦̘̦ͮ̏ͩ̅!͌͏̻̭̺̹̱̺!̳̣̱͔͖͐ͪ̈́͘!҉̣͙̰̞̮!̩̰̦̩ͦ̇̕!͇̩̯̯ͮͯ͒͜!̧̼̹͙̟̓̈̆̀!͈̞̭̹̊̓̀͟ͅ!̙̲̋͋ͪ͑͠!͆҉̞̮͔͉͓̦͕̥
 package discord
 
 import (
@@ -17,12 +17,12 @@ import (
 var (
 	ErrInvalidAuthorization = fmt.Errorf("invalid authorization, try using a new token")
 	ErrForbidden            = fmt.Errorf("forbidden, your ip address may have been blocked or your account might need verification")
-)
+) //slow breaths sssllloooowwwww bbbbrrrreeeeaaaatttthhhhssss
 
 type Client struct {
 	Token string
 	User  User
-}
+} //huh
 
 func NewClient(token string) (*Client, error) {
 	c := &Client{Token: token}
@@ -32,7 +32,7 @@ func NewClient(token string) (*Client, error) {
 	}
 	c.User = u
 	return c, nil
-}
+} //bruhhhhh
 
 func (client Client) SendMessage(content, channelID string, typing time.Duration) error {
 	if client.Token == "" {
@@ -57,7 +57,7 @@ func (client Client) SendMessage(content, channelID string, typing time.Duration
 			}
 			time.Sleep(s)
 		}
-	}
+	} //tippitytaptap
 
 	reqURL := fmt.Sprintf("https://discord.com/api/v8/channels/%v/messages", channelID)
 
@@ -73,7 +73,7 @@ func (client Client) SendMessage(content, channelID string, typing time.Duration
 	if err != nil {
 		return fmt.Errorf("error while creating http request: %v", err)
 	}
-	req.Header.Add("Authorization", client.Token)
+	req.Header.Add("Authorization", client.Token) // websocket time baby
 	req.Header.Add("User-Agent", "Chrome/86.0.4240.75")
 	req.Header.Add("Accept-Language", "en-GB")
 	req.Header.Add("Content-Type", "application/json")
@@ -162,3 +162,5 @@ func (client Client) headers(r *http.Request) *http.Request {
 	r.Header.Add("Accept-Language", "en-GB")
 	return r
 }
+
+//that was funny

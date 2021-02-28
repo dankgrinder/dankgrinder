@@ -3,9 +3,10 @@
 // This source code has been released under the GNU Affero General Public
 // License v3.0. A copy of this license is available at
 // https://www.gnu.org/licenses/agpl-3.0.en.html
-
+//DO
 package discord
 
+//DO
 import (
 	"encoding/json"
 	"fmt"
@@ -14,8 +15,10 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+//DO
 const gatewayURL = "wss://gateway.discord.gg/?encoding=json&v=8"
 
+//DO
 type WSConn struct {
 	underlying *websocket.Conn
 	sessionID  string
@@ -34,6 +37,7 @@ type WSConnOpts struct {
 	FatalHandler  func(err *websocket.CloseError)
 }
 
+//websocket
 func (client Client) NewWSConn(rtr *MessageRouter, fatalHandler func(err error)) (*WSConn, error) {
 	conn, _, err := websocket.DefaultDialer.Dial(gatewayURL, nil)
 	if err != nil {

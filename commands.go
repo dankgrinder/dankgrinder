@@ -15,6 +15,7 @@ import (
 
 // commands returns a command pointer slice with all commands that should be
 // executed periodically. It contains all commands as configured.
+//^^ lmao
 func cmds() (cmds []*scheduler.Command) {
 	cmds = []*scheduler.Command{
 		{

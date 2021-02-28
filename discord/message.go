@@ -137,4 +137,4 @@ type EmbedAuthor struct {
 type EmbedProvider struct {
 	Name string `json:"name,omitempty"`
 	URL  string `json:"url,omitempty"`
-}
+} //how why when who                                 what

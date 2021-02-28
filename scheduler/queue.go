@@ -22,6 +22,7 @@ type queue struct {
 	close     chan struct{}
 }
 
+//queue
 func newQueue() *queue {
 	q := &queue{
 		enqueue:   make(chan *Command),
@@ -73,4 +74,5 @@ func (q *queue) Close() error {
 	close(q.enqueue)
 	close(q.dequeue)
 	return nil
-}
+} //eW91IG11c3QgaHVycnk=
+//lmao

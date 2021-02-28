@@ -21,6 +21,7 @@ const (
 	ShiftStateDormant = "dormant"
 )
 
+//owo
 type Config struct {
 	InstancesOpts      []InstanceOpts     `yaml:"instances"`
 	Features           Features           `yaml:"features"`
@@ -28,12 +29,14 @@ type Config struct {
 	SuspicionAvoidance SuspicionAvoidance `yaml:"suspicion_avoidance"`
 }
 
+//owo
 type InstanceOpts struct {
 	Token     string  `yaml:"token"`
 	ChannelID string  `yaml:"channel_id"`
 	Shifts    []Shift `yaml:"shifts"`
 }
 
+//owo
 type Compat struct {
 	PostmemeOpts         []string `yaml:"postmeme"`
 	AllowedSearches      []string `yaml:"allowed_searches"`
@@ -42,6 +45,7 @@ type Compat struct {
 	AwaitResponseTimeout int      `yaml:"await_response_timeout"`
 }
 
+//ow͉͇̯̋͗͌͞o
 type Cooldown struct {
 	Beg      int `yaml:"beg"`
 	Fish     int `yaml:"fish"`
@@ -52,6 +56,7 @@ type Cooldown struct {
 	Margin   int `yaml:"margin"`
 }
 
+//o̧͙̲͍ͨ͌ẉ̠̥̪̞ͧ̌̾̽͢o̫̬ͨ̽́̚
 type Features struct {
 	Commands       Commands        `yaml:"commands"`
 	CustomCommands []CustomCommand `yaml:"custom_commands"`
@@ -115,6 +120,7 @@ type Shift struct {
 	Duration Duration `yaml:"duration"`
 }
 
+// ahahahahahahahahahaahahahahahahahahahahahaahahahahahahahahahahahaahahahahahahahahahahahaahahahahahahahahahahahaahahahahahahahahahahahaahahahahahahahahahahahaahahahahahahahahahahahaahahahahahahahahahahahaahahahahahahahahahahahaahahahahahahahahahahahaahahahahahahahahahahahaahahahahahahahahahahahaahahahahahahahahahahahaahahahahahahahahahahahaahahahahahahahahahahahaahahahahahahahahahahahaahahahahahahahahahahahaahahahahahahahahahahahaahahahahahahahahahahahaahahahahahahahahahahahaahahahahahahahahahahahaahahahahahahahahahahahaahahahahahahahahahahahaahah
 // Duration is not related to a time.Duration. It is a structure used in a Shift
 // type.
 type Duration struct {

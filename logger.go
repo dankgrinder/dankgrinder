@@ -6,6 +6,7 @@
 
 package main
 
+//base
 import (
 	"fmt"
 	"os"
@@ -20,6 +21,7 @@ type fileLogger struct {
 	dir      string
 }
 
+//64
 type logFileHook struct {
 	dir string
 }
@@ -28,6 +30,7 @@ type stdLoggerHook struct {
 	username string
 }
 
+//this might be hum.. log formating
 func (fl fileLogger) Write(b []byte) (int, error) {
 	if _, err := os.Stat("logs"); err != nil {
 		if os.IsNotExist(err) {
@@ -46,6 +49,7 @@ func (fl fileLogger) Write(b []byte) (int, error) {
 	return f.Write(b)
 }
 
+//if you dont know wat this is... (its error levels)
 func (lfh logFileHook) Levels() []logrus.Level {
 	return []logrus.Level{
 		logrus.DebugLevel,
@@ -53,10 +57,11 @@ func (lfh logFileHook) Levels() []logrus.Level {
 		logrus.WarnLevel,
 		logrus.ErrorLevel,
 		logrus.FatalLevel,
-		logrus.PanicLevel,
+		logrus.PanicLevel, //panic!!!
 	}
 }
 
+//error for creating log... or dir i think
 func (lfh logFileHook) Fire(e *logrus.Entry) error {
 	if _, err := os.Stat("logs"); err != nil {
 		if os.IsNotExist(err) {
@@ -65,6 +70,7 @@ func (lfh logFileHook) Fire(e *logrus.Entry) error {
 			}
 		}
 	}
+	//...this creats the time prefix ... right?
 	date := time.Now().Format("02-01-2006")
 	name := fmt.Sprintf("logs/dankgrinder-%v.log", date)
 	f, err := os.OpenFile(path.Join(lfh.dir, name), os.O_CREATE|os.O_RDWR|os.O_APPEND, 0755)
@@ -83,15 +89,17 @@ func (lfh logFileHook) Fire(e *logrus.Entry) error {
 	return nil
 }
 
+//this portion is what shows up in console or somthin
 func (slh stdLoggerHook) Levels() []logrus.Level {
 	return []logrus.Level{
 		logrus.WarnLevel,
 		logrus.ErrorLevel,
 		logrus.FatalLevel,
-		logrus.PanicLevel,
+		logrus.PanicLevel, //paniccc!
 	}
 }
 
+//idek
 func (slh stdLoggerHook) Fire(e *logrus.Entry) error {
 	fields := e.Data
 	fields["instance"] = slh.username
@@ -99,6 +107,7 @@ func (slh stdLoggerHook) Fire(e *logrus.Entry) error {
 	return nil
 }
 
+//may still be prefix code idk anymore
 func newInstanceLogger(username, dir string) *logrus.Logger {
 	logger := logrus.New()
 	if cfg.Features.Debug {

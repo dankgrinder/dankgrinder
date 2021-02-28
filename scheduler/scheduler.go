@@ -33,7 +33,7 @@ type Scheduler struct {
 	resume             chan *Command
 	awaitResume        bool
 	awaitResumeTrigger string
-}
+} //Déjà vu hm
 
 type Command struct {
 	Value string
@@ -64,6 +64,7 @@ type Command struct {
 	execs uint
 }
 
+// I feel like someone is watching us
 func (s *Scheduler) Start() error {
 	if s.Client == nil {
 		return fmt.Errorf("no client")
@@ -80,7 +81,7 @@ func (s *Scheduler) Start() error {
 	if s.FatalHandler == nil {
 		s.FatalHandler = func(err error) {}
 	}
-
+	//what is happening
 	s.queue, s.priorityQueue = newQueue(), newQueue()
 	s.close, s.resume = make(chan struct{}), make(chan *Command)
 
@@ -129,6 +130,7 @@ func (s *Scheduler) AwaitResumeTrigger() string {
 	return s.awaitResumeTrigger
 }
 
+//must be on time
 func (s *Scheduler) Schedule(cmd *Command) {
 	if s.closed {
 		return
@@ -146,6 +148,7 @@ func (s *Scheduler) PrioritySchedule(cmd *Command) {
 	s.priorityQueue.enqueue <- cmd
 }
 
+// MUST
 // Resume makes a scheduler continue after being paused by a command with
 // an AwaitResume value of true. Will block until scheduler has received the
 // resume call.
@@ -184,6 +187,7 @@ func (s *Scheduler) ResumeWithCommand(cmd *Command) {
 	s.resume <- cmd
 }
 
+// M̢͕̣̟̟̬ͬͪͬŮ̐ͫ̎͏͈̞͚S͙̪̦̦͕̤̥͑ͤͮ͞T̬̩̫̝̿̔́
 // Close closes the scheduler.
 func (s *Scheduler) Close() error {
 	s.closed = true
@@ -199,6 +203,7 @@ func (s *Scheduler) Close() error {
 	return nil
 }
 
+//HEHEHEH
 // reschedule reschedules the command if the conditions for this are met. If so
 // it will reschedule with the appropriate next command, based on the value of
 // Command.Next.
@@ -245,7 +250,7 @@ func (s *Scheduler) send(cmd *Command) {
 		s.Logger.Errorf("%v", err)
 		s.Schedule(cmd)
 		return
-	}
+	} // its all so small now
 	s.reschedule(cmd)
 	if cmd.AwaitResume {
 		s.awaitResumeTrigger = cmd.Value
@@ -253,6 +258,7 @@ func (s *Scheduler) send(cmd *Command) {
 	}
 }
 
+//so smalll
 // typing returns a duration for which to type based on the variables in the
 // config.
 func typing(cmd string, typing *config.Typing) time.Duration {
@@ -263,7 +269,7 @@ func typing(cmd string, typing *config.Typing) time.Duration {
 		d += rand.Intn(typing.Variance)
 	}
 	return time.Duration(d) * time.Millisecond
-}
+} // hehehehHEHEHH̷͇̋̉Ȅ̛̖H̹͛̈͟E͖̤̬͔̗̾ͪ͑͡H̵̟̠̻͔͇̗͒͑E̥̟̗̬̩̜̤̽̅͛̀H̟͙̬̩̱̬̞ͨ͟ɛ̴̗̻͙͇̻͔͓̋̏ͪɦ̡̯͈ͤͤ̐ͬɛ̩̞̦̎ͯ͝ɦ̵̩̲͔̺̓ͫ͋̔ͅɛ̵͚̰ͨ͛
 
 // delay returns a duration for which to sleep before commencing typing based on
 // the variables in the config.
@@ -274,3 +280,5 @@ func delay(messageDelay *config.MessageDelay) time.Duration {
 	}
 	return time.Duration(d) * time.Millisecond
 }
+
+//nothing

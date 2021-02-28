@@ -18,6 +18,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+//huh funny
 type Responder struct {
 	Sdlr            *scheduler.Scheduler
 	Client          *discord.Client
@@ -36,6 +37,7 @@ type Responder struct {
 	startingTime time.Time
 }
 
+//I wish I could respond ... lmao
 func (r *Responder) Start() error {
 	if r.Client == nil {
 		return fmt.Errorf("no client")
@@ -61,7 +63,7 @@ func (r *Responder) Start() error {
 	if r.FatalHandler == nil {
 		r.FatalHandler = func(err error) {}
 	}
-
+	//bruh
 	ws, err := r.Client.NewWSConn(r.router(), r.wsFatalHandler)
 	if err != nil {
 		return fmt.Errorf("error while starting websocket connection: %v", err)
@@ -78,6 +80,7 @@ func (r *Responder) Close() error {
 	return nil
 }
 
+// WEB SOCKET
 func (r *Responder) wsFatalHandler(err error) {
 	if closeErr, ok := err.(*websocket.CloseError); ok && closeErr.Code == 4004 {
 		r.FatalHandler(fmt.Errorf("websocket closed: authentication failed, try using a new token"))

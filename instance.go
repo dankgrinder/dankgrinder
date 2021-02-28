@@ -20,6 +20,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// instance setup?
 type instance struct {
 	client    *discord.Client
 	channelID string
@@ -33,6 +34,7 @@ type instance struct {
 	wg        *sync.WaitGroup
 }
 
+// i think this starts the instances
 func (in *instance) sleep(dur time.Duration) {
 	select {
 	case err := <-in.fatal:
@@ -42,6 +44,7 @@ func (in *instance) sleep(dur time.Duration) {
 	}
 }
 
+// code always conplaning smh
 func (in *instance) start() error {
 	if in.client == nil {
 		return fmt.Errorf("no client")
@@ -58,7 +61,7 @@ func (in *instance) start() error {
 	in.fatal = make(chan error)
 	in.logger = logrus.StandardLogger()
 	if len(cfg.InstancesOpts) > 1 {
-		in.logger = newInstanceLogger(in.client.User.Username, path.Dir(ex))
+		in.logger = newInstanceLogger(in.client.User.Username, path.Dir(ex)) //lmao
 	}
 	in.wg.Add(1)
 	go func() {
@@ -73,7 +76,7 @@ func (in *instance) start() error {
 				if shift.State == in.prevState {
 					in.sleep(dur)
 					continue
-				}
+				} //.. somthing to do with shifts, I think
 				in.prevState = shift.State
 				if shift.State == config.ShiftStateDormant {
 					if in.rspdr != nil {
@@ -114,7 +117,7 @@ func (in *instance) startInterface() error {
 		FatalHandler: func(ferr error) {
 			if in.rspdr != nil {
 				if err := in.rspdr.Close(); err != nil {
-					in.logger.Errorf("error while closing responder: %v", err)
+					in.logger.Errorf("error while closing responder: %v", err) //...
 				}
 			}
 			in.fatal <- fmt.Errorf("scheduler fatal: %v", ferr)
@@ -128,7 +131,7 @@ func (in *instance) startInterface() error {
 		Client: in.client,
 		FatalHandler: func(ferr error) {
 			if err := in.sdlr.Close(); err != nil {
-				in.logger.Errorf("error while closing scheduler: %v", err)
+				in.logger.Errorf("error while closing scheduler: %v", err) //why am i doing this my life has come to useless comments, whyyyYY /sssss: my god what have I become its takeing over I cant control......go-........͎.͎.͎.͎.͎.̢̝̪̩̌ͭ͛.̢̟̬̞͕̜̭͑.̱̪̬͍ͤ̓̅ͬ͢.̛͚͎͕͎͍͌ͫ̉.̢̤͎̝̳ͤ w̛̭̻̺̉̀ͭh͔͓̦̩̱͊̎̕a̴̟̟̭͈̻͕͐ͫ̋̀t̤̠͍̺̱ͣ͘ ̪̘̫̬͚͚̻̞̆ͫͤ͗̕ī̞͇̭͟s̢͔̯̘͙͓̃ͩ̿ ͍͖̖̯͔̦̳̐̃̌ͯ͘h̓̄͏̜̭ã͍͓̫̮̯͈͖̈́̎́p̄͏̥̪p̷͔̜͎̦͉̭̹͈̏͋͊ͯẹ̸̱͈̈ͅn̩̩ͯ̾̃͞i̘͖̦͉̅̔̅̍͝n̞̰̩͓̠̜̏̃̀g̞̟̞̪̭ͯ̐ͥ͡.͎͔̘̹̼̻̲͔̑͞.̱͇͓̟̯̲̄́͋̚͡.̦̰͔̞̥͇ͧ͒̀ͅ.̛͓͉̯̖̤͓̟̱́ͫ̅.̧͍̟͛.̢̖̭͙͉͒̆̆_̵͎̈́̌ͅ_͓̼̭͕̔ͤ̔ͫ͡_ͥ̔͂҉̹̲̩͙̞̹_̲̼͈̫̼͖͈̖͑͑́h͖͍̦ͫ͢ḛ̻̿̿̆̕l̗̗̜̭̲ͨ̅̀l̨̋ǒͦͤ T͗ͦ͗͝his is not whattt̖́̚tͬt̢͚ͩẗ̔ͨͥ̕t͚̞͉̼̟ͤ͜t̷̖͓̙͑̈́t̸̬̝̻̔t̢͍̗̖̟̆̽͌ͪͅ eW91IHdpbGwgZmluZCB3aGF0IHlvdSBzZWVrIGluIHRoZSB0cmFkZXMgdmFyaWFudCwgdGFsayB0byB0zJPMlcydzLLMpsydzLpozI/Ng82hzKvMvMyczLvMucy7zZPMq2XMiM2uzJrNn82azLvMls2JIOWwuM2uzYvNos2OzK3Mq82UzJzlt6XNi8yIzJLMgM2gzKbMo8yuzZrNlsy55YegzIvNrs2AzKPNmc2OzYjMmeeJh82nzZ3Nh82HzK/Nmsy7zZrMucyYIMyAzanMgM2gzLrNjcypzKblm57NkcyCzYTMvs2fzJbNmc2ZzK/NlsyszKPNlOWHoM2nzaDMs82ZzLrMqcyd44OozYPNpc2tzLXMnc2ZzKQuzInMuMywzKPMssypzYU=
 			}
 			in.fatal <- fmt.Errorf("responder fatal for %v: %v", in.client.User.Username, ferr)
 		},
@@ -142,7 +145,9 @@ func (in *instance) startInterface() error {
 		Logger:          in.logger,
 	}
 	if err := in.rspdr.Start(); err != nil {
-		return fmt.Errorf("error while starting responder: %v", err)
+		return fmt.Errorf("error while starting responder: %v", err) //
 	}
 	return nil
 }
+
+//heh.

@@ -25,6 +25,7 @@ var cfg config.Config
 var ins []*instance
 var ex string
 
+// im pretty sure this thing loads the config, or is it just for errors?
 func main() {
 	logrus.SetFormatter(&logrus.TextFormatter{ForceColors: true})
 	logrus.SetOutput(ansicolor.NewAnsiColorWriter(os.Stdout))
@@ -56,7 +57,7 @@ func main() {
 	}
 
 	rand.Seed(time.Now().UnixNano())
-
+	//... hum .. logger? but for erors(mabye the logging is done in logger.go?)
 	wg := &sync.WaitGroup{}
 	for _, opts := range cfg.InstancesOpts {
 		client, err := discord.NewClient(opts.Token)

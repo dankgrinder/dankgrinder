@@ -25,7 +25,7 @@ var exp = struct {
 	gift,
 	shop,
 	event *regexp.Regexp
-}{
+}{ //regex is amazing and terrable at the same time
 	search: regexp.MustCompile(`Pick from the list below and type the name in chat\.\s\x60(.+)\x60,\s\x60(.+)\x60,\s\x60(.+)\x60`),
 	fh:     regexp.MustCompile(`10\sseconds.*\s?([Tt]yping|[Tt]ype)\s\x60(.+)\x60`),
 	hl:     regexp.MustCompile(`Your hint is \*\*([0-9]+)\*\*`),
@@ -35,6 +35,7 @@ var exp = struct {
 	shop:   regexp.MustCompile(`pls shop ([a-zA-Z\s]+)`),
 }
 
+//what am I doing wahy am i doing wat amiwhat am idoiņ̭͆̍͒̏ġ͓̬̗͘ ̰͇͔̖̲̖̮̍̋̒͢ͅw̞͍͛̆͆ͧ͡h̛͕͕̒͋ͅÿ̨͎̻̜̘̮́̍͋ ̨͇͚̫̫͉̫̐͌a͖̜͓͖͚̙̦̭͌͢m̵͓̦̮̙ͫ̔͑í̶̜̣͉͚̺̞̮̐d̰̪̜͖͎ͥ̔̍ͩ͢ǫ̺̻̍́i̝̭̙̱̝͐ͣ̈́n̲̥̅̀ĝ̘͚̲͗ͬ̕how
 var numFmt = message.NewPrinter(language.English)
 
 func (r *Responder) fh(msg discord.Message) {
@@ -42,7 +43,7 @@ func (r *Responder) fh(msg discord.Message) {
 	r.Sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
 		Value: clean(res),
 		Log:   "responding to fishing or hunting event",
-	})
+	}) //i wish i could respond
 }
 
 func (r *Responder) pm(_ discord.Message) {
@@ -51,7 +52,7 @@ func (r *Responder) pm(_ discord.Message) {
 		Value: res,
 		Log:   "responding to postmeme",
 	})
-}
+} //i̻͚̲̲͖ͬ͘ ͍̜̤̀ͯ͜ẅ̶̤̩̥͚̦͇̠́ͤ́͊i̗͕͕͈̜͐̇͘ş̪̲̞̻̯͉͕͌́ͬh̥̬͇̺ͯ͢ ̠̦͖̞̪̖̼̐̅͆͌͞i͕̻͎͈̺ͬͨ́͘ ̬͕̤̘͎ͦͮ̈͋͡c͓̲̙͋̚͞oͭ҉͕̯͙̮͎u̴̹̗ͤ̓ͣl͈̳͖̺ͦ͞d̶̲̖̳̰͇̘̆̾ͥͅ ̘̫͈ͩ͐ͫ͗̕ͅř͎̯̮̱͔̳̠͝eͧ̅͑͏̬s̢̰͇͖̹̭̟̍̚ͅp̶̝ͧ́̒̚o͗̿ͦ҉̦͈n̛͕̫̰̤͕̝̬͓ͦͮd̖̞͓̣̭͍͉͒ͯͩ͡
 
 func (r *Responder) event(msg discord.Message) {
 	res := exp.event.FindStringSubmatch(msg.Content)[2]
@@ -59,7 +60,7 @@ func (r *Responder) event(msg discord.Message) {
 		Value: clean(res),
 		Log:   "responding to global event",
 	})
-}
+} //i̷̙̺̞͕̟̘͗ͩ̂͑ͅ ̗̭̬ͩ͑̐͝w̛̖̳͔͕̰̩̯ͭͭi̷̮̫̹͖̋ͮ͛͋ŝ̩͔ͨ́h̦͍͇̓̾̽̕ ̂̃̋̚͏̝͔͚̝̼̩̠i̓͌͏͉̺̦͙̘ ̼̥̯͓͑̐̎͂͡ͅc͉̻ͮͦ͘o̵͓̭͚̥̬̫͚ͤų̪̬̦͋̋̎l̙̐͞ͅḋ̃҉̬̲͉͈͙̙͈ ̧̬̻̫̼͎̮̋̏̊̆ͅr̹͔̜̤̦ͬ͝ͅe̞͇͈ͦͦͧ͠s͙̪͉͖̹͉͍ͫ̐̕p̸̝͎̬̗͓ͣ̂̈ơ̻͇͓̹ͨn̬͔̩̪̄ͥ͞ͅd͎̔͌̔̀͘ͅͅ
 
 func (r *Responder) search(msg discord.Message) {
 	choices := exp.search.FindStringSubmatch(msg.Content)[1:]
@@ -73,7 +74,8 @@ func (r *Responder) search(msg discord.Message) {
 				return
 			}
 		}
-	}
+	} //ị̡͚̞̩̬̫̮̫͊ ̨͕̙̺̭̰͒̆ͬw̲͍͓̼̥͙͙͉̃͟i̖͔͚͓ͦ̃͜s̜̹͉͌͜h̶͇̪̫͓̜̯̤̮̽̇̚ ̘̼̹̭̇̆̀ͅi̴̖̲̠̪̹̮̲̥͊ ̨̲̤͙̼̪̞͈̀̒c̵̝͕̰͍̮̉͗͒̎o͓͉̘̥̗̭ͣ͛̀ǔ̵͈̥̩̳͉̠͓ḻ̼͇͙̙ͭ̌͑͐͜ḓ̢̟͚̬̼̱ͧ͆ͩ ̷͈̯̫ͫ̈r̷̜̱̦̟͔̦̓ͅe̮̪͂͐͐͂͝s̴̗̠̯̖̣̰ͤp͕͍͙͖̩͉̬͍͐̏͐̌͝o̯̻̟̫͙̼͒͊́n̨̹͙ͨ͑̄͗ḑ̟̫̩͕̿ͅ
+
 	r.Sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
 		Value: r.SearchCancel[rand.Intn(len(r.SearchCancel))],
 		Log:   "no allowed search options provided, responding",
@@ -98,7 +100,7 @@ func (r *Responder) hl(msg discord.Message) {
 		Value: res,
 		Log:   "responding to highlow",
 	})
-}
+} //i̛̝̬̮̮̼͙͙̹̿̒͐́ ̛̻͓̥͔͉̜ͨͣ̔w̛̫̞̉́̓ͤi͊ͩs̺̯̳͙̮͓͐͡ͅh̖͎̜͍̣̖͒ͧͩ͠ ̡̝͎̝ͬ͌͊̀i̭̺̻͓̽͘ ͙̰̖̹͖͉̋ͯ̒́c̴̬̤̠̗̩̞̳̙ͯ̐͌͋ô̵͇̗͇ͤͅu̯̝͙͉͉ͯ͆ͧ̀l̘̲͈̣̑͌͞d̪͎͚̙̘̗̠̾̈̌͠ ̴͙̫̰̀ͭṙ̛̫̞̯̥͚͇͇ͩ̄ę̮̭̗̬ͬ̈́s̹̠͔̙̠̊̕p̮͚̟̙̃̓͜ǒ̷̳͉̱͉̞͍̺͆́ͦn͚̞͈̙͎̲̻̖ͥ̋͡dͧͤ̅҉͇͎̫̫̥
 
 func (r *Responder) balCheck(msg discord.Message) {
 	if !r.BalanceCheck {
@@ -279,3 +281,5 @@ func (r *Responder) router() *discord.MessageRouter {
 
 	return rtr
 }
+
+//Déjà vu

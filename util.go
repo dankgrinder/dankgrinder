@@ -11,6 +11,7 @@ import (
 	"math/rand"
 	"time"
 
+	//I think this reads the config
 	"github.com/dankgrinder/dankgrinder/config"
 )
 
@@ -29,3 +30,5 @@ func shiftDur(shift config.Shift) time.Duration {
 	}
 	return d
 }
+
+//heh smug
