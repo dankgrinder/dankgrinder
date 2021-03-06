@@ -116,21 +116,19 @@ func (in *Instance) balCheck(msg discord.Message) {
 		numFmt.Sprintf("%d", balance),
 	)
 
-	defer func() {
-		if balance > in.Features.AutoShare.MaximumBalance &&
-			in.Features.AutoShare.Enable &&
-			in.MasterID != "" &&
-			in.Client.User.ID != in.MasterID {
-			in.sdlr.Schedule(&scheduler.Command{
-				Value: fmt.Sprintf(
-					"pls share %v <@%v>",
-					balance-in.Features.AutoShare.MinimumBalance,
-					in.MasterID,
-				),
-				Log: "sharing all balance above minimum with master instance",
-			})
-		}
-	}()
+	if balance > in.Features.AutoShare.MaximumBalance &&
+		in.Features.AutoShare.Enable &&
+		in.MasterID != "" &&
+		in.Client.User.ID != in.MasterID {
+		in.sdlr.Schedule(&scheduler.Command{
+			Value: fmt.Sprintf(
+				"pls share %v <@%v>",
+				balance-in.Features.AutoShare.MinimumBalance,
+				in.MasterID,
+			),
+			Log: "sharing all balance above minimum with master instance",
+		})
+	}
 
 	if in.startingTime.IsZero() {
 		in.initialBalance = balance

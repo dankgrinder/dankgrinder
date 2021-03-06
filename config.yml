@@ -56,7 +56,7 @@ features:
     enable: false
     priority: true
     pause_below_balance: 1000000
-  auto-tidepod:
+  auto_tidepod:
     enable: false
     buy_lifesaver_on_death: true
   balance_check: true
