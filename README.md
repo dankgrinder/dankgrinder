@@ -263,18 +263,8 @@ Example if you would like to run two instances simultaneously and 24/7 (this shi
 instances:
   - token: "bmljZSB0cnkgYnV0IHRoaXMgaXM.bm90IGE.cmVhbCB0b2tlbg"
     channel_id: "791694339116892202"
-    shifts:
-      - state: "active"
-        duration:
-          base: 0
-          variation: 0
   - token: "b2YgY291cnNlIHRoaXM.aXNuJ3QgYQ.cmVhbCB0b2tlbiBlaXRoZXIsIHNpbGx5"
     channel_id: "791694383098495047"
-    shifts:
-      - state: "active"
-        duration:
-          base: 0
-          variation: 0
 ```
 
 ## Disclaimer
