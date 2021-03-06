@@ -86,9 +86,9 @@ Name | Type | Description
 `token` | string | The Discord [authorization token](#getting-an-authorization-token) of the instance
 `channel_id` | string | The channel id this instance sends and receives messages in, you must have [Discord developer mode](#enabling-discords-developer-mode) enabled to obtain one
 `is_master` | bool |
-`features?` | [features object](#features-object) | Override the default features object of the config only for this specific instance, any fields left out will not be overridden and vice-versa
-`suspicion_avoidance?` | [suspicion avoidance object](#suspicion-avoidance-object) | Override the default suspicion avoidance object of the config only for this specific instance, any fields left out will not be overridden and vice-versa
-`shifts?` | array of [shift objects](#shift-object) | Override the default shifts array of the config only for this specific instance
+`features?` | [features object](#features-object) | Override the default features object of the config only for this specific instance, any fields left out will not be overridden and vice-versa, see [default values and when you can leave out fields](#default-values-and-when-you-can-leave-out-fields)
+`suspicion_avoidance?` | [suspicion avoidance object](#suspicion-avoidance-object) | Override the default suspicion avoidance object of the config only for this specific instance, any fields left out will not be overridden and vice-versa, see [default values and when you can leave out fields](#default-values-and-when-you-can-leave-out-fields)
+`shifts?` | array of [shift objects](#shift-object) | Override the default shifts array of the config only for this specific instance, see [default values and when you can leave out fields](#default-values-and-when-you-can-leave-out-fields)
 
 ### Shift object
 Name | Type | Description
@@ -255,7 +255,7 @@ In example custom command 2, the value is sent every 5 minutes for a total of 5 
 
 In example custom command 3, the value is sent once in the beginning of every active shift.
 
-In example custom command 4, 20 zz will be bought whenever the balance is above 9,000,000
+In example custom command 4, 20 zz will be bought whenever the balance is above 9,000,000.
 
 ### Instances
 Example if you would like to run two instances simultaneously and 24/7 (this shift configuration is not recommended):
@@ -263,9 +263,41 @@ Example if you would like to run two instances simultaneously and 24/7 (this shi
 instances:
   - token: "bmljZSB0cnkgYnV0IHRoaXMgaXM.bm90IGE.cmVhbCB0b2tlbg"
     channel_id: "791694339116892202"
+    is_master: true
   - token: "b2YgY291cnNlIHRoaXM.aXNuJ3QgYQ.cmVhbCB0b2tlbiBlaXRoZXIsIHNpbGx5"
     channel_id: "791694383098495047"
 ```
+
+### Default values and when you can leave out fields
+Because of the way Go structs work, most times, when you leave out a field in your config, it will default to a value such as `0` or `false`. This is useful to avoid clutter. In the default config many fields are left out because their values would have been set to `0` or `false`, but they are still available for use, of course. Simply lookup what configuration is possible for your object of choice in the [configuration documentation](#configuration) above.
+
+The only exception is the fields which are currently marked as optional, the `features`, `suspicion_avoidance` and `shifts` fields on every [instance object](#instance-object). These fields are used to override the values you have specified in the regular `features`, `suspicion_avoidance` and `shifts` objects in the config. If you leave out one of these fields or a child field of one of these fields, the default configuration is not overridden and is used instead.
+
+```yaml
+instances:
+  - token: "bmljZSB0cnkgYnV0IHRoaXMgaXM.bm90IGE.cmVhbCB0b2tlbg"
+    channel_id: "791694339116892202"
+    is_master: true
+  - token: "b2YgY291cnNlIHRoaXM.aXNuJ3QgYQ.cmVhbCB0b2tlbiBlaXRoZXIsIHNpbGx5"
+    channel_id: "791694383098495047"
+    shifts:
+      - state: "active"
+  - token: "MTI3OTgzNDcyMTkzNDM4Mg.ZmRzdg.dGhpcyBpcyBub3QgYW4gYWN0dWFsIH"
+    channel_id: "791691923098486933"
+    features:
+      auto_tidepod:
+        enable: false
+
+shifts:
+  - state: "active"
+    base: 21600
+  - state: "dormant"
+    base: 32400
+```
+
+In the example above, all instances use a shift configuration of 6 hours active, 9 hours dormant, except for the second instance. This instance overrides the shift configuration defined below with a shift configuration that is always active. 
+
+The third instance in this example, overrides the normal configuration with one where auto-tidepod is disabled (the rest of the config is left out for simplicity), the rest of the instances would still use auto-tidepod if it was enabled. 
 
 ## Disclaimer
 This is a self-bot. Such bots are against Discord's terms of service. Automation of Dank Memer commands also breaks Dank Memer's rules. By using this software you acknowledge that we take no responsibility whatsoever for any action taken against your account, whether by Discord or Dank Memer, for not abiding by their respective rules.
