@@ -167,6 +167,8 @@ Name | Type | Description
 `minimum_balance` | integer | The amount of money the instance should keep after giving money to the master instance
 
 ### Auto-tidepod object
+Name | Type | Description
+---- | ---- | ----
 `enable` | boolean | Whether or not to enable automatic usage of tidepods
 `interval` | integer | The interval in seconds at which the program attempts to use tidepods. If set to 0, a tidepod will only be used once at the beginning of every active shift
 `buy_lifesaver_on_death` | bool | Whether or not to buy a lifesaver after dying from tidepod usage
