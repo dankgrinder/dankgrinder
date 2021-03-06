@@ -111,6 +111,13 @@ func (rt *MessageRoute) HasEmbeds(b bool) *MessageRoute {
 	return rt
 }
 
+func (rt *MessageRoute) RespondsTo(id string) *MessageRoute {
+	rt.conds = append(rt.conds, func(msg Message, _ string) bool {
+		return msg.ReferencedMessage != nil && msg.ReferencedMessage.Author.ID == id
+	})
+	return rt
+}
+
 func (rt *MessageRoute) Handler(h func(msg Message)) {
 	rt.handler = h
 }
