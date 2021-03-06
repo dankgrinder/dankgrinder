@@ -50,6 +50,8 @@ type Command struct {
 	// executing the next command.
 	AwaitResume bool
 
+	RescheduleAsPriority bool
+
 	// Next is a pointer to the command that will be rescheduled if interval is
 	// not 0. If this is nil this command itself will be rescheduled. Using this
 	// feature might be useful when you want to create a chain of commands that
@@ -60,6 +62,12 @@ type Command struct {
 	// reschedule indefinitely. To run a command once, the interval should be
 	// set to 0, not the amount.
 	Amount uint
+
+	// If this function returns false, the command will not be sent but will be
+	// rescheduled. It does not count as an execution of the command and as such
+	// it will not count towards the amount if it is set. It will also not
+	// reschedule Next if this is set to a different command.
+	CondFunc func() bool
 
 	execs uint
 }
@@ -168,6 +176,7 @@ func (s *Scheduler) ResumeWithCommandOrPrioritySchedule(cmd *Command) {
 	}
 	if !s.awaitResume {
 		s.PrioritySchedule(cmd)
+		return
 	}
 	s.resume <- cmd
 }
@@ -207,18 +216,31 @@ func (s *Scheduler) reschedule(cmd *Command) {
 	if cmd.Amount != 0 && cmd.execs >= cmd.Amount {
 		return
 	}
-	if cmd.Interval > 0 {
-		time.AfterFunc(cmd.Interval, func() {
-			if cmd.Next == nil {
-				s.Schedule(cmd)
+	if cmd.Interval <= 0 {
+		return
+	}
+	time.AfterFunc(cmd.Interval, func() {
+		if cmd.Next == nil {
+			if cmd.RescheduleAsPriority {
+				s.PrioritySchedule(cmd)
 				return
 			}
-			s.Schedule(cmd.Next)
-		})
-	}
+			s.Schedule(cmd)
+			return
+		}
+		if cmd.RescheduleAsPriority {
+			s.PrioritySchedule(cmd.Next)
+			return
+		}
+		s.Schedule(cmd.Next)
+	})
 }
 
 func (s *Scheduler) send(cmd *Command) {
+	if cmd.CondFunc != nil && !cmd.CondFunc() {
+		s.Schedule(cmd)
+		return
+	}
 	d := delay(s.MessageDelay)
 	tt := typing(cmd.Value, s.Typing)
 	info := "sending command"
@@ -230,9 +252,9 @@ func (s *Scheduler) send(cmd *Command) {
 		"typing": tt.String(),
 	}).Infof("%v: %v", info, cmd.Value)
 
-	if err := s.Client.SendMessage(cmd.Value, s.ChannelID, tt); err == discord.ErrForbidden || err == discord.ErrInvalidAuthorization {
+	if err := s.Client.SendMessage(cmd.Value, s.ChannelID, tt); err == discord.ErrForbidden || err == discord.ErrUnauthorized {
 		s.FatalHandler(err)
-		// Ran in a goroutine because otherwise the scheduler's goroutine would
+		// Run in a goroutine because otherwise the scheduler's goroutine would
 		// be attempting to send a message to itself via its close channel which
 		// just causes a permanently dormant goroutine.
 		go s.Close()
@@ -259,8 +281,8 @@ func typing(cmd string, typing *config.Typing) time.Duration {
 	msPerKey := int(math.Round((1.0 / float64(typing.Speed)) * 60000))
 	d := typing.Base
 	d += len(cmd) * msPerKey
-	if typing.Variance > 0 {
-		d += rand.Intn(typing.Variance)
+	if typing.Variation > 0 {
+		d += rand.Intn(typing.Variation)
 	}
 	return time.Duration(d) * time.Millisecond
 }
@@ -269,8 +291,8 @@ func typing(cmd string, typing *config.Typing) time.Duration {
 // the variables in the config.
 func delay(messageDelay *config.MessageDelay) time.Duration {
 	d := messageDelay.Base
-	if messageDelay.Variance > 0 {
-		d += rand.Intn(messageDelay.Variance)
+	if messageDelay.Variation > 0 {
+		d += rand.Intn(messageDelay.Variation)
 	}
 	return time.Duration(d) * time.Millisecond
 }

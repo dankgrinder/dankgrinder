@@ -24,8 +24,8 @@ func shiftDur(shift config.Shift) time.Duration {
 		return time.Duration(math.MaxInt64)
 	}
 	d := sec(shift.Duration.Base)
-	if shift.Duration.Variance > 0 {
-		d += sec(rand.Intn(shift.Duration.Variance))
+	if shift.Duration.Variation > 0 {
+		d += sec(rand.Intn(shift.Duration.Variation))
 	}
 	return d
 }

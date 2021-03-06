@@ -15,8 +15,10 @@ import (
 )
 
 var (
-	ErrInvalidAuthorization = fmt.Errorf("invalid authorization, try using a new token")
-	ErrForbidden            = fmt.Errorf("forbidden, your ip address may have been blocked or your account might need verification")
+	ErrUnauthorized    = fmt.Errorf("invalid authorization, try using a new token")
+	ErrForbidden       = fmt.Errorf("forbidden, you may not have permission to send in the channel (i.e. you aren't in the server or don't have send message permissions in the channel), your account might need verification, or your ip address may have been blocked")
+	ErrTooManyRequests = fmt.Errorf("you are being rate limited, try waiting some time and trying again")
+	ErrNotFound        = fmt.Errorf("not found, make sure your channel id is valid")
 )
 
 type Client struct {
@@ -25,6 +27,9 @@ type Client struct {
 }
 
 func NewClient(token string) (*Client, error) {
+	if token == "" {
+		return nil, fmt.Errorf("no token")
+	}
 	c := &Client{Token: token}
 	u, err := c.CurrentUser()
 	if err != nil {
@@ -36,13 +41,13 @@ func NewClient(token string) (*Client, error) {
 
 func (client Client) SendMessage(content, channelID string, typing time.Duration) error {
 	if client.Token == "" {
-		return fmt.Errorf("invalid authorization")
+		return fmt.Errorf("no token")
 	}
 	if channelID == "" {
-		return fmt.Errorf("no channel id provided")
+		return fmt.Errorf("no channel id")
 	}
 	if content == "" {
-		return fmt.Errorf("no content provided")
+		return fmt.Errorf("no content")
 	}
 
 	if typing != 0 {
@@ -83,16 +88,20 @@ func (client Client) SendMessage(content, channelID string, typing time.Duration
 		return fmt.Errorf("error while sending http request: %v", err)
 	}
 
-	if res.StatusCode == http.StatusUnauthorized {
-		return ErrInvalidAuthorization
-	}
-	if res.StatusCode == http.StatusForbidden {
-		return ErrForbidden
-	}
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code while sending message: %v", res.StatusCode)
+		switch res.StatusCode {
+		case http.StatusUnauthorized:
+			return ErrUnauthorized
+		case http.StatusForbidden:
+			return ErrForbidden
+		case http.StatusNotFound:
+			return ErrNotFound
+		case http.StatusTooManyRequests:
+			return ErrTooManyRequests
+		default:
+			return fmt.Errorf("unexpected status code while sending message: %v", res.StatusCode)
+		}
 	}
-
 	return nil
 }
 
@@ -112,7 +121,7 @@ func (client Client) CurrentUser() (User, error) {
 	}
 
 	if res.StatusCode == http.StatusUnauthorized {
-		return User{}, ErrInvalidAuthorization
+		return User{}, ErrUnauthorized
 	}
 	if res.StatusCode == http.StatusForbidden {
 		return User{}, ErrForbidden
@@ -134,6 +143,9 @@ func (client Client) CurrentUser() (User, error) {
 // Consequently, if you want to make the user type for more than 10 seconds, you
 // must call this function every 10 seconds.
 func (client Client) typing(channelID string) error {
+	if channelID == "" {
+		return fmt.Errorf("no channel id")
+	}
 	reqURL := fmt.Sprintf("https://discord.com/api/v8/channels/%v/typing", channelID)
 	req, err := http.NewRequest("POST", reqURL, nil)
 	if err != nil {
@@ -144,14 +156,19 @@ func (client Client) typing(channelID string) error {
 	if err != nil {
 		return fmt.Errorf("error while sending http request: %v", err)
 	}
-	if res.StatusCode == http.StatusUnauthorized {
-		return ErrInvalidAuthorization
-	}
-	if res.StatusCode == http.StatusForbidden {
-		return ErrForbidden
-	}
 	if res.StatusCode != http.StatusNoContent && res.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected response code while sending typing message: %v", res.StatusCode)
+		switch res.StatusCode {
+		case http.StatusUnauthorized:
+			return ErrUnauthorized
+		case http.StatusForbidden:
+			return ErrForbidden
+		case http.StatusNotFound:
+			return ErrNotFound
+		case http.StatusTooManyRequests:
+			return ErrTooManyRequests
+		default:
+			return fmt.Errorf("unexpected status code while sending message: %v", res.StatusCode)
+		}
 	}
 	return nil
 }
