@@ -104,6 +104,9 @@ func (in *Instance) balCheck(msg discord.Message) {
 	if !strings.Contains(msg.Embeds[0].Title, in.Client.User.Username) {
 		return
 	}
+	if !exp.bal.Match([]byte(msg.Embeds[0].Description)) {
+		return
+	}
 	balstr := strings.Replace(exp.bal.FindStringSubmatch(msg.Embeds[0].Description)[1], ",", "", -1)
 	balance, err := strconv.Atoi(balstr)
 	if err != nil {

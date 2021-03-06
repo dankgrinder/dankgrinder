@@ -8,15 +8,14 @@ Want to join the community or need support? [Join our Discord](https://discord.g
 </p>
 
 ## Features
-* Cycles through currency commands to earn approximately 150,000 coins per hour
-* Responds to fishing and hunting events (i.e. captures the dragon, etc.)
-* Responds to global events, search, and postmeme
-* Automation of highlow
-* Reports an average income every 2 minutes
-* Automatically buys a fishing pole, hunting rifle or laptop if they have broken
-* High configurability; configure custom commands and much more
 * Can run many instances at once
 * Uses very little system resources
+* High configurability; configure custom commands and much more
+* Automation of most currency command and betting
+* Responds to fishing and hunting events (i.e. captures the dragon and special fish)
+* Responds to global events, search, and postmeme
+* Automatically uses tidepods and buys lifesavers when dying from them
+* Automatically buys a fishing pole, hunting rifle or laptop if they have broken
 
 ## Getting started
 
@@ -185,15 +184,15 @@ Name | Type | Description
 ### Cooldown object
 Name | Type | Description
 ---- | ---- | ----
-`beg` | integer | The cooldown of the beg command, set a few seconds higher to account for network delay
-`search` | integer | The cooldown of the search command, set a few seconds higher to account for network delay
-`highlow` | integer | The cooldown of the highlow command, set a few seconds higher to account for network delay
-`postmeme` | integer | The cooldown of the postmeme command, set a few seconds higher to account for network delay
-`fish` | integer | The cooldown of the fish command, set a few seconds higher to account for network delay
-`hunt` | integer | The cooldown of the hunt command, set a few seconds higher to account for network delay
-`bet` | integer | The cooldown of the bet command, set a few seconds higher to account for network delay
-`sell` | integer | The cooldown of the sell command, set a few seconds higher to account for network delay
-`gift` | integer | The cooldown of the gift command, set a few seconds higher to account for network delay
+`beg` | integer | The cooldown of the beg command in seconds, set a few seconds higher to account for network delay
+`search` | integer | The cooldown of the search command in seconds, set a few seconds higher to account for network delay
+`highlow` | integer | The cooldown of the highlow command in seconds, set a few seconds higher to account for network delay
+`postmeme` | integer | The cooldown of the postmeme command in seconds, set a few seconds higher to account for network delay
+`fish` | integer | The cooldown of the fish command in seconds, set a few seconds higher to account for network delay
+`hunt` | integer | The cooldown of the hunt command in seconds, set a few seconds higher to account for network delay
+`bet` | integer | The cooldown of the bet command in seconds, set a few seconds higher to account for network delay
+`sell` | integer | The cooldown of the sell command in seconds, set a few seconds higher to account for network delay
+`gift` | integer | The cooldown of the gift command in seconds, set a few seconds higher to account for network delay
 
 ### Suspicion avoidance object
 Name | Type | Description

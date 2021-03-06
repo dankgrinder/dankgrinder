@@ -90,7 +90,7 @@ compatibility:
   cooldown:
     beg: 48
     search: 33
-    highlow: 23
+    highlow: 33
     postmeme: 63
     fish: 63
     hunt: 63
