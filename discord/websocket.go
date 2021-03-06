@@ -202,6 +202,7 @@ func (c *WSConn) awaitEvent(e string) error {
 
 func (c *WSConn) Close() error {
 	c.fatalHandler = func(err error) {}
+	c.rtr.routes = nil
 	c.closePinger <- struct{}{}
 	err := c.underlying.WriteControl(
 		websocket.CloseMessage,

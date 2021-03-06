@@ -14,7 +14,7 @@ for OS in "windows" "darwin" "linux"; do
 
   mkdir "${DIR}"
   cp config.yml "${DIR}"
-  GOOS=${OS} GOARCH=amd64 go build -ldflags "-w -s" -v -o "${DIR}/${DANKGRINDER}" .
+  GOROOT_FINAL=/ GOOS=${OS} GOARCH=amd64 go build -ldflags "-w -s" -v -o "${DIR}/${DANKGRINDER}" .
   zip -vr9j "${DIR}".zip "${DIR}"/*
   rm -rf "${DIR}"
 done

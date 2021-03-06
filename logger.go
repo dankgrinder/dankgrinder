@@ -15,7 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type fileLogger struct {
+type logFileWriter struct {
 	username string
 	dir      string
 }
@@ -28,17 +28,26 @@ type stdLoggerHook struct {
 	username string
 }
 
-func (fl fileLogger) Write(b []byte) (int, error) {
-	if _, err := os.Stat("logs"); err != nil {
+func (lfw logFileWriter) Write(b []byte) (int, error) {
+	ld := path.Join(lfw.dir, "logs")
+	if _, err := os.Stat(ld); err != nil {
 		if os.IsNotExist(err) {
-			if err = os.Mkdir("logs", 0755); err != nil {
+			if err = os.Mkdir(ld, 0755); err != nil {
+				return 0, fmt.Errorf("error while creating logs dir: %v", err)
+			}
+		}
+	}
+	uld := path.Join(lfw.dir, fmt.Sprintf("logs/%v", lfw.username))
+	if _, err := os.Stat(uld); err != nil {
+		if os.IsNotExist(err) {
+			if err = os.Mkdir(uld, 0755); err != nil {
 				return 0, fmt.Errorf("error while creating logs dir: %v", err)
 			}
 		}
 	}
 	date := time.Now().Format("02-01-2006")
-	name := fmt.Sprintf("logs/%v-%v.log", fl.username, date)
-	f, err := os.OpenFile(path.Join(fl.dir, name), os.O_CREATE|os.O_RDWR|os.O_APPEND, 0755)
+	name := fmt.Sprintf("logs/%v/%v.log", lfw.username, date)
+	f, err := os.OpenFile(path.Join(lfw.dir, name), os.O_CREATE|os.O_RDWR|os.O_APPEND, 0755)
 	if err != nil {
 		return 0, err
 	}
@@ -58,9 +67,10 @@ func (lfh logFileHook) Levels() []logrus.Level {
 }
 
 func (lfh logFileHook) Fire(e *logrus.Entry) error {
-	if _, err := os.Stat("logs"); err != nil {
+	ld := path.Join(lfh.dir, "logs")
+	if _, err := os.Stat(ld); err != nil {
 		if os.IsNotExist(err) {
-			if err = os.Mkdir("logs", 0755); err != nil {
+			if err = os.Mkdir(ld, 0755); err != nil {
 				return fmt.Errorf("error while creating logs dir: %v", err)
 			}
 		}
@@ -99,13 +109,13 @@ func (slh stdLoggerHook) Fire(e *logrus.Entry) error {
 	return nil
 }
 
-func newInstanceLogger(username, dir string) *logrus.Logger {
+func newInstanceLogger(username, dir string, debug bool) *logrus.Logger {
 	logger := logrus.New()
-	if cfg.Features.Debug {
+	if debug {
 		logger.SetLevel(logrus.DebugLevel)
 	}
 	logger = logrus.New()
-	logger.SetOutput(fileLogger{
+	logger.SetOutput(logFileWriter{
 		username: username,
 		dir:      dir,
 	})

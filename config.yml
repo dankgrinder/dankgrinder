@@ -8,17 +8,24 @@
 # https://github.com/dankgrinder/dankgrinder#configuration.
 # Make sure you have read that as well as the frequently asked questions before
 # asking for support on GitHub or Discord.
+
 instances:
   - token: ""
     channel_id: ""
-    shifts:
-      - state: "active"
-        duration:
-          base: 0
-          variance: 0
+    is_master: true
+
+shifts:
+  - state: "active"
+    base: 21600
+  - state: "dormant"
+    base: 32400
 
 features:
   commands:
+    beg: true
+    postmeme: true
+    search: true
+    highlow: true
     fish: true
     hunt: true
   custom_commands:
@@ -28,7 +35,6 @@ features:
     laptop: true
   auto_sell:
     enable: false
-    interval: 0
     items:
       - "boar"
       - "dragon"
@@ -39,11 +45,20 @@ features:
       - "skunk"
   auto_gift:
     enable: false
-    to: ""
-    interval: 0
     items:
       - "kn"
       - "zz"
+  auto_share:
+    enable: false
+    maximum_balance: 8000000
+    minimum_balance: 5000000
+  auto_bet:
+    enable: false
+    priority: true
+    pause_below_balance: 1000000
+  auto-tidepod:
+    enable: false
+    buy_lifesaver_on_death: true
   balance_check: true
   log_to_file: true
   debug: false
@@ -66,7 +81,6 @@ compatibility:
     - "pocket"
     - "shoe"
     - "sink"
-    - "car"
   search_cancel:
     - "no"
     - "bad options"
@@ -74,20 +88,21 @@ compatibility:
     - "stop"
     - "."
   cooldown:
-    beg: 45
-    search: 30
-    highlow: 20
-    postmeme: 60
-    fish: 60
-    hunt: 60
-    margin: 3
+    beg: 48
+    search: 33
+    highlow: 23
+    postmeme: 63
+    fish: 63
+    hunt: 63
+    bet: 9
+    sell: 6
+    gift: 26
   await_response_timeout: 4
 
 suspicion_avoidance:
   typing:
-    base: 0
-    variance: 250
+    variation: 250
     speed: 450
   message_delay:
     base: 100
-    variance: 400
+    variation: 400

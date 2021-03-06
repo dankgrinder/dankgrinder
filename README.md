@@ -49,7 +49,7 @@ To obtain a channel id for config.yml, you will need to have developer mode enab
 2. Click "appearance" under "app settings"
 3. Scroll down to "advanced" and enable developer mode
 
-You can now right click any user or channel to obtain the ID.
+You can now right click any user or channel to obtain the id.
 
 ## Building from source
 If you use an architecture other than amd64, or you want to build from source for another reason, doing so is quite simple.
@@ -88,8 +88,8 @@ Name | Type | Description
 Name | Type | Description
 ---- | ---- | ----
 `state` | string | The state of the program for this shift, either `active` or `dormant`
-`duration.base` | integer | The base duration of this shift in seconds. [Read more about base and variance](#base-and-variance)
-`duration.variance` | integer | The random variance of this shift in seconds. [Read more about base and variance](#base-and-variance)
+`duration.base` | integer | The base duration of this shift in seconds. [Read more about base and variation](#base-and-variation)
+`duration.variation` | integer | The random variation of this shift in seconds. [Read more about base and variation](#base-and-variation)
 
 ### Features object
 Name | Type | Description
@@ -167,22 +167,22 @@ Name | Type | Description
 ### Typing object
 Name | Type | Description
 ---- | ---- | ----
-`base` | integer | The base duration of typing in milliseconds. [Read more about base and variance](#base-and-variance)
-`variance` | integer | The random variance of typing in milliseconds. [Read more about base and variance](#base-and-variance)
+`base` | integer | The base duration of typing in milliseconds. [Read more about base and variation](#base-and-variation)
+`variation` | integer | The random variation of typing in milliseconds. [Read more about base and variation](#base-and-variation)
 `speed` | integer | The typing speed based on message length, in characters per minute
 
 ### Message delay object
 Name | Type | Description
 ---- | ---- | ----
-`base` | integer | The base delay in milliseconds. [Read more about base and variance](#base-and-variance)
-`variance` | integer | The random variance of the delay in milliseconds. [Read more about base and variance](#base-and-variance)
+`base` | integer | The base delay in milliseconds. [Read more about base and variation](#base-and-variation)
+`variation` | integer | The random variation of the delay in milliseconds. [Read more about base and variation](#base-and-variation)
 
-### Base and variance
+### Base and variation
 A base is a value that forms the base for a final result; it is the value that the program starts with.
 
-A variance, in the context of this program, not to be confused with its definition in statistics, is a random value, from 0 up to but excluding n, added to a starting value.
+A variation is a random value, from 0 up to but excluding n, added to a starting value.
 
-Say a base value of 100, and a variance of 50 are used. The final result will be a number from 100 up to and including 149 because of the random value added by the variance.
+Say a base value of 100, and a variation of 50 are used. The final result will be a number from 100 up to and including 149 because of the random value added by the variation.
 
 ### Shifts
 You can use shifts to make sure the bot is not suspicious because it is too active. We highly recommended using this option, and not running this program 24/7. An uptime of 50% per instance or less is advisable.
@@ -193,11 +193,11 @@ shifts:
   - state: "active"
     duration:
       base: 21600
-      variance: 0
+      variation: 0
   - state: "dormant"
     duration:
       base: 64800
-      variance: 0
+      variation: 0
 ```
 
 ### Custom commands
@@ -228,15 +228,15 @@ instances:
     shifts:
       - state: "active"
         duration:
-          base: -1
-          variance: 0
+          base: 0
+          variation: 0
   - token: "b2YgY291cnNlIHRoaXM.aXNuJ3QgYQ.cmVhbCB0b2tlbiBlaXRoZXIsIHNpbGx5"
     channel_id: "791694383098495047"
     shifts:
       - state: "active"
         duration:
-          base: -1
-          variance: 0
+          base: 0
+          variation: 0
 ```
 
 ## Disclaimer
