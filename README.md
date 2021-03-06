@@ -62,7 +62,7 @@ A working Go installation, see https://golang.org/doc/install.
    `$ git clone https://github.com/dankgrinder/dankgrinder.git`
 2. Build:  
    `$ make build`
-   
+
 The executables should then be in the `/build` folder.
 
 ## Configuration
@@ -70,9 +70,12 @@ All configuration can be done by editing config.yml with your editor of choice (
 
 If you do not know how yaml works and are getting fatal errors, use [this guide](https://www.tutorialspoint.com/yaml/yaml_basics.htm) to learn the basics of yaml. Configuration errors are characterized by a near-instant fatal error when starting the program. If the program opens and then closes immediately on Windows, open a command prompt first, drag the executable onto it and hit enter. You should now be able to see the error.
 
-Name | Type | Description 
+A question mark after a field name means this field is optional.
+
+Name | Type | Description
 ---- | ---- | ----
 `instances` | array of [instance objects](#instance-object) | The instances that are run simultaneously by the program
+`shifts` | array of [shift objects](#shift-object) | One or more shifts which the instances use to schedule switching between the active and dormant state. [Read more about shifts](#shifts)
 `features` | [features object](#features-object) | Several feature configurations which apply to all instances
 `compatibility` | [compatibility object](#compatibility-object) | Several compatibility options which apply to all instances
 `suspicion_avoidance` | [suspicion avoidance object](#suspicion-avoidance-object) | Several techniques to avoid suspicion which apply to all instances
@@ -82,7 +85,10 @@ Name | Type | Description
 ---- | ---- | ----
 `token` | string | The Discord [authorization token](#getting-an-authorization-token) of the instance
 `channel_id` | string | The channel id this instance sends and receives messages in, you must have [Discord developer mode](#enabling-discords-developer-mode) enabled to obtain one
-`shifts` | array of [shift objects](#shift-object) | One or more shifts which the instance uses to schedule switching between the active and dormant state. [Read more about shifts](#shifts)
+`is_master` | bool |
+`features?` | [features object](#features-object) | Override the default features object of the config only for this specific instance, any fields left out will not be overridden and vice-versa
+`suspicion_avoidance?` | [suspicion avoidance object](#suspicion-avoidance-object) | Override the default suspicion avoidance object of the config only for this specific instance, any fields left out will not be overridden and vice-versa
+`shifts?` | array of [shift objects](#shift-object) | Override the default shifts array of the config only for this specific instance
 
 ### Shift object
 Name | Type | Description
@@ -98,7 +104,10 @@ Name | Type | Description
 `custom_commands` | array of [custom command object](#custom-command-object) | Configure your own, custom commands for the program to use
 `auto_buy` | [auto-buy object](#auto-buy-object) | Options for the automatic buying of certain items if it is detected that they are not available
 `auto_sell` | [auto-sell object](#auto-sell-object) | Options for the automatic, periodic selling of certain items
-`auto_gift` | [auto-gift object](#auto-gift-object) | Options for the automatic, periodic gifting of certain items to a specified user id
+`auto_gift` | [auto-gift object](#auto-gift-object) | Options for the automatic, periodic gifting of certain items to the master instance
+`auto_bet` | [auto-bet object](#auto-bet-object) | Options for automatically using the bet command
+`auto_share` | [auto-share object](#auto-share-object) | Options for automatically sharing money with the master instance
+`auto_tidepod` |  [auto-tidepod](#auto-tidepod-object) | Options for automatically using tidepods
 `balance_check` | boolean | Enable checking the balance of the instance occasionally. Will also report an average income per hour for the active, current shift
 `log_to_file` | boolean | Whether or not to log errors and information to a file. If running multiple instances a log file for each instance will always be created, regardless of the value of this property
 `debug` | boolean | Enable logging debug level information. Currently has no effect
@@ -106,6 +115,10 @@ Name | Type | Description
 ### Commands object
 Name | Type | Description
 ---- | ---- | ----
+`beg` | boolean | Enable the `pls beg` command
+`postmeme` | boolean | Enable the `pls postmeme` command
+`search` | boolean | Enable the `pls search` command
+`highlow` | boolean | Enable the `pls highlow` command
 `fish` | boolean | Enable the `pls fish` command
 `hunt` | boolean | Enable the `pls hunt` command
 
@@ -114,7 +127,8 @@ Name | Type | Description
 ---- | ---- | ----
 `value` | string | The value of the command, for example: `pls dep max`
 `interval` | integer | The interval at which this command will be re-sent in seconds. Time may vary depending on other commands and responses. If `0` the command will only run once in the beginning of every active shift
-`amount` | unsigned integer | The amount of times this command will be run in total every active shift. Set to `0` for no limit
+`amount` | integer | The amount of times this command will be run in total every active shift. Set to `0` for no limit
+`pause_below_balance` | integer | A wallet balance value below which this command will not be sent
 
 ### Auto-buy object
 Name | Type | Description
@@ -133,10 +147,29 @@ Name | Type | Description
 ### Auto-gift object
 Name | Type | Description
 ---- | ---- | ----
-`enable` | boolean | Whether or not to enable automatic gifting
-`to` | string | The user id of the account you want the instances to gift the items to
+`enable` | boolean | Whether or not to enable automatic gifting to the master instance
 `interval` | integer | The interval at which items will be gifted during an active shift. If set to 0, items will only be gifted once at the beginning of every active shift
 `items` | array of strings | The Dank Memer item ids of the items to gift
+
+### Auto-bet object
+Name | Type | Description
+---- | ---- | ----
+`enable` | boolean | Whether or not to enable automatic betting
+`priority` | boolean | Whether or not to give the command priority over other, regular commands if there are commands queued
+`amount` | integer | The amount to bet every time, set to `0` to bet the maximum amount of coins
+`pause_below_balance` | integer | The balance below which the program should stop betting
+
+### Auto-share object
+Name | Type | Description
+---- | ---- | ----
+`enable` | boolean | Whether or not to enable automatically giving money to the master instance
+`maximum_balance` | integer | The amount of money the instance may have before giving them to the master instance
+`minimum_balance` | integer | The amount of money the instance should keep after giving money to the master instance
+
+### Auto-tidepod object
+`enable` | boolean | Whether or not to enable automatic usage of tidepods
+`interval` | integer | The interval in seconds at which the program attempts to use tidepods. If set to 0, a tidepod will only be used once at the beginning of every active shift
+`buy_lifesaver_on_death` | bool | Whether or not to buy a lifesaver after dying from tidepod usage
 
 ### Compatibility object
 Name | Type | Description
@@ -150,13 +183,15 @@ Name | Type | Description
 ### Cooldown object
 Name | Type | Description
 ---- | ---- | ----
-`beg` | integer | Interval at which the beg command will be re-sent
-`search` | integer | Interval at which the search command will be re-sent
-`highlow` | integer | Interval at which the highlow command will be re-sent
-`postmeme` | integer | Interval at which the postmeme command will be re-sent
-`fish` | integer | Interval at which the fish command will be re-sent
-`hunt` | integer | Interval at which the hunt command will be re-sent
-`margin` | integer | A positive value which is added to every value in this object to account for timing errors
+`beg` | integer | The cooldown of the beg command, set a few seconds higher to account for network delay
+`search` | integer | The cooldown of the search command, set a few seconds higher to account for network delay
+`highlow` | integer | The cooldown of the highlow command, set a few seconds higher to account for network delay
+`postmeme` | integer | The cooldown of the postmeme command, set a few seconds higher to account for network delay
+`fish` | integer | The cooldown of the fish command, set a few seconds higher to account for network delay
+`hunt` | integer | The cooldown of the hunt command, set a few seconds higher to account for network delay
+`bet` | integer | The cooldown of the bet command, set a few seconds higher to account for network delay
+`sell` | integer | The cooldown of the sell command, set a few seconds higher to account for network delay
+`gift` | integer | The cooldown of the gift command, set a few seconds higher to account for network delay
 
 ### Suspicion avoidance object
 Name | Type | Description
@@ -205,13 +240,12 @@ shifts:
 custom_commands:
   - value: "pls command1"
     interval: 60
-    amount: 0
   - value: "pls command2"
     interval: 300
     amount: 5
   - value: "pls command3"
-    interval: 0
-    amount: 0
+  - value: "pls buy zz 20"
+    pause_below_balance: 9000000
 ```
 In example custom command 1, the value is sent every 60 seconds for infinite times, until the program enters the dormant state.
 
@@ -219,8 +253,10 @@ In example custom command 2, the value is sent every 5 minutes for a total of 5 
 
 In example custom command 3, the value is sent once in the beginning of every active shift.
 
+In example custom command 4, 20 zz will be bought whenever the balance is above 9,000,000
+
 ### Instances
-Example if you would like to run two instances simultaneously and 24/7 (this shift configuration is not recommended): 
+Example if you would like to run two instances simultaneously and 24/7 (this shift configuration is not recommended):
 ```yaml
 instances:
   - token: "bmljZSB0cnkgYnV0IHRoaXMgaXM.bm90IGE.cmVhbCB0b2tlbg"

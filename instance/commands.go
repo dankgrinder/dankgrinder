@@ -125,7 +125,8 @@ func (in *Instance) newAutoBetCmd() *scheduler.Command {
 		Value:    fmt.Sprintf("pls bet %v", in.Features.AutoBet.Amount),
 		Interval: time.Duration(in.Compat.Cooldown.Bet) * time.Second,
 		CondFunc: func() bool {
-			return in.balance > in.Features.AutoBet.PauseBelowBalance && in.balance < 10000000
+			correctBalance := in.Features.AutoBet.PauseBelowBalance == 0 || in.balance > in.Features.AutoBet.PauseBelowBalance
+			return correctBalance  && in.balance < 10000000
 		},
 	}
 	if in.Features.AutoBet.Amount == 0 {
