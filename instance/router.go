@@ -268,7 +268,7 @@ func (in *Instance) router() *discord.MessageRouter {
 		Channel(in.ChannelID).
 		Author(DMID).
 		HasEmbeds(true).
-		Mentions(in.Client.User.ID).
+		RespondsTo(in.Client.User.ID).
 		Handler(in.hl)
 
 	// Balance report.

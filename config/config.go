@@ -339,6 +339,15 @@ func validateCompat(compat Compat) error {
 	if compat.Cooldown.Beg <= 0 {
 		return fmt.Errorf("beg cooldown must be greater than 0")
 	}
+	if compat.Cooldown.Gift <= 0 {
+		return fmt.Errorf("gift cooldown must be greater than 0")
+	}
+	if compat.Cooldown.Bet <= 0 {
+		return fmt.Errorf("bet cooldown must be greater than 0")
+	}
+	if compat.Cooldown.Sell <= 0 {
+		return fmt.Errorf("sell cooldown must be greater than 0")
+	}
 	if compat.AwaitResponseTimeout < 0 {
 		return fmt.Errorf("await response timeout must be greater than 0")
 	}
