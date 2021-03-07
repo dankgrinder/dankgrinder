@@ -16,9 +16,11 @@ instances:
 
 shifts:
   - state: "active"
-    base: 21600
+    duration:
+      base: 21600
   - state: "dormant"
-    base: 32400
+    duration:
+      base: 32400
 
 features:
   commands:
