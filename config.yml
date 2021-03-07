@@ -46,8 +46,8 @@ features:
   auto_gift:
     enable: false
     items:
-      - "kn"
-      - "zz"
+      - "bank"
+      - "pizza"
   auto_share:
     enable: false
     maximum_balance: 8000000
@@ -89,8 +89,8 @@ compatibility:
     - "."
   cooldown:
     beg: 48
-    search: 33
-    highlow: 23
+    search: 38
+    highlow: 33
     postmeme: 63
     fish: 63
     hunt: 63

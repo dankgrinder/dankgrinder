@@ -104,6 +104,9 @@ func (in *Instance) balCheck(msg discord.Message) {
 	if !strings.Contains(msg.Embeds[0].Title, in.Client.User.Username) {
 		return
 	}
+	if !exp.bal.Match([]byte(msg.Embeds[0].Description)) {
+		return
+	}
 	balstr := strings.Replace(exp.bal.FindStringSubmatch(msg.Embeds[0].Description)[1], ",", "", -1)
 	balance, err := strconv.Atoi(balstr)
 	if err != nil {
@@ -165,6 +168,21 @@ func (in *Instance) abFishingPole(_ discord.Message) {
 	})
 }
 
+func (in *Instance) abTidepod(_ discord.Message) {
+	if !strings.Contains(in.sdlr.AwaitResumeTrigger(), "use tide") {
+		return
+	}
+	in.sdlr.Schedule(&scheduler.Command{
+		Value:       "pls buy tidepod",
+		Log:         "no tidepod, buy a new one",
+	})
+	in.sdlr.Schedule(&scheduler.Command{
+		Value:       "pls use tidepod",
+		Log:         "retrying tidepod usage after last unavailability",
+		AwaitResume: true,
+	})
+}
+
 func (in *Instance) gift(msg discord.Message) {
 	trigger := in.sdlr.AwaitResumeTrigger()
 	if !strings.Contains(trigger, "shop") {
@@ -212,8 +230,9 @@ func (in *Instance) tidepodDeath(msg discord.Message) {
 		})
 	}
 	in.sdlr.Schedule(&scheduler.Command{
-		Value: "y",
+		Value: "pls use tidepod",
 		Log:   "retrying tidepod usage after previous death",
+		AwaitResume: true,
 	})
 }
 
@@ -334,6 +353,12 @@ func (in *Instance) router() *discord.MessageRouter {
 			Author(DMID).
 			ContentContains("Eating a tidepod is just dumb and stupid.").
 			Handler(in.tidepodDeath)
+
+		rtr.NewRoute().
+			Channel(in.ChannelID).
+			Author(DMID).
+			ContentContains("You don't own this item??").
+			Handler(in.abTidepod)
 	}
 
 	return rtr
