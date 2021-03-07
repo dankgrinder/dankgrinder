@@ -33,13 +33,13 @@ type Instance struct {
 	Compat             config.Compat
 	Shifts             []config.Shift
 
-	sdlr            *scheduler.Scheduler
-	ws              *discord.WSConn
-	initialBalance  int
-	balance         int
-	startingTime    time.Time
-	prevState       string
-	fatal           chan error
+	sdlr           *scheduler.Scheduler
+	ws             *discord.WSConn
+	initialBalance int
+	balance        int
+	startingTime   time.Time
+	prevState      string
+	fatal          chan error
 }
 
 func (in *Instance) Start() error {
@@ -66,7 +66,7 @@ func (in *Instance) Start() error {
 			in.Logger.Warnf("nobody to auto-share to, no master instance available")
 		}
 	}
-	
+
 	// For now, we assume that in.SuspicionAvoidance, in.Compat and in.Features
 	// are correct. They are currently validated in the main function. Ideally,
 	// this needs to change in the future.

@@ -73,15 +73,20 @@ type Features struct {
 	AutoGift       AutoGift        `yaml:"auto_gift"`
 	AutoBet        AutoBet         `yaml:"auto_bet"`
 	AutoShare      AutoShare       `yaml:"auto_share"`
-	AutoTidepod    AutoTidepod            `yaml:"auto_tidepod"`
-	BalanceCheck   bool            `yaml:"balance_check"`
+	AutoTidepod    AutoTidepod     `yaml:"auto_tidepod"`
+	BalanceCheck   BalanceCheck    `yaml:"balance_check"`
 	LogToFile      bool            `yaml:"log_to_file"`
 	Debug          bool            `yaml:"debug"`
 }
 
+type BalanceCheck struct {
+	Enable   bool `yaml:"enable"`
+	Interval int  `yaml:"interval"`
+}
+
 type AutoTidepod struct {
-	Enable bool `yaml:"enable"`
-	Interval int `yaml:"interval"`
+	Enable              bool `yaml:"enable"`
+	Interval            int  `yaml:"interval"`
 	BuyLifesaverOnDeath bool `yaml:"buy_lifesaver_on_death"`
 }
 
@@ -105,10 +110,10 @@ type AutoGift struct {
 }
 
 type CustomCommand struct {
-	Value    string `yaml:"value"`
-	Interval int    `yaml:"interval"`
-	Amount   int    `yaml:"amount"`
-	PauseBelowBalance int `yaml:"pause_below_balance"`
+	Value             string `yaml:"value"`
+	Interval          int    `yaml:"interval"`
+	Amount            int    `yaml:"amount"`
+	PauseBelowBalance int    `yaml:"pause_below_balance"`
 }
 
 type AutoBuy struct {
@@ -282,8 +287,19 @@ func validateFeatures(features Features) error {
 			return fmt.Errorf("auto-share minumum must be smaller than or equal to maximum")
 		}
 	}
-	if features.AutoBet.Enable && !features.BalanceCheck {
-		return fmt.Errorf("auto-bet enabled but balance check disabled")
+	if features.AutoTidepod.Enable && features.AutoTidepod.Interval < 0 {
+		return fmt.Errorf("auto-tidepod interval must be greater than or equal to 0")
+	}
+	if features.BalanceCheck.Enable && features.BalanceCheck.Interval <= 0 {
+		return fmt.Errorf("balance check interval must be greater than 0")
+	}
+	if features.AutoBet.Enable {
+		if !features.BalanceCheck.Enable {
+			return fmt.Errorf("auto-bet enabled but balance check disabled")
+		}
+		if features.AutoBet.Amount < 0 {
+			return fmt.Errorf("auto-bet amount must be greater than or equal to 0")
+		}
 	}
 	for i, cmd := range features.CustomCommands {
 		if cmd.Value == "" {
