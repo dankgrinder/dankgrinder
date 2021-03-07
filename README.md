@@ -107,7 +107,7 @@ Name | Type | Description
 `auto_bet` | [auto-bet object](#auto-bet-object) | Options for automatically using the bet command
 `auto_share` | [auto-share object](#auto-share-object) | Options for automatically sharing money with the master instance
 `auto_tidepod` |  [auto-tidepod](#auto-tidepod-object) | Options for automatically using tidepods
-`balance_check` | boolean | Enable checking the balance of the instance occasionally. Will also report an average income per hour for the active, current shift
+`balance_check` | [balance check object](#balance-check-object) | Options for checking balance
 `log_to_file` | boolean | Whether or not to log errors and information to a file. If running multiple instances a log file for each instance will always be created, regardless of the value of this property
 `debug` | boolean | Enable logging debug level information. Currently has no effect
 
@@ -171,6 +171,13 @@ Name | Type | Description
 `enable` | boolean | Whether or not to enable automatic usage of tidepods
 `interval` | integer | The interval in seconds at which the program attempts to use tidepods. If set to 0, a tidepod will only be used once at the beginning of every active shift
 `buy_lifesaver_on_death` | bool | Whether or not to buy a lifesaver after dying from tidepod usage
+
+### Balance check object
+Name | Type | Description
+---- | ---- | ----
+`enable` | boolean | Whether or not to enable balance checks
+`interval` | integer | The interval in seconds at which the program checks the balance. This is the same as the auto-share interval, if enabled
+
 
 ### Compatibility object
 Name | Type | Description

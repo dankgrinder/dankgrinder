@@ -173,8 +173,8 @@ func (in *Instance) abTidepod(_ discord.Message) {
 		return
 	}
 	in.sdlr.Schedule(&scheduler.Command{
-		Value:       "pls buy tidepod",
-		Log:         "no tidepod, buy a new one",
+		Value: "pls buy tidepod",
+		Log:   "no tidepod, buying a new one",
 	})
 	in.sdlr.Schedule(&scheduler.Command{
 		Value:       "pls use tidepod",
@@ -198,7 +198,7 @@ func (in *Instance) gift(msg discord.Message) {
 	}
 	amount := exp.gift.FindStringSubmatch(msg.Embeds[0].Title)[1]
 	item := exp.shop.FindStringSubmatch(trigger)[1]
-	
+
 	// ResumeWithCommandOrPrioritySchedule is not necessary in this case because
 	// the scheduler has to be awaiting resume. AwaitResumeTrigger returns "" if
 	// the scheduler isn't awaiting resume which causes this function to return.
@@ -230,8 +230,8 @@ func (in *Instance) tidepodDeath(msg discord.Message) {
 		})
 	}
 	in.sdlr.Schedule(&scheduler.Command{
-		Value: "pls use tidepod",
-		Log:   "retrying tidepod usage after previous death",
+		Value:       "pls use tidepod",
+		Log:         "retrying tidepod usage after previous death",
 		AwaitResume: true,
 	})
 }
@@ -291,7 +291,7 @@ func (in *Instance) router() *discord.MessageRouter {
 		Handler(in.hl)
 
 	// Balance report.
-	if in.Features.BalanceCheck {
+	if in.Features.BalanceCheck.Enable {
 		rtr.NewRoute().
 			Channel(in.ChannelID).
 			Author(DMID).

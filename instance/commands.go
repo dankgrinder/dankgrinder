@@ -58,16 +58,16 @@ func (in *Instance) newCmds() []*scheduler.Command {
 			AwaitResume: true,
 		})
 	}
-	if in.Features.BalanceCheck {
+	if in.Features.BalanceCheck.Enable {
 		cmds = append(cmds, &scheduler.Command{
 			Value:    "pls bal",
-			Interval: time.Minute * 2,
+			Interval: time.Duration(in.Features.BalanceCheck.Interval) * time.Second,
 		})
 	}
 	if in.Features.AutoTidepod.Enable {
 		cmds = append(cmds, &scheduler.Command{
-			Value:    "pls use tidepod",
-			Interval: time.Duration(in.Features.AutoTidepod.Interval) * time.Second,
+			Value:       "pls use tidepod",
+			Interval:    time.Duration(in.Features.AutoTidepod.Interval) * time.Second,
 			AwaitResume: true,
 		})
 	}
@@ -84,7 +84,7 @@ func (in *Instance) newCmds() []*scheduler.Command {
 			Interval: time.Duration(cmd.Interval) * time.Second,
 			Amount:   uint(cmd.Amount),
 			CondFunc: func() bool {
-				return cmd.PauseBelowBalance == 0 || in.balance > cmd.PauseBelowBalance
+				return cmd.PauseBelowBalance == 0 || in.balance >= cmd.PauseBelowBalance
 			},
 		})
 	}
@@ -125,8 +125,8 @@ func (in *Instance) newAutoBetCmd() *scheduler.Command {
 		Value:    fmt.Sprintf("pls bet %v", in.Features.AutoBet.Amount),
 		Interval: time.Duration(in.Compat.Cooldown.Bet) * time.Second,
 		CondFunc: func() bool {
-			correctBalance := in.Features.AutoBet.PauseBelowBalance == 0 || in.balance > in.Features.AutoBet.PauseBelowBalance
-			return correctBalance  && in.balance < 10000000
+			correctBalance := in.Features.AutoBet.PauseBelowBalance == 0 || in.balance >= in.Features.AutoBet.PauseBelowBalance
+			return correctBalance && in.balance < 10000000
 		},
 	}
 	if in.Features.AutoBet.Amount == 0 {

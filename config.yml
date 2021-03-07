@@ -59,7 +59,9 @@ features:
   auto_tidepod:
     enable: false
     buy_lifesaver_on_death: true
-  balance_check: true
+  balance_check:
+    enable: true
+    interval: 180
   log_to_file: true
   debug: false
 
