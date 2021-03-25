@@ -7,9 +7,10 @@
 package instance
 
 import (
+	"math/rand"
+
 	"github.com/dankgrinder/dankgrinder/discord"
 	"github.com/dankgrinder/dankgrinder/instance/scheduler"
-	"math/rand"
 )
 
 func (in *Instance) search(msg discord.Message) {

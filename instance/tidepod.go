@@ -7,9 +7,10 @@
 package instance
 
 import (
+	"strings"
+
 	"github.com/dankgrinder/dankgrinder/discord"
 	"github.com/dankgrinder/dankgrinder/instance/scheduler"
-	"strings"
 )
 
 func (in *Instance) tidepod(_ discord.Message) {
@@ -39,4 +40,3 @@ func (in *Instance) tidepodDeath(_ discord.Message) {
 		AwaitResume: true,
 	})
 }
-

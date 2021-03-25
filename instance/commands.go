@@ -128,7 +128,7 @@ func (in *Instance) newAutoBlackjackCmd() *scheduler.Command {
 			correctBalance := in.Features.AutoBlackjack.PauseBelowBalance == 0 || in.balance >= in.Features.AutoBlackjack.PauseBelowBalance
 			return correctBalance && in.balance < 10000000
 		},
-		AwaitResume: true,
+		AwaitResume:          true,
 		RescheduleAsPriority: in.Features.AutoBlackjack.Priority,
 	}
 	if in.Features.AutoBlackjack.Amount == 0 {

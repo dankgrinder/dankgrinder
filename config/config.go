@@ -55,15 +55,15 @@ type Compat struct {
 }
 
 type Cooldown struct {
-	Beg      int `yaml:"beg"`
-	Fish     int `yaml:"fish"`
-	Hunt     int `yaml:"hunt"`
-	Postmeme int `yaml:"postmeme"`
-	Search   int `yaml:"search"`
-	Highlow  int `yaml:"highlow"`
-	Blackjack      int `yaml:"blackjack"`
-	Sell     int `yaml:"sell"`
-	Gift     int `yaml:"gift"`
+	Beg       int `yaml:"beg"`
+	Fish      int `yaml:"fish"`
+	Hunt      int `yaml:"hunt"`
+	Postmeme  int `yaml:"postmeme"`
+	Search    int `yaml:"search"`
+	Highlow   int `yaml:"highlow"`
+	Blackjack int `yaml:"blackjack"`
+	Sell      int `yaml:"sell"`
+	Gift      int `yaml:"gift"`
 }
 
 type Features struct {
@@ -72,7 +72,7 @@ type Features struct {
 	AutoBuy        AutoBuy         `yaml:"auto_buy"`
 	AutoSell       AutoSell        `yaml:"auto_sell"`
 	AutoGift       AutoGift        `yaml:"auto_gift"`
-	AutoBlackjack        AutoBlackjack         `yaml:"auto_blackjack"`
+	AutoBlackjack  AutoBlackjack   `yaml:"auto_blackjack"`
 	AutoShare      AutoShare       `yaml:"auto_share"`
 	AutoTidepod    AutoTidepod     `yaml:"auto_tidepod"`
 	BalanceCheck   BalanceCheck    `yaml:"balance_check"`

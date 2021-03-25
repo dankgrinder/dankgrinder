@@ -8,12 +8,13 @@ package instance
 
 import (
 	"fmt"
-	"github.com/dankgrinder/dankgrinder/discord"
-	"github.com/dankgrinder/dankgrinder/instance/scheduler"
 	"math"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/dankgrinder/dankgrinder/discord"
+	"github.com/dankgrinder/dankgrinder/instance/scheduler"
 )
 
 func (in *Instance) balanceCheck(msg discord.Message) {

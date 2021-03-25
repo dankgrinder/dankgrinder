@@ -7,9 +7,10 @@
 package instance
 
 import (
+	"strings"
+
 	"github.com/dankgrinder/dankgrinder/discord"
 	"github.com/dankgrinder/dankgrinder/instance/scheduler"
-	"strings"
 )
 
 func (in *Instance) abLaptop(_ discord.Message) {

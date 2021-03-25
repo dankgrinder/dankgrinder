@@ -7,9 +7,10 @@
 package instance
 
 import (
-	"github.com/dankgrinder/dankgrinder/instance/scheduler"
 	"strconv"
 	"strings"
+
+	"github.com/dankgrinder/dankgrinder/instance/scheduler"
 
 	"github.com/dankgrinder/dankgrinder/discord"
 )
@@ -72,8 +73,8 @@ func (in *Instance) blackjack(msg discord.Message) {
 	}
 
 	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-		Value: in.Features.AutoBlackjack.LogicTable[dealersUpCard][hand],
-		Log:   "responding to blackjack",
+		Value:       in.Features.AutoBlackjack.LogicTable[dealersUpCard][hand],
+		Log:         "responding to blackjack",
 		AwaitResume: true,
 	})
 }

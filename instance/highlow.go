@@ -7,10 +7,11 @@
 package instance
 
 import (
-	"github.com/dankgrinder/dankgrinder/discord"
-	"github.com/dankgrinder/dankgrinder/instance/scheduler"
 	"strconv"
 	"strings"
+
+	"github.com/dankgrinder/dankgrinder/discord"
+	"github.com/dankgrinder/dankgrinder/instance/scheduler"
 )
 
 func (in *Instance) hl(msg discord.Message) {

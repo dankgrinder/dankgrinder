@@ -8,9 +8,10 @@ package instance
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/dankgrinder/dankgrinder/discord"
 	"github.com/dankgrinder/dankgrinder/instance/scheduler"
-	"strings"
 )
 
 func (in *Instance) gift(msg discord.Message) {
