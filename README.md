@@ -11,7 +11,7 @@ Want to join the community or need support? [Join our Discord](https://discord.g
 * Can run many instances at once
 * Uses very little system resources
 * High configurability; configure custom commands and much more
-* Automation of most currency command and betting
+* Automation of most currency commands and blackjack
 * Responds to fishing and hunting events (i.e. captures the dragon and special fish)
 * Responds to global events, search, and postmeme
 * Automatically uses tidepods and buys lifesavers when dying from them
@@ -198,7 +198,7 @@ Name | Type | Description
 `postmeme` | integer | The cooldown of the postmeme command in seconds, set a few seconds higher to account for network delay
 `fish` | integer | The cooldown of the fish command in seconds, set a few seconds higher to account for network delay
 `hunt` | integer | The cooldown of the hunt command in seconds, set a few seconds higher to account for network delay
-`bet` | integer | The cooldown of the bet command in seconds, set a few seconds higher to account for network delay
+`blackjack` | integer | The cooldown of the blackjack command in seconds, set a few seconds higher to account for network delay
 `sell` | integer | The cooldown of the sell command in seconds, set a few seconds higher to account for network delay
 `gift` | integer | The cooldown of the gift command in seconds, set a few seconds higher to account for network delay
 
