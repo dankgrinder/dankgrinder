@@ -71,8 +71,8 @@ func (in *Instance) newCmds() []*scheduler.Command {
 			AwaitResume: true,
 		})
 	}
-	if in.Features.AutoBet.Enable {
-		cmds = append(cmds, in.newAutoBetCmd())
+	if in.Features.AutoBlackjack.Enable {
+		cmds = append(cmds, in.newAutoBlackjackCmd())
 	}
 
 	for _, cmd := range in.Features.CustomCommands {
@@ -120,16 +120,18 @@ func (in *Instance) newAutoGiftChain() *scheduler.Command {
 	)
 }
 
-func (in *Instance) newAutoBetCmd() *scheduler.Command {
+func (in *Instance) newAutoBlackjackCmd() *scheduler.Command {
 	cmd := &scheduler.Command{
-		Value:    fmt.Sprintf("pls bet %v", in.Features.AutoBet.Amount),
-		Interval: time.Duration(in.Compat.Cooldown.Bet) * time.Second,
+		Value:    fmt.Sprintf("pls blackjack %v", in.Features.AutoBlackjack.Amount),
+		Interval: time.Duration(in.Compat.Cooldown.Blackjack) * time.Second,
 		CondFunc: func() bool {
-			correctBalance := in.Features.AutoBet.PauseBelowBalance == 0 || in.balance >= in.Features.AutoBet.PauseBelowBalance
+			correctBalance := in.Features.AutoBlackjack.PauseBelowBalance == 0 || in.balance >= in.Features.AutoBlackjack.PauseBelowBalance
 			return correctBalance && in.balance < 10000000
 		},
+		AwaitResume: true,
+		RescheduleAsPriority: in.Features.AutoBlackjack.Priority,
 	}
-	if in.Features.AutoBet.Amount == 0 {
+	if in.Features.AutoBlackjack.Amount == 0 {
 		cmd.Value = fmt.Sprintf("pls bet max")
 	}
 	return cmd

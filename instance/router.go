@@ -1,18 +1,12 @@
 package instance
 
 import (
-	"fmt"
-	"math"
-	"math/rand"
-	"regexp"
-	"strconv"
-	"strings"
-	"time"
-
 	"github.com/dankgrinder/dankgrinder/discord"
 	"github.com/dankgrinder/dankgrinder/instance/scheduler"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
+	"math/rand"
+	"regexp"
 )
 
 const DMID = "270904126974590976"
@@ -24,6 +18,7 @@ var exp = struct {
 	bal,
 	gift,
 	shop,
+	blackjack,
 	event *regexp.Regexp
 }{
 	search: regexp.MustCompile(`Pick from the list below and type the name in chat\.\s\x60(.+)\x60,\s\x60(.+)\x60,\s\x60(.+)\x60`),
@@ -31,8 +26,9 @@ var exp = struct {
 	hl:     regexp.MustCompile(`Your hint is \*\*([0-9]+)\*\*`),
 	bal:    regexp.MustCompile(`\*\*Wallet\*\*: \x60?⏣?\s?([0-9,]+)\x60?`),
 	event:  regexp.MustCompile(`^(Attack the boss by typing|Type) \x60(.+)\x60`),
-	gift:   regexp.MustCompile(`[a-zA-Z\s]* \(([0-9]+) owned\)`),
+	gift:   regexp.MustCompile(`[a-zA-Z\s]* \(([0-9,]+) owned\)`),
 	shop:   regexp.MustCompile(`pls shop ([a-zA-Z\s]+)`),
+	blackjack: regexp.MustCompile(`\[\x60.\s([0-9]{1,2}|[JQKA])\x60\]`),
 }
 
 var numFmt = message.NewPrinter(language.English)
@@ -58,181 +54,6 @@ func (in *Instance) event(msg discord.Message) {
 	in.sdlr.PrioritySchedule(&scheduler.Command{
 		Value: clean(res),
 		Log:   "responding to global event",
-	})
-}
-
-func (in *Instance) search(msg discord.Message) {
-	choices := exp.search.FindStringSubmatch(msg.Content)[1:]
-	for _, choice := range choices {
-		for _, allowed := range in.Compat.AllowedSearches {
-			if choice == allowed {
-				in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-					Value: choice,
-					Log:   "responding to search",
-				})
-				return
-			}
-		}
-	}
-	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-		Value: in.Compat.SearchCancel[rand.Intn(len(in.Compat.SearchCancel))],
-		Log:   "no allowed search options provided, responding",
-	})
-}
-
-func (in *Instance) hl(msg discord.Message) {
-	if !exp.hl.MatchString(msg.Embeds[0].Description) {
-		return
-	}
-	nstr := strings.Replace(exp.hl.FindStringSubmatch(msg.Embeds[0].Description)[1], ",", "", -1)
-	n, err := strconv.Atoi(nstr)
-	if err != nil {
-		in.Logger.Errorf("error while reading highlow hint: %v", err)
-		return
-	}
-	res := "high"
-	if n > 50 {
-		res = "low"
-	}
-	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-		Value: res,
-		Log:   "responding to highlow",
-	})
-}
-
-func (in *Instance) balCheck(msg discord.Message) {
-	if !strings.Contains(msg.Embeds[0].Title, in.Client.User.Username) {
-		return
-	}
-	if !exp.bal.Match([]byte(msg.Embeds[0].Description)) {
-		return
-	}
-	balstr := strings.Replace(exp.bal.FindStringSubmatch(msg.Embeds[0].Description)[1], ",", "", -1)
-	balance, err := strconv.Atoi(balstr)
-	if err != nil {
-		in.Logger.Errorf("error while reading balance: %v", err)
-		return
-	}
-	in.balance = balance
-	in.Logger.Infof(
-		"current wallet balance: %v coins",
-		numFmt.Sprintf("%d", balance),
-	)
-
-	if balance > in.Features.AutoShare.MaximumBalance &&
-		in.Features.AutoShare.Enable &&
-		in.MasterID != "" &&
-		in.Client.User.ID != in.MasterID {
-		in.sdlr.Schedule(&scheduler.Command{
-			Value: fmt.Sprintf(
-				"pls share %v <@%v>",
-				balance-in.Features.AutoShare.MinimumBalance,
-				in.MasterID,
-			),
-			Log: "sharing all balance above minimum with master instance",
-		})
-	}
-
-	if in.startingTime.IsZero() {
-		in.initialBalance = balance
-		in.startingTime = time.Now()
-		return
-	}
-	inc := balance - in.initialBalance
-	per := time.Now().Sub(in.startingTime)
-	hourlyInc := int(math.Round(float64(inc) / per.Hours()))
-	in.Logger.Infof(
-		"average income: %v coins/h",
-		numFmt.Sprintf("%d", hourlyInc),
-	)
-}
-
-func (in *Instance) abLaptop(_ discord.Message) {
-	in.sdlr.PrioritySchedule(&scheduler.Command{
-		Value: "pls buy laptop",
-		Log:   "no laptop, buying a new one",
-	})
-}
-
-func (in *Instance) abHuntingRifle(_ discord.Message) {
-	in.sdlr.PrioritySchedule(&scheduler.Command{
-		Value: "pls buy rifle",
-		Log:   "no hunting rifle, buying a new one",
-	})
-}
-
-func (in *Instance) abFishingPole(_ discord.Message) {
-	in.sdlr.PrioritySchedule(&scheduler.Command{
-		Value: "pls buy fishing pole",
-		Log:   "no fishing pole, buying a new one",
-	})
-}
-
-func (in *Instance) abTidepod(_ discord.Message) {
-	if !strings.Contains(in.sdlr.AwaitResumeTrigger(), "use tide") {
-		return
-	}
-	in.sdlr.Schedule(&scheduler.Command{
-		Value: "pls buy tidepod",
-		Log:   "no tidepod, buying a new one",
-	})
-	in.sdlr.Schedule(&scheduler.Command{
-		Value:       "pls use tidepod",
-		Log:         "retrying tidepod usage after last unavailability",
-		AwaitResume: true,
-	})
-}
-
-func (in *Instance) gift(msg discord.Message) {
-	trigger := in.sdlr.AwaitResumeTrigger()
-	if !strings.Contains(trigger, "shop") {
-		return
-	}
-	if in.Client.User.ID == in.MasterID {
-		in.sdlr.Resume()
-		return
-	}
-	if !exp.gift.Match([]byte(msg.Embeds[0].Title)) || !exp.shop.Match([]byte(trigger)) {
-		in.sdlr.Resume()
-		return
-	}
-	amount := exp.gift.FindStringSubmatch(msg.Embeds[0].Title)[1]
-	item := exp.shop.FindStringSubmatch(trigger)[1]
-
-	// ResumeWithCommandOrPrioritySchedule is not necessary in this case because
-	// the scheduler has to be awaiting resume. AwaitResumeTrigger returns "" if
-	// the scheduler isn't awaiting resume which causes this function to return.
-	in.sdlr.ResumeWithCommand(&scheduler.Command{
-		Value: fmt.Sprintf("pls gift %v %v <@%v>", amount, item, in.MasterID),
-		Log:   "gifting items",
-	})
-}
-
-func (in *Instance) tidepod(msg discord.Message) {
-	if !strings.Contains(in.sdlr.AwaitResumeTrigger(), "use tide") {
-		return
-	}
-
-	// ResumeWithCommandOrPrioritySchedule is not necessary in this case because
-	// the scheduler has to be awaiting resume. AwaitResumeTrigger returns "" if
-	// the scheduler isn't awaiting resume which causes this function to return.
-	in.sdlr.ResumeWithCommand(&scheduler.Command{
-		Value: "y",
-		Log:   "accepting tidepod",
-	})
-}
-
-func (in *Instance) tidepodDeath(msg discord.Message) {
-	if in.Features.AutoTidepod.BuyLifesaverOnDeath {
-		in.sdlr.Schedule(&scheduler.Command{
-			Value: "pls buy lifesaver",
-			Log:   "buying lifesaver after death from tidepod",
-		})
-	}
-	in.sdlr.Schedule(&scheduler.Command{
-		Value:       "pls use tidepod",
-		Log:         "retrying tidepod usage after previous death",
-		AwaitResume: true,
 	})
 }
 
@@ -271,6 +92,7 @@ func (in *Instance) router() *discord.MessageRouter {
 	rtr.NewRoute().
 		Channel(in.ChannelID).
 		Author(DMID).
+		HasEmbeds(false).
 		ContentMatchesExp(exp.event).
 		Handler(in.event)
 
@@ -296,7 +118,7 @@ func (in *Instance) router() *discord.MessageRouter {
 			Channel(in.ChannelID).
 			Author(DMID).
 			HasEmbeds(true).
-			Handler(in.balCheck)
+			Handler(in.balanceCheck)
 	}
 
 	// Auto-buy laptop.
@@ -359,6 +181,16 @@ func (in *Instance) router() *discord.MessageRouter {
 			Author(DMID).
 			ContentContains("You don't own this item??").
 			Handler(in.abTidepod)
+	}
+
+	// Auto-blackjack
+	if in.Features.AutoBlackjack.Enable {
+		rtr.NewRoute().
+			Channel(in.ChannelID).
+			Author(DMID).
+			HasEmbeds(true).
+			ContentContains("Type `h` to **hit**, type `s` to **stand**, or type `e` to **end** the game.").
+			Handler(in.blackjack)
 	}
 
 	return rtr

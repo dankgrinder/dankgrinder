@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -60,7 +61,7 @@ type Cooldown struct {
 	Postmeme int `yaml:"postmeme"`
 	Search   int `yaml:"search"`
 	Highlow  int `yaml:"highlow"`
-	Bet      int `yaml:"bet"`
+	Blackjack      int `yaml:"blackjack"`
 	Sell     int `yaml:"sell"`
 	Gift     int `yaml:"gift"`
 }
@@ -71,7 +72,7 @@ type Features struct {
 	AutoBuy        AutoBuy         `yaml:"auto_buy"`
 	AutoSell       AutoSell        `yaml:"auto_sell"`
 	AutoGift       AutoGift        `yaml:"auto_gift"`
-	AutoBet        AutoBet         `yaml:"auto_bet"`
+	AutoBlackjack        AutoBlackjack         `yaml:"auto_blackjack"`
 	AutoShare      AutoShare       `yaml:"auto_share"`
 	AutoTidepod    AutoTidepod     `yaml:"auto_tidepod"`
 	BalanceCheck   BalanceCheck    `yaml:"balance_check"`
@@ -90,11 +91,12 @@ type AutoTidepod struct {
 	BuyLifesaverOnDeath bool `yaml:"buy_lifesaver_on_death"`
 }
 
-type AutoBet struct {
-	Enable            bool `yaml:"enable"`
-	Priority          bool `yaml:"priority"`
-	Amount            int  `yaml:"amount"`
-	PauseBelowBalance int  `yaml:"pause_below_balance"`
+type AutoBlackjack struct {
+	Enable            bool                         `yaml:"enable"`
+	Priority          bool                         `yaml:"priority"`
+	Amount            int                          `yaml:"amount"`
+	PauseBelowBalance int                          `yaml:"pause_below_balance"`
+	LogicTable        map[string]map[string]string `yaml:"logic_table"`
 }
 
 type AutoShare struct {
@@ -293,14 +295,30 @@ func validateFeatures(features Features) error {
 	if features.BalanceCheck.Enable && features.BalanceCheck.Interval <= 0 {
 		return fmt.Errorf("balance check interval must be greater than 0")
 	}
-	if features.AutoBet.Enable {
+	if features.AutoBlackjack.Enable {
 		if !features.BalanceCheck.Enable {
-			return fmt.Errorf("auto-bet enabled but balance check disabled")
+			return fmt.Errorf("auto-blackjack enabled but balance check disabled")
 		}
-		if features.AutoBet.Amount < 0 {
-			return fmt.Errorf("auto-bet amount must be greater than or equal to 0")
+		if features.AutoBlackjack.Amount < 0 {
+			return fmt.Errorf("auto-blackjack amount must be greater than or equal to 0")
+		}
+		for columnKey, row := range features.AutoBlackjack.LogicTable {
+			if columnKey != "A" {
+				n, err := strconv.Atoi(columnKey)
+				if err != nil || n < 2 || n > 10 {
+					return fmt.Errorf("invalid auto-blackjack logic table key: %v", columnKey)
+				}
+			}
+			for rowKey := range row {
+				rowKey = strings.Replace(rowKey, "soft", "", -1)
+				n, err := strconv.Atoi(rowKey)
+				if err != nil || n < 4 || n > 20 {
+					return fmt.Errorf("invalid auto-blackjack logic table key: %v", rowKey)
+				}
+			}
 		}
 	}
+
 	for i, cmd := range features.CustomCommands {
 		if cmd.Value == "" {
 			return fmt.Errorf("features.custom_commands[%v].value: no value", i)
@@ -358,8 +376,8 @@ func validateCompat(compat Compat) error {
 	if compat.Cooldown.Gift <= 0 {
 		return fmt.Errorf("gift cooldown must be greater than 0")
 	}
-	if compat.Cooldown.Bet <= 0 {
-		return fmt.Errorf("bet cooldown must be greater than 0")
+	if compat.Cooldown.Blackjack <= 0 {
+		return fmt.Errorf("blackjack cooldown must be greater than 0")
 	}
 	if compat.Cooldown.Sell <= 0 {
 		return fmt.Errorf("sell cooldown must be greater than 0")
