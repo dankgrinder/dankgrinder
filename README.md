@@ -104,7 +104,7 @@ Name | Type | Description
 `auto_buy` | [auto-buy object](#auto-buy-object) | Options for the automatic buying of certain items if it is detected that they are not available
 `auto_sell` | [auto-sell object](#auto-sell-object) | Options for the automatic, periodic selling of certain items
 `auto_gift` | [auto-gift object](#auto-gift-object) | Options for the automatic, periodic gifting of certain items to the master instance
-`auto_bet` | [auto-bet object](#auto-bet-object) | Options for automatically using the bet command
+`auto_blackjack` | [auto-blackjack object](#auto-blackjack-object) | Options for automatically using the blackjack command
 `auto_share` | [auto-share object](#auto-share-object) | Options for automatically sharing money with the master instance
 `auto_tidepod` |  [auto-tidepod](#auto-tidepod-object) | Options for automatically using tidepods
 `balance_check` | [balance check object](#balance-check-object) | Options for checking balance
@@ -127,7 +127,7 @@ Name | Type | Description
 `value` | string | The value of the command, for example: `pls dep max`
 `interval` | integer | The interval at which this command will be re-sent in seconds. Time may vary depending on other commands and responses. If `0` the command will only run once in the beginning of every active shift
 `amount` | integer | The amount of times this command will be run in total every active shift. Set to `0` for no limit
-`pause_below_balance` | integer | A wallet balance value below which this command will not be sent
+`pause_below_balance` | integer | A wallet balance value below which this command will not be sent. The balance is read from the balance check functionality. Consider having the interval of this quite low, to make sure the balance the program thinks you have is as up-to-date as possible
 
 ### Auto-buy object
 Name | Type | Description
@@ -150,13 +150,14 @@ Name | Type | Description
 `interval` | integer | The interval at which items will be gifted during an active shift. If set to 0, items will only be gifted once at the beginning of every active shift
 `items` | array of strings | The Dank Memer item ids of the items to gift
 
-### Auto-bet object
+### Auto-blackjack object
 Name | Type | Description
 ---- | ---- | ----
-`enable` | boolean | Whether or not to enable automatic betting
+`enable` | boolean | Whether or not to enable automatic blackjack
 `priority` | boolean | Whether or not to give the command priority over other, regular commands if there are commands queued
 `amount` | integer | The amount to bet every time, set to `0` to bet the maximum amount of coins
-`pause_below_balance` | integer | The balance below which the program should stop betting
+`pause_below_balance` | integer | The balance below which the program should stop betting. The balance is read from the balance check functionality. Consider having the interval of this quite low, to make sure the balance the program thinks you have is as up-to-date as possible
+`logic_table` | dictionary[string]dictionary[string]string | What to do for every possible blackjack hand. The string values are the exact response that will be triggered
 
 ### Auto-share object
 Name | Type | Description
