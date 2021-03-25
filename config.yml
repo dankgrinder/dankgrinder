@@ -316,7 +316,7 @@ features:
         14: "hit"
         15: "hit"
         16: "hit"
-        17: "end"
+        17: "hit"
         18: "stand"
         19: "stand"
         20: "stand"
@@ -369,7 +369,7 @@ compatibility:
     postmeme: 63
     fish: 63
     hunt: 63
-    bet: 9
+    blackjack: 13
     sell: 6
     gift: 26
   await_response_timeout: 4
