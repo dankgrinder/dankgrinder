@@ -56,7 +56,6 @@ features:
     minimum_balance: 5000000
   auto_blackjack:
     enable: false
-    priority: true
     pause_below_balance: 1000000
     logic_table:
       2:
