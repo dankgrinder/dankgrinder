@@ -180,6 +180,12 @@ func (in *Instance) router() *discord.MessageRouter {
 		rtr.NewRoute().
 			Channel(in.ChannelID).
 			Author(DMID).
+			ContentContains("You lost **all of your coins**.").
+			Handler(in.tidepodDeath)
+
+		rtr.NewRoute().
+			Channel(in.ChannelID).
+			Author(DMID).
 			ContentContains("You don't own this item??").
 			Handler(in.abTidepod)
 	}

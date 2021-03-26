@@ -238,7 +238,13 @@ func (s *Scheduler) reschedule(cmd *Command) {
 
 func (s *Scheduler) send(cmd *Command) {
 	if cmd.CondFunc != nil && !cmd.CondFunc() {
-		s.Schedule(cmd)
+		retryAfter := cmd.Interval
+		if retryAfter <= 0 {
+			retryAfter = time.Second * 10
+		}
+		time.AfterFunc(retryAfter, func() {
+			s.Schedule(cmd)
+		})
 		return
 	}
 	d := delay(s.MessageDelay)
