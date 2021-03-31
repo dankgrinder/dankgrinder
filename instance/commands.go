@@ -8,10 +8,53 @@ package instance
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/dankgrinder/dankgrinder/instance/scheduler"
 )
+
+const (
+	begCmdValue           = "pls beg"
+	postmemeCmdValue      = "pls pm"
+	searchCmdValue        = "pls search"
+	highlowCmdValue       = "pls hl"
+	fishCmdValue          = "pls fish"
+	huntCmdValue          = "pls hunt"
+	balanceCheckCmdValue  = "pls bal"
+	tidepodCmdValue       = "pls use tidepod"
+	acceptTidepodCmdValue = "y"
+	buyBaseCmdValue       = "pls buy"
+	blackjackBaseCmdValue = "pls blackjack"
+	sellBaseCmdValue      = "pls sell"
+	shopBaseCmdValue      = "pls shop"
+	giftBaseCmdValue      = "pls gift"
+	shareBaseCmdValue     = "pls share"
+)
+
+func blackjackCmdValue(amount string) string {
+	return fmt.Sprintf("%v %v", blackjackBaseCmdValue, amount)
+}
+
+func buyCmdValue(amount, item string) string {
+	return fmt.Sprintf("%v %v %v", buyBaseCmdValue, item, amount)
+}
+
+func sellCmdValue(amount, item string) string {
+	return fmt.Sprintf("%v %v %v", sellBaseCmdValue, item, amount)
+}
+
+func shopCmdValue(item string) string {
+	return fmt.Sprintf("%v %v", shopBaseCmdValue, item)
+}
+
+func giftCmdValue(amount, item, id string) string {
+	return fmt.Sprintf("%v %v %v <@%v>", giftBaseCmdValue, amount, item, id)
+}
+
+func shareCmdValue(amount, id string) string {
+	return fmt.Sprintf("%v %v <@%v>", shareBaseCmdValue, amount, id)
+}
 
 // commands returns a command pointer slice with all commands that should be
 // executed periodically. It contains all commands as configured.
@@ -19,54 +62,54 @@ func (in *Instance) newCmds() []*scheduler.Command {
 	var cmds []*scheduler.Command
 	if in.Features.Commands.Beg {
 		cmds = append(cmds, &scheduler.Command{
-			Value:    "pls beg",
+			Value:    begCmdValue,
 			Interval: time.Duration(in.Compat.Cooldown.Beg) * time.Second,
 		})
 	}
 	if in.Features.Commands.Postmeme {
 		cmds = append(cmds, &scheduler.Command{
-			Value:       "pls pm",
+			Value:       postmemeCmdValue,
 			Interval:    time.Duration(in.Compat.Cooldown.Postmeme) * time.Second,
 			AwaitResume: true,
 		})
 	}
 	if in.Features.Commands.Search {
 		cmds = append(cmds, &scheduler.Command{
-			Value:       "pls search",
+			Value:       searchCmdValue,
 			Interval:    time.Duration(in.Compat.Cooldown.Search) * time.Second,
 			AwaitResume: true,
 		})
 	}
 	if in.Features.Commands.Highlow {
 		cmds = append(cmds, &scheduler.Command{
-			Value:       "pls hl",
+			Value:       highlowCmdValue,
 			Interval:    time.Duration(in.Compat.Cooldown.Highlow) * time.Second,
 			AwaitResume: true,
 		})
 	}
 	if in.Features.Commands.Fish {
 		cmds = append(cmds, &scheduler.Command{
-			Value:       "pls fish",
+			Value:       fishCmdValue,
 			Interval:    time.Duration(in.Compat.Cooldown.Fish) * time.Second,
 			AwaitResume: true,
 		})
 	}
 	if in.Features.Commands.Hunt {
 		cmds = append(cmds, &scheduler.Command{
-			Value:       "pls hunt",
+			Value:       huntCmdValue,
 			Interval:    time.Duration(in.Compat.Cooldown.Hunt) * time.Second,
 			AwaitResume: true,
 		})
 	}
 	if in.Features.BalanceCheck.Enable {
 		cmds = append(cmds, &scheduler.Command{
-			Value:    "pls bal",
+			Value:    balanceCheckCmdValue,
 			Interval: time.Duration(in.Features.BalanceCheck.Interval) * time.Second,
 		})
 	}
 	if in.Features.AutoTidepod.Enable {
 		cmds = append(cmds, &scheduler.Command{
-			Value:       "pls use tidepod",
+			Value:       tidepodCmdValue,
 			Interval:    time.Duration(in.Features.AutoTidepod.Interval) * time.Second,
 			AwaitResume: true,
 		})
@@ -95,7 +138,7 @@ func (in *Instance) newAutoSellChain() *scheduler.Command {
 	var cmds []*scheduler.Command
 	for _, item := range in.Features.AutoSell.Items {
 		cmds = append(cmds, &scheduler.Command{
-			Value:    fmt.Sprintf("pls sell %v max", item),
+			Value:    sellCmdValue("max", item),
 			Interval: time.Duration(in.Compat.Cooldown.Sell) * time.Second,
 		})
 	}
@@ -109,7 +152,7 @@ func (in *Instance) newAutoGiftChain() *scheduler.Command {
 	var cmds []*scheduler.Command
 	for _, item := range in.Features.AutoGift.Items {
 		cmds = append(cmds, &scheduler.Command{
-			Value:       fmt.Sprintf("pls shop %v", item),
+			Value:       shopCmdValue(item),
 			Interval:    time.Duration(in.Compat.Cooldown.Gift) * time.Second,
 			AwaitResume: true,
 		})
@@ -122,7 +165,7 @@ func (in *Instance) newAutoGiftChain() *scheduler.Command {
 
 func (in *Instance) newAutoBlackjackCmd() *scheduler.Command {
 	cmd := &scheduler.Command{
-		Value:    fmt.Sprintf("pls blackjack %v", in.Features.AutoBlackjack.Amount),
+		Value:    blackjackCmdValue(strconv.Itoa(in.Features.AutoBlackjack.Amount)),
 		Interval: time.Duration(in.Compat.Cooldown.Blackjack) * time.Second,
 		CondFunc: func() bool {
 			correctBalance := in.Features.AutoBlackjack.PauseBelowBalance == 0 || in.balance >= in.Features.AutoBlackjack.PauseBelowBalance
@@ -132,7 +175,7 @@ func (in *Instance) newAutoBlackjackCmd() *scheduler.Command {
 		RescheduleAsPriority: in.Features.AutoBlackjack.Priority,
 	}
 	if in.Features.AutoBlackjack.Amount == 0 {
-		cmd.Value = fmt.Sprintf("pls bet max")
+		cmd.Value = blackjackCmdValue("max")
 	}
 	return cmd
 }

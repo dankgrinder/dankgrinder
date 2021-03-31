@@ -14,32 +14,48 @@ const DMID = "270904126974590976"
 
 var exp = struct {
 	search,
-	fh,
+	fhEvent,
 	hl,
 	bal,
 	gift,
 	shop,
 	blackjack,
+	blackjackBal,
 	event *regexp.Regexp
 }{
 	search:    regexp.MustCompile(`Pick from the list below and type the name in chat\.\s\x60(.+)\x60,\s\x60(.+)\x60,\s\x60(.+)\x60`),
-	fh:        regexp.MustCompile(`10\sseconds.*\s?([Tt]yping|[Tt]ype)\s\x60(.+)\x60`),
+	fhEvent:   regexp.MustCompile(`10\sseconds.*\s?([Tt]yping|[Tt]ype)\s\x60(.+)\x60`),
 	hl:        regexp.MustCompile(`Your hint is \*\*([0-9]+)\*\*`),
 	bal:       regexp.MustCompile(`\*\*Wallet\*\*: \x60?⏣?\s?([0-9,]+)\x60?`),
 	event:     regexp.MustCompile(`^(Attack the boss by typing|Type) \x60(.+)\x60`),
 	gift:      regexp.MustCompile(`[a-zA-Z\s]* \(([0-9,]+) owned\)`),
 	shop:      regexp.MustCompile(`pls shop ([a-zA-Z\s]+)`),
 	blackjack: regexp.MustCompile(`\[\x60.\s([0-9]{1,2}|[JQKA])\x60\]`),
+	blackjackBal: regexp.MustCompile(`(You now have|You have) (\*\*)?(⏣\s)?(\*\*)?([0-9,]+)(\*\*)?(\sstill)?\.`),
 }
 
 var numFmt = message.NewPrinter(language.English)
 
-func (in *Instance) fh(msg discord.Message) {
-	res := exp.fh.FindStringSubmatch(msg.Content)[2]
+func (in *Instance) fhEvent(msg discord.Message) {
+	res := exp.fhEvent.FindStringSubmatch(msg.Content)[2]
 	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
 		Value: clean(res),
 		Log:   "responding to fishing or hunting event",
 	})
+}
+
+func (in *Instance) fhEnd(msg discord.Message) {
+	trigger := in.sdlr.AwaitResumeTrigger()
+	if trigger == nil {
+		return
+	}
+	if msg.ReferencedMessage.Content != fishCmdValue && msg.ReferencedMessage.Content != huntCmdValue {
+		return
+	}
+	if trigger.Value == fishCmdValue || trigger.Value == huntCmdValue &&
+	!exp.fhEvent.MatchString(msg.Content) {
+		in.sdlr.Resume()
+	}
 }
 
 func (in *Instance) pm(_ discord.Message) {
@@ -54,7 +70,7 @@ func (in *Instance) event(msg discord.Message) {
 	res := exp.event.FindStringSubmatch(msg.Content)[2]
 	in.sdlr.PrioritySchedule(&scheduler.Command{
 		Value: clean(res),
-		Log:   "responding to global event",
+		Log:   "responding to event",
 	})
 }
 
@@ -73,13 +89,22 @@ func clean(s string) string {
 func (in *Instance) router() *discord.MessageRouter {
 	rtr := &discord.MessageRouter{}
 
-	// Fishing and hunting events.
+	// Fishing and hunting.
 	rtr.NewRoute().
 		Channel(in.ChannelID).
 		Author(DMID).
-		ContentMatchesExp(exp.fh).
+		ContentMatchesExp(exp.fhEvent).
 		Mentions(in.Client.User.ID).
-		Handler(in.fh)
+		Handler(in.fhEvent)
+
+	// When a fish/hunt is completed without any events, Dank Memer will
+	// reference the original command. If there are events it will mention. This
+	// can therefore be used to differentiate between the two.
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		RespondsTo(in.Client.User.ID).
+		Handler(in.fhEnd)
 
 	// Postmeme.
 	rtr.NewRoute().
@@ -154,8 +179,8 @@ func (in *Instance) router() *discord.MessageRouter {
 
 	// Auto-gift
 	if in.Features.AutoGift.Enable &&
-		in.MasterID != "" &&
-		in.MasterID != in.Client.User.ID {
+		in.Master != nil &&
+		in != in.Master {
 		rtr.NewRoute().
 			Channel(in.ChannelID).
 			Author(DMID).
@@ -198,6 +223,12 @@ func (in *Instance) router() *discord.MessageRouter {
 			HasEmbeds(true).
 			ContentContains("Type `h` to **hit**, type `s` to **stand**, or type `e` to **end** the game.").
 			Handler(in.blackjack)
+
+		rtr.NewRoute().
+			Channel(in.ChannelID).
+			Author(DMID).
+			HasEmbeds(true).
+			Handler(in.blackjackEnd)
 	}
 
 	return rtr

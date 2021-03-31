@@ -7,43 +7,42 @@
 package instance
 
 import (
-	"strings"
-
 	"github.com/dankgrinder/dankgrinder/discord"
 	"github.com/dankgrinder/dankgrinder/instance/scheduler"
 )
 
 func (in *Instance) abLaptop(_ discord.Message) {
 	in.sdlr.PrioritySchedule(&scheduler.Command{
-		Value: "pls buy laptop",
+		Value: buyCmdValue("1", "laptop"),
 		Log:   "no laptop, buying a new one",
 	})
 }
 
 func (in *Instance) abHuntingRifle(_ discord.Message) {
 	in.sdlr.PrioritySchedule(&scheduler.Command{
-		Value: "pls buy rifle",
+		Value: buyCmdValue("1", "rifle"),
 		Log:   "no hunting rifle, buying a new one",
 	})
 }
 
 func (in *Instance) abFishingPole(_ discord.Message) {
 	in.sdlr.PrioritySchedule(&scheduler.Command{
-		Value: "pls buy fishing pole",
+		Value: buyCmdValue("1", "fishing"),
 		Log:   "no fishing pole, buying a new one",
 	})
 }
 
 func (in *Instance) abTidepod(_ discord.Message) {
-	if !strings.Contains(in.sdlr.AwaitResumeTrigger(), "use tide") {
+	trigger := in.sdlr.AwaitResumeTrigger()
+	if trigger == nil || trigger.Value != tidepodCmdValue {
 		return
 	}
 	in.sdlr.Schedule(&scheduler.Command{
-		Value: "pls buy tidepod",
+		Value: buyCmdValue("1", "tide"),
 		Log:   "no tidepod, buying a new one",
 	})
 	in.sdlr.Schedule(&scheduler.Command{
-		Value:       "pls use tidepod",
+		Value:       tidepodCmdValue,
 		Log:         "retrying tidepod usage after last unavailability",
 		AwaitResume: true,
 	})

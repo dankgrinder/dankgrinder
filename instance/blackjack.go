@@ -78,3 +78,37 @@ func (in *Instance) blackjack(msg discord.Message) {
 		AwaitResume: true,
 	})
 }
+
+func (in *Instance) blackjackEnd(msg discord.Message) {
+	if strings.Contains(msg.Content, "Type `h` to **hit**, type `s` to **stand**, or type `e` to **end** the game.") {
+		return
+	}
+	if !strings.Contains(msg.Embeds[0].Author.Name, in.Client.User.Username) {
+		return
+	}
+	if !strings.Contains(msg.Embeds[0].Author.Name, "blackjack") {
+		return
+	}
+	if !exp.blackjackBal.MatchString(msg.Embeds[0].Description) {
+		return
+	}
+	trigger := in.sdlr.AwaitResumeTrigger()
+	if trigger != nil {
+		rowLoop:
+		for _, row := range in.Features.AutoBlackjack.LogicTable {
+			for _, val := range row {
+				if val == trigger.Value {
+					in.sdlr.Resume()
+					break rowLoop
+				}
+			}
+		}
+	}
+	balstr := strings.Replace(exp.blackjackBal.FindStringSubmatch(msg.Embeds[0].Description)[5], ",", "", -1)
+	balance, err := strconv.Atoi(balstr)
+	if err != nil {
+		in.Logger.Errorf("error while reading balance: %v", err)
+		return
+	}
+	in.updateBalance(balance)
+}

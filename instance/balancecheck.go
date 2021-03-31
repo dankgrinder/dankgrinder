@@ -8,13 +8,13 @@ package instance
 
 import (
 	"fmt"
+	"github.com/dankgrinder/dankgrinder/instance/scheduler"
 	"math"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/dankgrinder/dankgrinder/discord"
-	"github.com/dankgrinder/dankgrinder/instance/scheduler"
 )
 
 func (in *Instance) balanceCheck(msg discord.Message) {
@@ -30,31 +30,44 @@ func (in *Instance) balanceCheck(msg discord.Message) {
 		in.Logger.Errorf("error while reading balance: %v", err)
 		return
 	}
+	in.updateBalance(balance)
+}
+
+func (in *Instance) updateBalance(balance int) {
+	if balance > in.Features.AutoShare.MaximumBalance &&
+		in.Features.AutoShare.Enable &&
+		in.Master != nil &&
+		in != in.Master {
+		in.sdlr.PrioritySchedule(&scheduler.Command{
+			Value: fmt.Sprintf(
+				"pls share %v <@%v>",
+				balance-in.Features.AutoShare.MinimumBalance,
+				in.Master.Client.User.ID,
+			),
+			Log: "sharing all balance above minimum with master instance",
+		})
+	} else if balance < in.Features.AutoShare.MinimumBalance &&
+		in.Features.AutoShare.Enable &&
+		in.Features.AutoShare.Fund &&
+		in.Master != nil &&
+		in != in.Master &&
+		(in.prevFundReq.IsZero() ||
+			time.Now().Sub(in.prevFundReq) > fundReqInterval) {
+		in.Master.Share(in.Features.AutoShare.MinimumBalance-balance, in.Client.User.ID)
+		in.prevFundReq = time.Now()
+	}
 	in.balance = balance
 	in.Logger.Infof(
 		"current wallet balance: %v coins",
 		numFmt.Sprintf("%d", balance),
 	)
 
-	if balance > in.Features.AutoShare.MaximumBalance &&
-		in.Features.AutoShare.Enable &&
-		in.MasterID != "" &&
-		in.Client.User.ID != in.MasterID {
-		in.sdlr.Schedule(&scheduler.Command{
-			Value: fmt.Sprintf(
-				"pls share %v <@%v>",
-				balance-in.Features.AutoShare.MinimumBalance,
-				in.MasterID,
-			),
-			Log: "sharing all balance above minimum with master instance",
-		})
-	}
-
 	if in.startingTime.IsZero() {
 		in.initialBalance = balance
 		in.startingTime = time.Now()
 		return
 	}
+
 	inc := balance - in.initialBalance
 	per := time.Now().Sub(in.startingTime)
 	hourlyInc := int(math.Round(float64(inc) / per.Hours()))

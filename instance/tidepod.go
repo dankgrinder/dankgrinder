@@ -7,14 +7,13 @@
 package instance
 
 import (
-	"strings"
-
 	"github.com/dankgrinder/dankgrinder/discord"
 	"github.com/dankgrinder/dankgrinder/instance/scheduler"
 )
 
 func (in *Instance) tidepod(_ discord.Message) {
-	if !strings.Contains(in.sdlr.AwaitResumeTrigger(), "use tide") {
+	trigger := in.sdlr.AwaitResumeTrigger()
+	if trigger == nil || trigger.Value != tidepodCmdValue {
 		return
 	}
 
@@ -22,7 +21,7 @@ func (in *Instance) tidepod(_ discord.Message) {
 	// the scheduler has to be awaiting resume. AwaitResumeTrigger returns "" if
 	// the scheduler isn't awaiting resume which causes this function to return.
 	in.sdlr.ResumeWithCommand(&scheduler.Command{
-		Value: "y",
+		Value: acceptTidepodCmdValue,
 		Log:   "accepting tidepod",
 	})
 }
@@ -30,12 +29,12 @@ func (in *Instance) tidepod(_ discord.Message) {
 func (in *Instance) tidepodDeath(_ discord.Message) {
 	if in.Features.AutoTidepod.BuyLifesaverOnDeath {
 		in.sdlr.Schedule(&scheduler.Command{
-			Value: "pls buy lifesaver",
+			Value: buyCmdValue("1", "lifesaver"),
 			Log:   "buying lifesaver after death from tidepod",
 		})
 	}
 	in.sdlr.Schedule(&scheduler.Command{
-		Value:       "pls use tidepod",
+		Value:       tidepodCmdValue,
 		Log:         "retrying tidepod usage after previous death",
 		AwaitResume: true,
 	})

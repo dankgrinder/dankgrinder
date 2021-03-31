@@ -7,7 +7,6 @@
 package instance
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/dankgrinder/dankgrinder/discord"
@@ -16,25 +15,25 @@ import (
 
 func (in *Instance) gift(msg discord.Message) {
 	trigger := in.sdlr.AwaitResumeTrigger()
-	if !strings.Contains(trigger, "shop") {
+	if trigger == nil || !strings.Contains(trigger.Value, shopBaseCmdValue) {
 		return
 	}
-	if in.Client.User.ID == in.MasterID {
+	if in == in.Master {
 		in.sdlr.Resume()
 		return
 	}
-	if !exp.gift.Match([]byte(msg.Embeds[0].Title)) || !exp.shop.Match([]byte(trigger)) {
+	if !exp.gift.Match([]byte(msg.Embeds[0].Title)) || !exp.shop.Match([]byte(trigger.Value)) {
 		in.sdlr.Resume()
 		return
 	}
 	amount := strings.Replace(exp.gift.FindStringSubmatch(msg.Embeds[0].Title)[1], ",", "", -1)
-	item := exp.shop.FindStringSubmatch(trigger)[1]
+	item := exp.shop.FindStringSubmatch(trigger.Value)[1]
 
 	// ResumeWithCommandOrPrioritySchedule is not necessary in this case because
 	// the scheduler has to be awaiting resume. AwaitResumeTrigger returns "" if
 	// the scheduler isn't awaiting resume which causes this function to return.
 	in.sdlr.ResumeWithCommand(&scheduler.Command{
-		Value: fmt.Sprintf("pls gift %v %v <@%v>", amount, item, in.MasterID),
+		Value: giftCmdValue(amount, item, in.Master.Client.User.ID),
 		Log:   "gifting items",
 	})
 }

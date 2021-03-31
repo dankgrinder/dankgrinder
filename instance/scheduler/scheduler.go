@@ -32,7 +32,7 @@ type Scheduler struct {
 	closed             bool
 	resume             chan *Command
 	awaitResume        bool
-	awaitResumeTrigger string
+	awaitResumeTrigger *Command
 }
 
 type Command struct {
@@ -104,6 +104,7 @@ func (s *Scheduler) Start() error {
 					}
 				case <-time.After(s.AwaitResumeTimeout):
 					s.awaitResume = false
+					s.Logger.Errorf("await resume timed out for: %v", s.awaitResumeTrigger.Value)
 				case <-s.close:
 					return
 				}
@@ -130,9 +131,9 @@ func (s *Scheduler) Start() error {
 // AwaitResumeTrigger returns the value of the command that caused the await
 // resume state. An empty string will be returned if the scheduler is not awaiting
 // a resume at the time this method is called.
-func (s *Scheduler) AwaitResumeTrigger() string {
+func (s *Scheduler) AwaitResumeTrigger() *Command {
 	if !s.awaitResume {
-		return ""
+		return nil
 	}
 	return s.awaitResumeTrigger
 }
@@ -140,9 +141,6 @@ func (s *Scheduler) AwaitResumeTrigger() string {
 func (s *Scheduler) Schedule(cmd *Command) {
 	if s.closed {
 		return
-	}
-	if cmd.Next == nil {
-		cmd.Next = cmd
 	}
 	s.queue.enqueue <- cmd
 }
@@ -245,6 +243,7 @@ func (s *Scheduler) send(cmd *Command) {
 		time.AfterFunc(retryAfter, func() {
 			s.Schedule(cmd)
 		})
+		s.Logger.Infof("stopped execution of command because its conditions were not satisfied: %v", cmd.Value)
 		return
 	}
 	d := delay(s.MessageDelay)
@@ -258,8 +257,11 @@ func (s *Scheduler) send(cmd *Command) {
 		"typing": tt.String(),
 	}).Infof("%v: %v", info, cmd.Value)
 
-	if err := s.Client.SendMessage(cmd.Value, s.ChannelID, tt); err == discord.ErrForbidden || err == discord.ErrUnauthorized {
-		s.FatalHandler(err)
+	err := s.Client.SendMessage(cmd.Value, s.ChannelID, tt)
+	switch err {
+	case nil:
+	case discord.ErrForbidden, discord.ErrUnauthorized, discord.ErrNotFound:
+		s.FatalHandler(fmt.Errorf("scheduler fatal: %v", err))
 		// Run in a goroutine because otherwise the scheduler's goroutine would
 		// be attempting to send a message to itself via its close channel which
 		// just causes a permanently dormant goroutine.
@@ -269,15 +271,23 @@ func (s *Scheduler) send(cmd *Command) {
 		// fast that it hasn't been closed yet by the goroutine created previously.
 		s.awaitResume = true
 		return
-	} else if err != nil {
-		s.Logger.Errorf("%v", err)
-		s.Schedule(cmd)
+	case discord.ErrIntervalServer:
+		s.Logger.Errorf("error while sending message: %v", err)
+		s.PrioritySchedule(cmd)
+		return
+	case discord.ErrTooManyRequests:
+		s.Logger.Errorf("error while sending message: %v", err)
+		s.PrioritySchedule(cmd)
+		s.Logger.Infof("sleeping for 20 seconds")
+		time.Sleep(time.Second * 20)
+		return
+	default:
+		s.Logger.Errorf("error while sending message: %v", err)
 		return
 	}
 	s.reschedule(cmd)
 	if cmd.AwaitResume {
-		s.awaitResumeTrigger = cmd.Value
-		s.awaitResume = true
+		s.awaitResumeTrigger, s.awaitResume = cmd, true
 	}
 }
 
