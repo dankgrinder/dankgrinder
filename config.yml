@@ -52,6 +52,7 @@ features:
       - "pizza"
   auto_share:
     enable: false
+    fund: true
     maximum_balance: 8000000
     minimum_balance: 5000000
   auto_blackjack:
@@ -371,7 +372,7 @@ compatibility:
     blackjack: 13
     sell: 6
     gift: 26
-  await_response_timeout: 4
+  await_response_timeout: 7
 
 suspicion_avoidance:
   typing:

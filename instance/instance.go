@@ -11,6 +11,7 @@ import (
 	"math"
 	"math/rand"
 	"runtime"
+	"strconv"
 	"sync"
 	"time"
 
@@ -22,12 +23,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const fundReqInterval = time.Minute * 10
+
 type Instance struct {
 	Client             *discord.Client
 	Logger             *logrus.Logger
 	ChannelID          string
 	WG                 *sync.WaitGroup
-	MasterID           string
+	Master             *Instance
 	Features           config.Features
 	SuspicionAvoidance config.SuspicionAvoidance
 	Compat             config.Compat
@@ -39,6 +42,7 @@ type Instance struct {
 	balance        int
 	startingTime   time.Time
 	prevState      string
+	prevFundReq    time.Time
 	fatal          chan error
 }
 
@@ -58,7 +62,7 @@ func (in *Instance) Start() error {
 	if in.Logger == nil {
 		return fmt.Errorf("no logger")
 	}
-	if in.MasterID == "" {
+	if in.Master == nil {
 		if in.Features.AutoGift.Enable {
 			in.Logger.Warnf("nobody to auto-gift to, no master instance available")
 		}
@@ -114,8 +118,8 @@ func (in *Instance) Start() error {
 					cmds = append(cmds, in.newAutoSellChain())
 				}
 				if in.Features.AutoGift.Enable &&
-					in.MasterID != "" &&
-					in.Client.User.ID != in.MasterID {
+					in.Master != nil &&
+					in != in.Master {
 					cmds = append(cmds, in.newAutoGiftChain())
 				}
 				for _, cmd := range cmds {
@@ -188,4 +192,15 @@ func (in *Instance) wsFatalHandler(err error) {
 		return
 	}
 	in.Logger.Infof("reconnected to websocket")
+}
+
+func (in *Instance) Share(amount int, id string) {
+	amount = int(math.Round(float64(amount)/0.92)) // Account for 8% tax.
+	if in.balance < amount {
+		return
+	}
+	in.sdlr.PrioritySchedule(&scheduler.Command{
+		Value: shareCmdValue(strconv.Itoa(amount), id),
+		Log: "funding",
+	})
 }

@@ -101,6 +101,7 @@ type AutoBlackjack struct {
 
 type AutoShare struct {
 	Enable         bool `yaml:"enable"`
+	Fund           bool `yaml:"fund"`
 	MaximumBalance int  `yaml:"maximum_balance"`
 	MinimumBalance int  `yaml:"minimum_balance"`
 }
@@ -302,11 +303,11 @@ func validateFeatures(features Features) error {
 		if features.AutoBlackjack.Amount < 0 {
 			return fmt.Errorf("auto-blackjack amount must be greater than or equal to 0")
 		}
-		for columnKey, row := range features.AutoBlackjack.LogicTable {
-			if columnKey != "A" {
-				n, err := strconv.Atoi(columnKey)
+		for colKey, row := range features.AutoBlackjack.LogicTable {
+			if colKey != "A" {
+				n, err := strconv.Atoi(colKey)
 				if err != nil || n < 2 || n > 10 {
-					return fmt.Errorf("invalid auto-blackjack logic table key: %v", columnKey)
+					return fmt.Errorf("invalid auto-blackjack logic table key: %v", colKey)
 				}
 			}
 			for rowKey := range row {

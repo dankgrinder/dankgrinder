@@ -19,6 +19,7 @@ var (
 	ErrForbidden       = fmt.Errorf("forbidden, you may not have permission to send in the channel (i.e. you aren't in the server or don't have send message permissions in the channel), your account might need verification, or your ip address may have been blocked")
 	ErrTooManyRequests = fmt.Errorf("you are being rate limited, try waiting some time and trying again")
 	ErrNotFound        = fmt.Errorf("not found, make sure your channel id is valid")
+	ErrIntervalServer  = fmt.Errorf("remote server interval server error")
 )
 
 type Client struct {
@@ -98,6 +99,8 @@ func (client Client) SendMessage(content, channelID string, typing time.Duration
 			return ErrNotFound
 		case http.StatusTooManyRequests:
 			return ErrTooManyRequests
+		case http.StatusInternalServerError:
+			return ErrIntervalServer
 		default:
 			return fmt.Errorf("unexpected status code while sending message: %v", res.StatusCode)
 		}
