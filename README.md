@@ -305,7 +305,7 @@ shifts:
 
 ### Commonly asked questions
 ## How do I disable certain features?
-You can remove a specific feature by removing it from the config, setting its "enable" value to false, or by setting the cooldown at the bottom of the config to a very high number.
+You can remove a specific feature by removing it from the config, setting its `enable` value to `false`.
 
 ## How do I disable global events?
 This is not possible as of now.
