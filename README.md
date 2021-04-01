@@ -303,6 +303,16 @@ shifts:
     base: 32400
 ```
 
+### Commonly asked questions
+## How do I disable certain features?
+You can remove a specific feature by removing it from the config, setting its "enable" value to false, or by setting the cooldown at the bottom of the config to a very high number.
+
+## How do I disable global events?
+This is not possible as of now.
+
+## Can I run it on other architectures?
+As mentioned above, it is possible to run this program on other architecures than amd64. However, to do this, you will need to [build from source](#building-from-source). This is not difficult to do.
+
 In the example above, all instances use a shift configuration of 6 hours active, 9 hours dormant, except for the second instance. This instance overrides the shift configuration defined below with a shift configuration that is always active. 
 
 The third instance in this example, overrides the normal configuration with one where auto-tidepod is disabled (the rest of the config is left out for simplicity), the rest of the instances would still use auto-tidepod if it was enabled. 
