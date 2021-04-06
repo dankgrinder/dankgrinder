@@ -73,7 +73,7 @@ A question mark after a field name means this field is optional.
 
 Name | Type | Description
 ---- | ---- | ----
-`clusters` | dictionary[string][cluster object](#cluster-object) | The instances that are run simultaneously by the program
+`clusters` | dictionary[string][cluster object](#cluster-object) | The clusters of instances run by the program. Each has at least a master, and optionally more instances
 `shifts` | array of [shift objects](#shift-object) | One or more shifts which the instances use to schedule switching between the active and dormant state. [Read more about shifts](#shifts)
 `features` | [features object](#features-object) | Several feature configurations which apply to all instances
 `compatibility` | [compatibility object](#compatibility-object) | Several compatibility options which apply to all instances
