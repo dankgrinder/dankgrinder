@@ -31,19 +31,21 @@ type Instance struct {
 	ChannelID          string
 	WG                 *sync.WaitGroup
 	Master             *Instance
+	Cluster            []*Instance
 	Features           config.Features
 	SuspicionAvoidance config.SuspicionAvoidance
 	Compat             config.Compat
 	Shifts             []config.Shift
 
-	sdlr           *scheduler.Scheduler
-	ws             *discord.WSConn
-	initialBalance int
-	balance        int
-	startingTime   time.Time
-	prevState      string
-	prevFundReq    time.Time
-	fatal          chan error
+	sdlr              *scheduler.Scheduler
+	ws                *discord.WSConn
+	initialBalance    int
+	balance           int
+	startingTime      time.Time
+	lastState         string
+	lastBalanceUpdate time.Time
+	fatal             chan error
+	isClosed          bool
 }
 
 func (in *Instance) Start() error {
@@ -79,6 +81,9 @@ func (in *Instance) Start() error {
 	in.WG.Add(1)
 	go func() {
 		defer in.WG.Done()
+		defer func() {
+			in.isClosed = true
+		}()
 		for {
 			for i, shift := range in.Shifts {
 				dur := shiftDur(shift)
@@ -86,11 +91,11 @@ func (in *Instance) Start() error {
 					"state":    shift.State,
 					"duration": dur,
 				}).Infof("starting shift %v", i+1)
-				if shift.State == in.prevState {
+				if shift.State == in.lastState {
 					in.sleep(dur)
 					continue
 				}
-				in.prevState = shift.State
+				in.lastState = shift.State
 				if shift.State == config.ShiftStateDormant {
 					if in.ws != nil {
 						if err := in.ws.Close(); err != nil {
@@ -129,6 +134,46 @@ func (in *Instance) Start() error {
 			}
 		}
 	}()
+	if in.Features.AutoShare.Enable && in.Features.AutoShare.Fund && in == in.Master {
+		go func() {
+			t := time.NewTicker(time.Minute*5 + time.Duration(len(in.Cluster)*in.Compat.Cooldown.Share)*time.Second)
+			defer t.Stop()
+			for {
+				<-t.C
+				var totalFunding int
+				var fundingCmds []*scheduler.Command
+				for _, clusterInstance := range in.Cluster {
+					if in == clusterInstance {
+						continue
+					}
+					if !clusterInstance.Features.AutoShare.Enable ||
+						clusterInstance.LastBalanceUpdate().IsZero() ||
+						clusterInstance.IsClosed() {
+						continue
+					}
+					balance := clusterInstance.Balance()
+					if balance >= clusterInstance.Features.AutoShare.MinimumBalance {
+						continue
+					}
+					deficit := clusterInstance.Features.AutoShare.MinimumBalance - balance
+					deficit = int(math.Round(float64(deficit) / 0.92)) // Account for 8% tax.
+					if totalFunding+deficit > in.balance {
+						break
+					}
+					totalFunding += deficit
+					fundingCmds = append(fundingCmds, &scheduler.Command{
+						Value:                shareCmdValue(strconv.Itoa(deficit), clusterInstance.Client.User.ID),
+						Log:                  "funding",
+						Interval:             time.Duration(in.Compat.Cooldown.Share) * time.Second,
+						RescheduleAsPriority: true,
+					})
+				}
+				if len(fundingCmds) > 0 {
+					in.sdlr.PrioritySchedule(in.newCmdChain(fundingCmds, 0))
+				}
+			}
+		}()
+	}
 	return nil
 }
 
@@ -194,13 +239,14 @@ func (in *Instance) wsFatalHandler(err error) {
 	in.Logger.Infof("reconnected to websocket")
 }
 
-func (in *Instance) Share(amount int, id string) {
-	amount = int(math.Round(float64(amount)/0.92)) // Account for 8% tax.
-	if in.balance < amount {
-		return
-	}
-	in.sdlr.PrioritySchedule(&scheduler.Command{
-		Value: shareCmdValue(strconv.Itoa(amount), id),
-		Log: "funding",
-	})
+func (in *Instance) IsClosed() bool {
+	return in.isClosed
+}
+
+func (in *Instance) LastBalanceUpdate() time.Time {
+	return in.lastBalanceUpdate
+}
+
+func (in *Instance) Balance() int {
+	return in.balance
 }

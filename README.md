@@ -73,18 +73,23 @@ A question mark after a field name means this field is optional.
 
 Name | Type | Description
 ---- | ---- | ----
-`instances` | array of [instance objects](#instance-object) | The instances that are run simultaneously by the program
+`clusters` | dictionary[string][cluster object](#cluster-object) | The clusters of instances run by the program. Each has at least a master, and optionally more instances
 `shifts` | array of [shift objects](#shift-object) | One or more shifts which the instances use to schedule switching between the active and dormant state. [Read more about shifts](#shifts)
 `features` | [features object](#features-object) | Several feature configurations which apply to all instances
 `compatibility` | [compatibility object](#compatibility-object) | Several compatibility options which apply to all instances
 `suspicion_avoidance` | [suspicion avoidance object](#suspicion-avoidance-object) | Several techniques to avoid suspicion which apply to all instances
+
+### Cluster object
+Name | Type | Description
+---- | ---- | ----
+`master` | [instance object](#instance-object) | The master instance of the cluster
+`instances` | array of [instance objects](#instance-object) | The other instances in this cluster
 
 ### Instance object
 Name | Type | Description
 ---- | ---- | ----
 `token` | string | The Discord [authorization token](#getting-an-authorization-token) of the instance
 `channel_id` | string | The channel id this instance sends and receives messages in, you must have [Discord developer mode](#enabling-discords-developer-mode) enabled to obtain one
-`is_master` | bool |
 `features?` | [features object](#features-object) | Override the default features object of the config only for this specific instance, any fields left out will not be overridden and vice-versa, see [default values and when you can leave out fields](#default-values-and-when-you-can-leave-out-fields)
 `suspicion_avoidance?` | [suspicion avoidance object](#suspicion-avoidance-object) | Override the default suspicion avoidance object of the config only for this specific instance, any fields left out will not be overridden and vice-versa, see [default values and when you can leave out fields](#default-values-and-when-you-can-leave-out-fields)
 `shifts?` | array of [shift objects](#shift-object) | Override the default shifts array of the config only for this specific instance, see [default values and when you can leave out fields](#default-values-and-when-you-can-leave-out-fields)
@@ -106,9 +111,10 @@ Name | Type | Description
 `auto_gift` | [auto-gift object](#auto-gift-object) | Options for the automatic, periodic gifting of certain items to the master instance
 `auto_blackjack` | [auto-blackjack object](#auto-blackjack-object) | Options for automatically using the blackjack command
 `auto_share` | [auto-share object](#auto-share-object) | Options for automatically sharing money with the master instance
-`auto_tidepod` |  [auto-tidepod](#auto-tidepod-object) | Options for automatically using tidepods
+`auto_tidepod` |  [auto-tidepod object](#auto-tidepod-object) | Options for automatically using tidepods
 `balance_check` | [balance check object](#balance-check-object) | Options for checking balance
-`log_to_file` | boolean | Whether or not to log errors and information to a file. If running multiple instances a log file for each instance will always be created, regardless of the value of this property
+`verbose_log_to_stdout` | boolean | Whether or not to hook info events of instances to the standard logger
+`log_to_file` | boolean | Whether or not to log errors and information to a file
 `debug` | boolean | Enable logging debug level information. Currently has no effect
 
 ### Commands object
@@ -163,7 +169,7 @@ Name | Type | Description
 Name | Type | Description
 ---- | ---- | ----
 `enable` | boolean | Whether or not to enable automatically giving money to the master 
-`fund` | boolean | Whether or not instances can request money from the master
+`fund` | boolean | Whether or not master instances should fund others that have auto-share enabled. This field is only read by master instances and ignored by others. It will fund them up to their minimum auto-share balance
 `maximum_balance` | integer | The amount of money the instance may have before giving them to the master instance
 `minimum_balance` | integer | The amount of money the instance should keep after giving money to the master instance and the amount the master will fund it to if an instance requests it
 
@@ -202,6 +208,7 @@ Name | Type | Description
 `blackjack` | integer | The cooldown of the blackjack command in seconds, set a few seconds higher to account for network delay
 `sell` | integer | The cooldown of the sell command in seconds, set a few seconds higher to account for network delay
 `gift` | integer | The cooldown of the gift command in seconds, set a few seconds higher to account for network delay
+`share` | integer | The cooldown of the share command in seconds, set a few seconds higher to account for network delay
 
 ### Suspicion avoidance object
 Name | Type | Description
@@ -268,12 +275,14 @@ In example custom command 4, 20 zz will be bought whenever the balance is above 
 ### Instances
 Example if you would like to run two instances simultaneously and 24/7 (this shift configuration is not recommended):
 ```yaml
-instances:
-  - token: "bmljZSB0cnkgYnV0IHRoaXMgaXM.bm90IGE.cmVhbCB0b2tlbg"
-    channel_id: "791694339116892202"
-    is_master: true
-  - token: "b2YgY291cnNlIHRoaXM.aXNuJ3QgYQ.cmVhbCB0b2tlbiBlaXRoZXIsIHNpbGx5"
-    channel_id: "791694383098495047"
+clusters:
+  default:
+    master:
+      token: "bmljZSB0cnkgYnV0IHRoaXMgaXM.bm90IGE.cmVhbCB0b2tlbg"
+      channel_id: "791694339116892202"
+    instances:
+      - token: "b2YgY291cnNlIHRoaXM.aXNuJ3QgYQ.cmVhbCB0b2tlbiBlaXRoZXIsIHNpbGx5"
+        channel_id: "791694383098495047"
 ```
 
 ### Default values and when you can leave out fields
@@ -282,19 +291,21 @@ Because of the way Go structs work, most times, when you leave out a field in yo
 The only exception is the fields which are currently marked as optional, the `features`, `suspicion_avoidance` and `shifts` fields on every [instance object](#instance-object). These fields are used to override the values you have specified in the regular `features`, `suspicion_avoidance` and `shifts` objects in the config. If you leave out one of these fields or a child field of one of these fields, the default configuration is not overridden and is used instead.
 
 ```yaml
-instances:
-  - token: "bmljZSB0cnkgYnV0IHRoaXMgaXM.bm90IGE.cmVhbCB0b2tlbg"
-    channel_id: "791694339116892202"
-    is_master: true
-  - token: "b2YgY291cnNlIHRoaXM.aXNuJ3QgYQ.cmVhbCB0b2tlbiBlaXRoZXIsIHNpbGx5"
-    channel_id: "791694383098495047"
-    shifts:
-      - state: "active"
-  - token: "MTI3OTgzNDcyMTkzNDM4Mg.ZmRzdg.dGhpcyBpcyBub3QgYW4gYWN0dWFsIH"
-    channel_id: "791691923098486933"
-    features:
-      auto_tidepod:
-        enable: false
+clusters:
+   default:
+      master:
+         token: "bmljZSB0cnkgYnV0IHRoaXMgaXM.bm90IGE.cmVhbCB0b2tlbg" # Instance 1
+         channel_id: "791694339116892202"
+      instances:
+         - token: "b2YgY291cnNlIHRoaXM.aXNuJ3QgYQ.cmVhbCB0b2tlbiBlaXRoZXIsIHNpbGx5" # Instance 2
+           channel_id: "791694383098495047"
+           shifts:
+              - state: "active"
+         - token: "MTI3OTgzNDcyMTkzNDM4Mg.ZmRzdg.dGhpcyBpcyBub3QgYW4gYWN0dWFsIH" # Instance 3
+           channel_id: "791691923098486933"
+           features:
+              auto_tidepod:
+                 enable: false
 
 shifts:
   - state: "active"

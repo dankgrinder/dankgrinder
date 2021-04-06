@@ -29,7 +29,7 @@ type Scheduler struct {
 	queue              *queue
 	priorityQueue      *queue
 	close              chan struct{}
-	closed             bool
+	isClosed           bool
 	resume             chan *Command
 	awaitResume        bool
 	awaitResumeTrigger *Command
@@ -139,14 +139,14 @@ func (s *Scheduler) AwaitResumeTrigger() *Command {
 }
 
 func (s *Scheduler) Schedule(cmd *Command) {
-	if s.closed {
+	if s.isClosed {
 		return
 	}
 	s.queue.enqueue <- cmd
 }
 
 func (s *Scheduler) PrioritySchedule(cmd *Command) {
-	if s.closed {
+	if s.isClosed {
 		return
 	}
 	s.priorityQueue.enqueue <- cmd
@@ -156,7 +156,7 @@ func (s *Scheduler) PrioritySchedule(cmd *Command) {
 // an AwaitResume value of true. Will block until scheduler has received the
 // resume call.
 func (s *Scheduler) Resume() {
-	if s.closed {
+	if s.isClosed {
 		return
 	}
 	if !s.awaitResume {
@@ -169,7 +169,7 @@ func (s *Scheduler) Resume() {
 // the scheduler is not awaiting a resume, it will schedule the command in the
 // priority queue instead.
 func (s *Scheduler) ResumeWithCommandOrPrioritySchedule(cmd *Command) {
-	if s.closed {
+	if s.isClosed {
 		return
 	}
 	if !s.awaitResume {
@@ -182,7 +182,7 @@ func (s *Scheduler) ResumeWithCommandOrPrioritySchedule(cmd *Command) {
 // ResumeWithCommand is the same as Resume but executes the passed command
 // immediately after resuming.
 func (s *Scheduler) ResumeWithCommand(cmd *Command) {
-	if s.closed {
+	if s.isClosed {
 		return
 	}
 	if !s.awaitResume {
@@ -193,7 +193,7 @@ func (s *Scheduler) ResumeWithCommand(cmd *Command) {
 
 // Close closes the scheduler.
 func (s *Scheduler) Close() error {
-	s.closed = true
+	s.isClosed = true
 	s.close <- struct{}{}
 	close(s.close)
 	if err := s.queue.Close(); err != nil {

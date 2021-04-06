@@ -11,8 +11,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"regexp"
-	"strings"
 	"sync"
 	"time"
 
@@ -49,9 +47,7 @@ func main() {
 	if cfg.Features.Debug {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
-	if cfg.Features.LogToFile {
-		logrus.AddHook(logFileHook{dir: path.Dir(ex)})
-	}
+	logrus.AddHook(logFileHook{dir: path.Dir(ex)})
 
 	// Checks for many possible invalid configurations. This means that during
 	// execution of the program, many of these checks don't need to be repeated.
@@ -65,49 +61,61 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 
 	wg := &sync.WaitGroup{}
-	var ins []*instance.Instance
-	var master *instance.Instance
-	for _, opts := range cfg.InstancesOpts {
-		client, err := discord.NewClient(opts.Token)
-		if err != nil {
-			logrus.Errorf("error while creating client: %v", err)
-			if opts.IsMaster {
-				logrus.Warnf("failed to create master instance client, some functionality may be unavailable")
+	for ck, cluster := range cfg.Clusters {
+		var ins []*instance.Instance
+		var master *instance.Instance
+		logrus.Infof("starting cluster %v", ck)
+
+		for i, inOpts := range append(cluster.Instances, cluster.Master) {
+			client, err := discord.NewClient(inOpts.Token)
+			if err != nil {
+				logrus.Errorf("error while creating client: %v", err)
+				if i == 0 {
+					logrus.Warnf("failed to create master instance client, some functionality may be unavailable")
+				}
+				continue
 			}
-			continue
+
+			logrus.Infof("successful authorization as %v", client.User.Username+"#"+client.User.Discriminator)
+
+			in := &instance.Instance{
+				Client:             client,
+				ChannelID:          inOpts.ChannelID,
+				WG:                 wg,
+				Features:           inOpts.Features,
+				SuspicionAvoidance: inOpts.SuspicionAvoidance,
+				Compat:             cfg.Compat,
+				Shifts:             inOpts.Shifts,
+			}
+
+			loggerOpts := instanceLoggerOpts{
+				username:             in.Client.User.Username,
+				discriminator:        in.Client.User.Discriminator,
+				cluster:              ck,
+				id:                   in.Client.User.ID,
+				debug:                in.Features.Debug,
+				verboseStdLoggerHook: in.Features.VerboseLogToStdout,
+			}
+			if in.Features.LogToFile {
+				loggerOpts.dir = path.Dir(ex)
+			}
+			in.Logger = newInstanceLogger(loggerOpts)
+
+			if i == len(cluster.Instances) {
+				master = in
+			}
+			ins = append(ins, in)
 		}
-		logrus.Infof("successful authorization as %v", client.User.Username+"#"+client.User.Discriminator)
-		in := &instance.Instance{
-			Client:             client,
-			ChannelID:          opts.ChannelID,
-			WG:                 wg,
-			Features:           opts.Features,
-			SuspicionAvoidance: opts.SuspicionAvoidance,
-			Compat:             cfg.Compat,
-			Shifts:             opts.Shifts,
-		}
-		username, cleanedUsername := in.Client.User.Username, ""
-		allowedChars := regexp.MustCompile(`[a-z0-9-]`)
-		username = strings.Replace(username, " ", "-", -1)
-		username = strings.ToLower(username)
-		for _, char := range username {
-			if allowedChars.MatchString(string(char)) {
-				cleanedUsername += string(char)
+
+		for _, in := range ins {
+			in.Master = master
+			in.Cluster = ins
+			if err = in.Start(); err != nil {
+				logrus.Fatalf("error while starting instance: %v", err)
 			}
 		}
-		in.Logger = newInstanceLogger(cleanedUsername, path.Dir(ex), cfg.Features.Debug)
-		if opts.IsMaster {
-			master = in
-		}
-		ins = append(ins, in)
 	}
 
-	for _, in := range ins {
-		in.Master = master
-		if err = in.Start(); err != nil {
-			logrus.Fatalf("error while starting instance: %v", err)
-		}
-	}
 	wg.Wait()
 	logrus.Fatalf("no running instances left")
 }

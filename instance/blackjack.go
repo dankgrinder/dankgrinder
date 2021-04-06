@@ -16,7 +16,8 @@ import (
 )
 
 func (in *Instance) blackjack(msg discord.Message) {
-	if !strings.Contains(msg.Embeds[0].Author.Name, in.Client.User.Username) {
+
+	if !strings.Contains(clean(msg.Embeds[0].Author.Name), in.Client.User.Username) {
 		return
 	}
 	if len(msg.Embeds[0].Fields) != 2 {
@@ -65,12 +66,13 @@ func (in *Instance) blackjack(msg discord.Message) {
 	if handIsSoft {
 		hand = "soft" + hand
 	}
-	in.Logger.Infof("calculated blackjack hand value as: %v", hand)
 
 	dealersUpCard := exp.blackjack.FindStringSubmatch(msg.Embeds[0].Fields[1].Value)[1]
 	if dealersUpCard == "J" || dealersUpCard == "Q" || dealersUpCard == "K" {
 		dealersUpCard = "10"
 	}
+
+	in.Logger.Infof("calculated blackjack hand as: %v against dealer's %v", hand, dealersUpCard)
 
 	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
 		Value:       in.Features.AutoBlackjack.LogicTable[dealersUpCard][hand],
@@ -83,7 +85,7 @@ func (in *Instance) blackjackEnd(msg discord.Message) {
 	if strings.Contains(msg.Content, "Type `h` to **hit**, type `s` to **stand**, or type `e` to **end** the game.") {
 		return
 	}
-	if !strings.Contains(msg.Embeds[0].Author.Name, in.Client.User.Username) {
+	if !strings.Contains(clean(msg.Embeds[0].Author.Name), in.Client.User.Username) {
 		return
 	}
 	if !strings.Contains(msg.Embeds[0].Author.Name, "blackjack") {
@@ -94,7 +96,7 @@ func (in *Instance) blackjackEnd(msg discord.Message) {
 	}
 	trigger := in.sdlr.AwaitResumeTrigger()
 	if trigger != nil {
-		rowLoop:
+	rowLoop:
 		for _, row := range in.Features.AutoBlackjack.LogicTable {
 			for _, val := range row {
 				if val == trigger.Value {

@@ -9,9 +9,6 @@ package config
 import (
 	"fmt"
 	"os"
-	"regexp"
-	"strconv"
-	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -22,28 +19,39 @@ const (
 )
 
 type Config struct {
-	InstancesOpts      []InstanceOpts     `yaml:"instances"`
+	Clusters           map[string]Cluster `yaml:"clusters"`
 	Shifts             []Shift            `yaml:"shifts"`
 	Features           Features           `yaml:"features"`
 	Compat             Compat             `yaml:"compatibility"`
 	SuspicionAvoidance SuspicionAvoidance `yaml:"suspicion_avoidance"`
 }
 
-type InstanceOpts struct {
+type Cluster struct {
+	Master    Instance   `yaml:"master"`
+	Instances []Instance `yaml:"instances"`
+}
+
+type Instance struct {
 	Token              string             `yaml:"token"`
 	ChannelID          string             `yaml:"channel_id"`
-	IsMaster           bool               `yaml:"is_master"`
 	Features           Features           `yaml:"-"`
 	SuspicionAvoidance SuspicionAvoidance `yaml:"-"`
 	Shifts             []Shift            `yaml:"-"`
 }
 
 type override struct {
-	InstanceOpts []struct {
-		Features           yaml.Node `yaml:"features"`
-		SuspicionAvoidance yaml.Node `yaml:"suspicion_avoidance"`
-		Shifts             yaml.Node `yaml:"shifts"`
-	} `yaml:"instances"`
+	Clusters map[string]struct {
+		Master struct {
+			Shifts             yaml.Node `yaml:"shifts"`
+			Features           yaml.Node `yaml:"features"`
+			SuspicionAvoidance yaml.Node `yaml:"suspicion_avoidance"`
+		} `yaml:"master"`
+		Instances []struct {
+			Shifts             yaml.Node `yaml:"shifts"`
+			Features           yaml.Node `yaml:"features"`
+			SuspicionAvoidance yaml.Node `yaml:"suspicion_avoidance"`
+		} `yaml:"instances"`
+	} `yaml:"clusters"`
 }
 
 type Compat struct {
@@ -64,20 +72,22 @@ type Cooldown struct {
 	Blackjack int `yaml:"blackjack"`
 	Sell      int `yaml:"sell"`
 	Gift      int `yaml:"gift"`
+	Share     int `yaml:"share"`
 }
 
 type Features struct {
-	Commands       Commands        `yaml:"commands"`
-	CustomCommands []CustomCommand `yaml:"custom_commands"`
-	AutoBuy        AutoBuy         `yaml:"auto_buy"`
-	AutoSell       AutoSell        `yaml:"auto_sell"`
-	AutoGift       AutoGift        `yaml:"auto_gift"`
-	AutoBlackjack  AutoBlackjack   `yaml:"auto_blackjack"`
-	AutoShare      AutoShare       `yaml:"auto_share"`
-	AutoTidepod    AutoTidepod     `yaml:"auto_tidepod"`
-	BalanceCheck   BalanceCheck    `yaml:"balance_check"`
-	LogToFile      bool            `yaml:"log_to_file"`
-	Debug          bool            `yaml:"debug"`
+	Commands           Commands        `yaml:"commands"`
+	CustomCommands     []CustomCommand `yaml:"custom_commands"`
+	AutoBuy            AutoBuy         `yaml:"auto_buy"`
+	AutoSell           AutoSell        `yaml:"auto_sell"`
+	AutoGift           AutoGift        `yaml:"auto_gift"`
+	AutoBlackjack      AutoBlackjack   `yaml:"auto_blackjack"`
+	AutoShare          AutoShare       `yaml:"auto_share"`
+	AutoTidepod        AutoTidepod     `yaml:"auto_tidepod"`
+	BalanceCheck       BalanceCheck    `yaml:"balance_check"`
+	LogToFile          bool            `yaml:"log_to_file"`
+	VerboseLogToStdout bool            `yaml:"verbose_log_to_stdout"`
+	Debug              bool            `yaml:"debug"`
 }
 
 type BalanceCheck struct {
@@ -190,205 +200,58 @@ func Load(path string) (Config, error) {
 		return Config{}, fmt.Errorf("error while decoding config override: %v", err)
 	}
 
-	if len(cfg.InstancesOpts) != len(ovr.InstanceOpts) {
+	if len(cfg.Clusters) != len(ovr.Clusters) {
 		panic("amount of instances not equal to the amount of override configs")
 	}
 
-	for i, ovrOpts := range ovr.InstanceOpts {
-		features := cfg.Features
-		sa := cfg.SuspicionAvoidance
-		shifts := cfg.Shifts
-		if ovrOpts.Features.Kind != 0 {
-			if err = ovrOpts.Features.Decode(&features); err != nil {
-				return Config{}, fmt.Errorf("instances[%v].features error while decoding: %v", i, err)
+	for ck, cluster := range ovr.Clusters {
+		for i, instance := range append(cluster.Instances, cluster.Master) {
+			features, suspicionAvoidance, shifts := cfg.Features, cfg.SuspicionAvoidance, cfg.Shifts
+			if instance.Features.Kind != 0 {
+				if err = instance.Features.Decode(&features); err != nil {
+					return Config{}, fmt.Errorf(
+						"clusters[%v].instances[%v].features error while decoding: %v",
+						ck,
+						i,
+						err,
+					)
+				}
+			}
+			if instance.SuspicionAvoidance.Kind != 0 {
+				if err = instance.SuspicionAvoidance.Decode(&suspicionAvoidance); err != nil {
+					return Config{}, fmt.Errorf(
+						"clusters[%v].instances[%v].suspicion_avoidance error while decoding: %v",
+						ck,
+						i,
+						err,
+					)
+				}
+			}
+			if instance.Shifts.Kind != 0 {
+				if err = instance.Shifts.Decode(&shifts); err != nil {
+					return Config{}, fmt.Errorf(
+						"clusters[%v].instances[%v].shifts error while decoding: %v",
+						ck,
+						i,
+						err,
+					)
+				}
+			}
+			if i == len(cluster.Instances) { // If this is the master instance
+				// Workaround. If done similar to the else case, a cannot assign
+				// compiler error is given.
+				cluster := cfg.Clusters[ck]
+				cluster.Master.Features = features
+				cluster.Master.SuspicionAvoidance = suspicionAvoidance
+				cluster.Master.Shifts = shifts
+				cfg.Clusters[ck] = cluster
+			} else {
+				cfg.Clusters[ck].Instances[i].Features = features
+				cfg.Clusters[ck].Instances[i].SuspicionAvoidance = suspicionAvoidance
+				cfg.Clusters[ck].Instances[i].Shifts = shifts
 			}
 		}
-		if ovrOpts.SuspicionAvoidance.Kind != 0 {
-			if err = ovrOpts.SuspicionAvoidance.Decode(&sa); err != nil {
-				return Config{}, fmt.Errorf("instances[%v].suspicion_avoidance error while decoding: %v", i, err)
-			}
-		}
-		if ovrOpts.Shifts.Kind != 0 {
-			if err = ovrOpts.Shifts.Decode(&shifts); err != nil {
-				return Config{}, fmt.Errorf("instances[%v].shifts error while decoding: %v", i, err)
-			}
-		}
-		cfg.InstancesOpts[i].Features = features
-		cfg.InstancesOpts[i].SuspicionAvoidance = sa
-		cfg.InstancesOpts[i].Shifts = shifts
 	}
 
 	return cfg, nil
-}
-
-func (c Config) Validate() error {
-	if len(c.InstancesOpts) == 0 {
-		return fmt.Errorf("instances: no instances, at least 1 is required")
-	}
-	if err := validateCompat(c.Compat); err != nil {
-		return err
-	}
-	if err := validateFeatures(c.Features); err != nil {
-		return err
-	}
-
-	var haveMaster bool
-	for i, opts := range c.InstancesOpts {
-		if opts.Token == "" {
-			return fmt.Errorf("instances[%v]: no token", i)
-		}
-		if opts.ChannelID == "" {
-			return fmt.Errorf("instances[%v]: no channel id", i)
-		}
-		if !isValidID(opts.ChannelID) {
-			return fmt.Errorf("instances[%v]: invalid channel id", i)
-		}
-		if len(opts.Shifts) == 0 {
-			return fmt.Errorf("instances[%v]: no shifts", i)
-		}
-		if opts.IsMaster {
-			if haveMaster {
-				return fmt.Errorf("multiple master instances")
-			}
-			haveMaster = true
-		}
-		if err := validateFeatures(opts.Features); err != nil {
-			return fmt.Errorf("instances[%v]: %v", i, err)
-		}
-		if err := validateShifts(opts.Shifts); err != nil {
-			return fmt.Errorf("instances[%v]: %v", i, err)
-		}
-	}
-	return nil
-}
-
-func validateFeatures(features Features) error {
-	if features.AutoSell.Enable {
-		if features.AutoSell.Interval < 0 {
-			return fmt.Errorf("auto-sell interval must be greater than or equal to 0")
-		}
-		if len(features.AutoSell.Items) == 0 {
-			return fmt.Errorf("auto-sell enabled but no items configured")
-		}
-	}
-	if features.AutoGift.Enable {
-		if features.AutoGift.Interval < 0 {
-			return fmt.Errorf("auto-gift interval must be greater than or equal to 0")
-		}
-		if len(features.AutoGift.Items) == 0 {
-			return fmt.Errorf("auto-gift enabled but no items configured")
-		}
-	}
-	if features.AutoShare.Enable {
-		if features.AutoShare.MinimumBalance < 0 {
-			return fmt.Errorf("auto-share minimum must be greater than or equal to 0")
-		}
-		if features.AutoShare.MaximumBalance < 0 {
-			return fmt.Errorf("auto-share maximum must be greater than or equal to 0")
-		}
-		if features.AutoShare.MinimumBalance > features.AutoShare.MaximumBalance {
-			return fmt.Errorf("auto-share minumum must be smaller than or equal to maximum")
-		}
-	}
-	if features.AutoTidepod.Enable && features.AutoTidepod.Interval < 0 {
-		return fmt.Errorf("auto-tidepod interval must be greater than or equal to 0")
-	}
-	if features.BalanceCheck.Enable && features.BalanceCheck.Interval <= 0 {
-		return fmt.Errorf("balance check interval must be greater than 0")
-	}
-	if features.AutoBlackjack.Enable {
-		if !features.BalanceCheck.Enable {
-			return fmt.Errorf("auto-blackjack enabled but balance check disabled")
-		}
-		if features.AutoBlackjack.Amount < 0 {
-			return fmt.Errorf("auto-blackjack amount must be greater than or equal to 0")
-		}
-		for colKey, row := range features.AutoBlackjack.LogicTable {
-			if colKey != "A" {
-				n, err := strconv.Atoi(colKey)
-				if err != nil || n < 2 || n > 10 {
-					return fmt.Errorf("invalid auto-blackjack logic table key: %v", colKey)
-				}
-			}
-			for rowKey := range row {
-				rowKey = strings.Replace(rowKey, "soft", "", -1)
-				n, err := strconv.Atoi(rowKey)
-				if err != nil || n < 4 || n > 20 {
-					return fmt.Errorf("invalid auto-blackjack logic table key: %v", rowKey)
-				}
-			}
-		}
-	}
-
-	for i, cmd := range features.CustomCommands {
-		if cmd.Value == "" {
-			return fmt.Errorf("features.custom_commands[%v].value: no value", i)
-		}
-		if strings.Contains(cmd.Value, "pls shop") {
-			return fmt.Errorf("invalid custom command value: %v, this custom command is disallowed, use auto-gift instead", cmd.Value)
-		}
-		if strings.Contains(cmd.Value, "pls sell") {
-			return fmt.Errorf("invalid custom command value: %v, this custom command is disallowed, use auto-sell instead", cmd.Value)
-		}
-		if cmd.Amount < 0 {
-			return fmt.Errorf("features.custom_commands[%v].amount: value must be greater than or equal to 0", i)
-		}
-	}
-	return nil
-}
-
-func validateShifts(shifts []Shift) error {
-	for _, shift := range shifts {
-		if shift.State != ShiftStateActive && shift.State != ShiftStateDormant {
-			return fmt.Errorf("invalid shift state: %v", shift.State)
-		}
-	}
-	return nil
-}
-
-func validateCompat(compat Compat) error {
-	if len(compat.PostmemeOpts) == 0 {
-		return fmt.Errorf("no postmeme compatibility options")
-	}
-	if len(compat.AllowedSearches) == 0 {
-		return fmt.Errorf("no allowed searches")
-	}
-	if len(compat.SearchCancel) == 0 {
-		return fmt.Errorf("no search cancel compatibility options")
-	}
-	if compat.Cooldown.Postmeme <= 0 {
-		return fmt.Errorf("postmeme cooldown must be greater than 0")
-	}
-	if compat.Cooldown.Hunt <= 0 {
-		return fmt.Errorf("hunt cooldown must be greater than 0")
-	}
-	if compat.Cooldown.Highlow <= 0 {
-		return fmt.Errorf("highlow cooldown must be greater than 0")
-	}
-	if compat.Cooldown.Fish <= 0 {
-		return fmt.Errorf("fish cooldown must be greater than 0")
-	}
-	if compat.Cooldown.Search <= 0 {
-		return fmt.Errorf("search cooldown must be greater than 0")
-	}
-	if compat.Cooldown.Beg <= 0 {
-		return fmt.Errorf("beg cooldown must be greater than 0")
-	}
-	if compat.Cooldown.Gift <= 0 {
-		return fmt.Errorf("gift cooldown must be greater than 0")
-	}
-	if compat.Cooldown.Blackjack <= 0 {
-		return fmt.Errorf("blackjack cooldown must be greater than 0")
-	}
-	if compat.Cooldown.Sell <= 0 {
-		return fmt.Errorf("sell cooldown must be greater than 0")
-	}
-	if compat.AwaitResponseTimeout < 0 {
-		return fmt.Errorf("await response timeout must be greater than 0")
-	}
-	return nil
-}
-
-func isValidID(id string) bool {
-	return regexp.MustCompile(`^[0-9]+$`).Match([]byte(id))
 }

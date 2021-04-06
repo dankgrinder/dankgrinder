@@ -8,11 +8,12 @@ package instance
 
 import (
 	"fmt"
-	"github.com/dankgrinder/dankgrinder/instance/scheduler"
 	"math"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/dankgrinder/dankgrinder/instance/scheduler"
 
 	"github.com/dankgrinder/dankgrinder/discord"
 )
@@ -46,17 +47,9 @@ func (in *Instance) updateBalance(balance int) {
 			),
 			Log: "sharing all balance above minimum with master instance",
 		})
-	} else if balance < in.Features.AutoShare.MinimumBalance &&
-		in.Features.AutoShare.Enable &&
-		in.Features.AutoShare.Fund &&
-		in.Master != nil &&
-		in != in.Master &&
-		(in.prevFundReq.IsZero() ||
-			time.Now().Sub(in.prevFundReq) > fundReqInterval) {
-		in.Master.Share(in.Features.AutoShare.MinimumBalance-balance, in.Client.User.ID)
-		in.prevFundReq = time.Now()
 	}
 	in.balance = balance
+	in.lastBalanceUpdate = time.Now()
 	in.Logger.Infof(
 		"current wallet balance: %v coins",
 		numFmt.Sprintf("%d", balance),

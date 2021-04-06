@@ -23,14 +23,14 @@ var exp = struct {
 	blackjackBal,
 	event *regexp.Regexp
 }{
-	search:    regexp.MustCompile(`Pick from the list below and type the name in chat\.\s\x60(.+)\x60,\s\x60(.+)\x60,\s\x60(.+)\x60`),
-	fhEvent:   regexp.MustCompile(`10\sseconds.*\s?([Tt]yping|[Tt]ype)\s\x60(.+)\x60`),
-	hl:        regexp.MustCompile(`Your hint is \*\*([0-9]+)\*\*`),
-	bal:       regexp.MustCompile(`\*\*Wallet\*\*: \x60?⏣?\s?([0-9,]+)\x60?`),
-	event:     regexp.MustCompile(`^(Attack the boss by typing|Type) \x60(.+)\x60`),
-	gift:      regexp.MustCompile(`[a-zA-Z\s]* \(([0-9,]+) owned\)`),
-	shop:      regexp.MustCompile(`pls shop ([a-zA-Z\s]+)`),
-	blackjack: regexp.MustCompile(`\[\x60.\s([0-9]{1,2}|[JQKA])\x60\]`),
+	search:       regexp.MustCompile(`Pick from the list below and type the name in chat\.\s\x60(.+)\x60,\s\x60(.+)\x60,\s\x60(.+)\x60`),
+	fhEvent:      regexp.MustCompile(`10\sseconds.*\s?([Tt]yping|[Tt]ype)\s\x60(.+)\x60`),
+	hl:           regexp.MustCompile(`Your hint is \*\*([0-9]+)\*\*`),
+	bal:          regexp.MustCompile(`\*\*Wallet\*\*: \x60?⏣?\s?([0-9,]+)\x60?`),
+	event:        regexp.MustCompile(`^(Attack the boss by typing|Type) \x60(.+)\x60`),
+	gift:         regexp.MustCompile(`[a-zA-Z\s]* \(([0-9,]+) owned\)`),
+	shop:         regexp.MustCompile(`pls shop ([a-zA-Z\s]+)`),
+	blackjack:    regexp.MustCompile(`\x60[♥♦♠♣] ([0-9]{1,2}|[JQKA])\x60`),
 	blackjackBal: regexp.MustCompile(`(You now have|You have) (\*\*)?(⏣\s)?(\*\*)?([0-9,]+)(\*\*)?(\sstill)?\.`),
 }
 
@@ -53,7 +53,7 @@ func (in *Instance) fhEnd(msg discord.Message) {
 		return
 	}
 	if trigger.Value == fishCmdValue || trigger.Value == huntCmdValue &&
-	!exp.fhEvent.MatchString(msg.Content) {
+		!exp.fhEvent.MatchString(msg.Content) {
 		in.sdlr.Resume()
 	}
 }
@@ -78,8 +78,9 @@ func (in *Instance) event(msg discord.Message) {
 // all keys you would find on a US keyboard).
 func clean(s string) string {
 	var result string
+	allowedChars := regexp.MustCompile(`[\x20-\x7E]`)
 	for _, char := range s {
-		if regexp.MustCompile(`[\x20-\x7E]`).MatchString(string(char)) {
+		if allowedChars.MatchString(string(char)) {
 			result += string(char)
 		}
 	}
