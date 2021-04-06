@@ -25,7 +25,7 @@ const (
 	tidepodCmdValue       = "pls use tidepod"
 	acceptTidepodCmdValue = "y"
 	buyBaseCmdValue       = "pls buy"
-	blackjackBaseCmdValue = "pls blackjack"
+	blackjackBaseCmdValue = "pls bj"
 	sellBaseCmdValue      = "pls sell"
 	shopBaseCmdValue      = "pls shop"
 	giftBaseCmdValue      = "pls gift"
