@@ -169,7 +169,7 @@ Name | Type | Description
 Name | Type | Description
 ---- | ---- | ----
 `enable` | boolean | Whether or not to enable automatically giving money to the master 
-`fund` | boolean | Whether or not instances can request money from the master
+`fund` | boolean | Whether or not master instances should fund others that have auto-share enabled. This field is only read by master instances and ignored by others. It will fund them up to their minimum auto-share balance
 `maximum_balance` | integer | The amount of money the instance may have before giving them to the master instance
 `minimum_balance` | integer | The amount of money the instance should keep after giving money to the master instance and the amount the master will fund it to if an instance requests it
 

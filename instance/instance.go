@@ -134,7 +134,7 @@ func (in *Instance) Start() error {
 			}
 		}
 	}()
-	if in.Features.AutoShare.Enable && in.Features.AutoShare.Fund {
+	if in.Features.AutoShare.Enable && in.Features.AutoShare.Fund && in == in.Master {
 		go func() {
 			t := time.NewTicker(time.Minute*5 + time.Duration(len(in.Cluster)*in.Compat.Cooldown.Share)*time.Second)
 			defer t.Stop()
