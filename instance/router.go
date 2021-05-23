@@ -154,7 +154,7 @@ func (in *Instance) router() *discord.MessageRouter {
 			Channel(in.ChannelID).
 			Author(DMID).
 			ContentContains("oi you need to buy a laptop in the shop to post memes").
-			//Mentions(in.Client.User.ID).
+			Mentions(in.Client.User.ID).
 			Handler(in.abLaptop)
 	}
 
