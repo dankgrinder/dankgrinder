@@ -16,7 +16,7 @@ func (in *Instance) abLaptop(_ discord.Message) {
 	if trigger == nil || trigger.Value != postmemeCmdValue {
 		return
 	}
-	in.sdlr.ResumeWithCommand(&scheduler.Command{
+	in.sdlr.PrioritySchedule(&scheduler.Command{
 		Value: buyCmdValue("1", "laptop"),
 		Log:   "no laptop, buying a new one",
 	})
@@ -38,7 +38,7 @@ func (in *Instance) abFishingPole(_ discord.Message) {
 	if trigger == nil || trigger.Value != fishCmdValue {
 		return
 	}
-	in.sdlr.ResumeWithCommand(&scheduler.Command{
+	in.sdlr.PrioritySchedule(&scheduler.Command{
 		Value: buyCmdValue("1", "fishing"),
 		Log:   "no fishing pole, buying a new one",
 	})
