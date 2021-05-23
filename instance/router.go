@@ -128,7 +128,7 @@ func (in *Instance) router() *discord.MessageRouter {
 		Channel(in.ChannelID).
 		Author(DMID).
 		ContentMatchesExp(exp.search).
-		Mentions(in.Client.User.ID).
+		//Mentions(in.Client.User.ID).
 		Handler(in.search)
 
 	// Highlow.
@@ -154,7 +154,7 @@ func (in *Instance) router() *discord.MessageRouter {
 			Channel(in.ChannelID).
 			Author(DMID).
 			ContentContains("oi you need to buy a laptop in the shop to post memes").
-			Mentions(in.Client.User.ID).
+			//Mentions(in.Client.User.ID).
 			Handler(in.abLaptop)
 	}
 
@@ -164,7 +164,7 @@ func (in *Instance) router() *discord.MessageRouter {
 			Channel(in.ChannelID).
 			Author(DMID).
 			ContentContains("You don't have a fishing pole").
-			Mentions(in.Client.User.ID).
+			//Mentions(in.Client.User.ID).
 			Handler(in.abFishingPole)
 	}
 
@@ -174,7 +174,7 @@ func (in *Instance) router() *discord.MessageRouter {
 			Channel(in.ChannelID).
 			Author(DMID).
 			ContentContains("You don't have a hunting rifle").
-			Mentions(in.Client.User.ID).
+			//Mentions(in.Client.User.ID).
 			Handler(in.abHuntingRifle)
 	}
 

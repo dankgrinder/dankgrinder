@@ -27,7 +27,7 @@ func (in *Instance) abHuntingRifle(_ discord.Message) {
 	if trigger == nil || trigger.Value != huntCmdValue {
 		return
 	}
-	in.sdlr.ResumeWithCommand(&scheduler.Command{
+	in.sdlr.PrioritySchedule(&scheduler.Command{
 		Value: buyCmdValue("1", "rifle"),
 		Log:   "no hunting rifle, buying a new one",
 	})
