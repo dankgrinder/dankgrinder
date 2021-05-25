@@ -22,6 +22,7 @@ var exp = struct {
 	blackjack,
 	blackjackBal,
 	digEventScramble,
+	digEventRetype,
 	event *regexp.Regexp
 }{
 	search:           regexp.MustCompile(`Pick from the list below and type the name in chat\.\s\x60(.+)\x60,\s\x60(.+)\x60,\s\x60(.+)\x60`),
@@ -34,6 +35,7 @@ var exp = struct {
 	blackjack:        regexp.MustCompile(`\x60[♥♦♠♣] ([0-9]{1,2}|[JQKA])\x60`),
 	blackjackBal:     regexp.MustCompile(`(You now have|You have) (\*\*)?(⏣\s)?(\*\*)?([0-9,]+)(\*\*)?(\sstill)?\.`),
 	digEventScramble: regexp.MustCompile(`Quickly unscramble the word to uncover what's in the dirt! in the next 15\sseconds\s\x60(.+)\x60`),
+	digEventRetype:   regexp.MustCompile(`Quickly re-type the phrase to uncover what's in the dirt! in the next 15 seconds\nType\s\x60(.+)\x60`),
 }
 
 var numFmt = message.NewPrinter(language.English)
@@ -122,7 +124,14 @@ func (in *Instance) router() *discord.MessageRouter {
 		ContentMatchesExp(exp.digEventScramble).
 		Mentions(in.Client.User.ID).
 		Handler(in.digEventScramble)
-	//Digging with other minigames here
+	//Digging with Retype
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.digEventRetype).
+		Mentions(in.Client.User.ID).
+		Handler(in.digEventRetype)
+	//Digging with Fill in the blanks
 
 	// Postmeme.
 	rtr.NewRoute().
@@ -193,6 +202,16 @@ func (in *Instance) router() *discord.MessageRouter {
 			ContentContains("You don't have a hunting rifle").
 			Mentions(in.Client.User.ID).
 			Handler(in.abHuntingRifle)
+	}
+
+	// Auto-buy shovel.
+	if in.Features.AutoBuy.Shovel {
+		rtr.NewRoute().
+			Channel(in.ChannelID).
+			Author(DMID).
+			ContentContains("You don't have a shovel").
+			Mentions(in.Client.User.ID).
+			Handler(in.abShovel)
 	}
 
 	// Auto-gift

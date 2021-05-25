@@ -62,6 +62,14 @@ func (in *Instance) digEventScramble(msg discord.Message) {
 	})
 }
 
+func (in *Instance) digEventRetype(msg discord.Message) {
+	res := exp.digEventRetype.FindStringSubmatch(msg.Content)[1]
+	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
+		Value: clean(res),
+		Log:   "responding to Dig retype event",
+	})
+}
+
 func (in *Instance) digEnd(msg discord.Message) {
 	trigger := in.sdlr.AwaitResumeTrigger()
 	if trigger == nil {
@@ -72,6 +80,10 @@ func (in *Instance) digEnd(msg discord.Message) {
 	}
 	if trigger.Value == digCmdValue &&
 		!exp.digEventScramble.MatchString(msg.Content) {
+		in.sdlr.Resume()
+	}
+	if trigger.Value == digCmdValue &&
+		!exp.digEventRetype.MatchString(msg.Content) {
 		in.sdlr.Resume()
 	}
 }

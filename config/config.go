@@ -136,6 +136,7 @@ type AutoBuy struct {
 	FishingPole  bool `yaml:"fishing_pole"`
 	HuntingRifle bool `yaml:"hunting_rifle"`
 	Laptop       bool `yaml:"laptop"`
+	Shovel       bool `yaml:"shovel"`
 }
 
 type AutoSell struct {

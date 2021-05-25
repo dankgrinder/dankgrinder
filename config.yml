@@ -47,6 +47,7 @@ features:
     fishing_pole: true
     hunting_rifle: true
     laptop: true
+    shovel: true
   auto_sell:
     enable: false
     items:
@@ -389,6 +390,7 @@ compatibility:
     - "stickbug"
   dig_cancel:
     - "LOL idk this"
+    - "No hable english"
   cooldown:
     beg: 48
     search: 38
