@@ -41,6 +41,7 @@ features:
     highlow: true
     fish: true
     hunt: true
+    dig: true
   custom_commands:
   auto_buy:
     fishing_pole: true
@@ -373,6 +374,21 @@ compatibility:
     - "i don't want to die"
     - "stop"
     - "."
+  allowed_scrambles:
+    - "scoop"
+    - "dirty"
+    - "ground"
+    - "burrow"
+    - "spider"
+    - "shovel"
+    - "trowel"
+    - "unearth"
+    - "uncover"
+    - "ladybug"
+    - "excavate"
+    - "stickbug"
+  dig_cancel:
+    - "LOL idk this"
   cooldown:
     beg: 48
     search: 38
@@ -384,6 +400,7 @@ compatibility:
     sell: 6
     gift: 26
     share: 13
+    dig: 42
   await_response_timeout: 7
 
 suspicion_avoidance:

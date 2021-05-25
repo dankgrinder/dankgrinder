@@ -60,6 +60,8 @@ type Compat struct {
 	SearchCancel         []string `yaml:"search_cancel"`
 	Cooldown             Cooldown `yaml:"cooldown"`
 	AwaitResponseTimeout int      `yaml:"await_response_timeout"`
+	AllowedScrambles     []string `yaml:"allowed_scrambles"`
+	DigCancel            []string `yaml:"dig_cancel"`
 }
 
 type Cooldown struct {
@@ -73,6 +75,7 @@ type Cooldown struct {
 	Sell      int `yaml:"sell"`
 	Gift      int `yaml:"gift"`
 	Share     int `yaml:"share"`
+	Dig       int `yaml:"dig"`
 }
 
 type Features struct {
@@ -148,6 +151,7 @@ type Commands struct {
 	Highlow  bool `yaml:"highlow"`
 	Fish     bool `yaml:"fish"`
 	Hunt     bool `yaml:"hunt"`
+	Dig      bool `yaml:"dig"`
 }
 
 type SuspicionAvoidance struct {

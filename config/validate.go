@@ -146,6 +146,15 @@ func validateCompat(compat Compat) error {
 	if len(compat.AllowedSearches) == 0 {
 		return fmt.Errorf("no allowed searches")
 	}
+	if len(compat.AllowedScrambles) == 0 {
+		return fmt.Errorf("no allowed scrambles")
+	}
+	if len(compat.DigCancel) == 0 {
+		return fmt.Errorf("no dig cancel compatibility options")
+	}
+	if compat.Cooldown.Dig <= 0 {
+		return fmt.Errorf("dig cooldown must be greater than 0")
+	}
 	if len(compat.SearchCancel) == 0 {
 		return fmt.Errorf("no search cancel compatibility options")
 	}
