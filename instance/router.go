@@ -33,7 +33,7 @@ var exp = struct {
 	shop:             regexp.MustCompile(`pls shop ([a-zA-Z\s]+)`),
 	blackjack:        regexp.MustCompile(`\x60[♥♦♠♣] ([0-9]{1,2}|[JQKA])\x60`),
 	blackjackBal:     regexp.MustCompile(`(You now have|You have) (\*\*)?(⏣\s)?(\*\*)?([0-9,]+)(\*\*)?(\sstill)?\.`),
-	digEventScramble: regexp.MustCompile(`15\sseconds\s\x60(.+)\x60`),
+	digEventScramble: regexp.MustCompile(`Quickly unscramble the word to uncover what's in the dirt! in the next 15\sseconds\s\x60(.+)\x60`),
 }
 
 var numFmt = message.NewPrinter(language.English)
