@@ -149,6 +149,9 @@ func validateCompat(compat Compat) error {
 	if len(compat.AllowedScrambles) == 0 {
 		return fmt.Errorf("no allowed scrambles")
 	}
+	if len(compat.AllowedFTB) == 0 {
+		return fmt.Errorf("no allowed dig fill the blanks")
+	}
 	if len(compat.DigCancel) == 0 {
 		return fmt.Errorf("no dig cancel compatibility options")
 	}

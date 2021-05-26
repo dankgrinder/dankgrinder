@@ -391,6 +391,13 @@ compatibility:
   dig_cancel:
     - "LOL idk this"
     - "No hable english"
+  allowed_ftb:
+    - "I am a dwarf and I diggy the hole"
+    - "Digging is my passion"
+    - "I hope I find some treasure"
+    - "I have never dug up a body"
+    - "I will dig all day and all night"
+    - "Never have I ever dug up a body"
   cooldown:
     beg: 48
     search: 38

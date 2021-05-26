@@ -62,6 +62,7 @@ type Compat struct {
 	AwaitResponseTimeout int      `yaml:"await_response_timeout"`
 	AllowedScrambles     []string `yaml:"allowed_scrambles"`
 	DigCancel            []string `yaml:"dig_cancel"`
+	AllowedFTB           []string `yaml:"allowed_ftb"`
 }
 
 type Cooldown struct {

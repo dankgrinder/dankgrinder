@@ -23,6 +23,7 @@ var exp = struct {
 	blackjackBal,
 	digEventScramble,
 	digEventRetype,
+	digEventFTB,
 	event *regexp.Regexp
 }{
 	search:           regexp.MustCompile(`Pick from the list below and type the name in chat\.\s\x60(.+)\x60,\s\x60(.+)\x60,\s\x60(.+)\x60`),
@@ -36,6 +37,7 @@ var exp = struct {
 	blackjackBal:     regexp.MustCompile(`(You now have|You have) (\*\*)?(⏣\s)?(\*\*)?([0-9,]+)(\*\*)?(\sstill)?\.`),
 	digEventScramble: regexp.MustCompile(`Quickly unscramble the word to uncover what's in the dirt! in the next 15\sseconds\s\x60(.+)\x60`),
 	digEventRetype:   regexp.MustCompile(`Quickly re-type the phrase to uncover what's in the dirt! in the next 15 seconds\nType\s\x60(.+)\x60`),
+	digEventFTB:      regexp.MustCompile(`Quickly guess the missing word to uncover what's in the dirt in the next 15 seconds!\n\x60(.+)\x60`),
 }
 
 var numFmt = message.NewPrinter(language.English)
@@ -132,6 +134,12 @@ func (in *Instance) router() *discord.MessageRouter {
 		Mentions(in.Client.User.ID).
 		Handler(in.digEventRetype)
 	//Digging with Fill in the blanks
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.digEventFTB).
+		Mentions(in.Client.User.ID).
+		Handler(in.digEventFTB)
 
 	// Postmeme.
 	rtr.NewRoute().
