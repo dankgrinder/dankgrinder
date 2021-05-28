@@ -16,37 +16,37 @@ import (
 	"github.com/dankgrinder/dankgrinder/instance/scheduler"
 )
 
-func isSameLength(s1 string, s2 string) bool { // Function checks length of strings
-
-	if len(s1) == len(s2) {
-		return true
-	} else {
+func haveSameChars(s1 string, s2 string) bool {
+	dissect1, dissect2 := map[rune]int{}, map[rune]int{}
+	for _, c := range s1 {
+		dissect1[c]++
+	}
+	for _, c := range s2 {
+		dissect2[c]++
+	}
+	if len(dissect1) != len(dissect2) {
 		return false
 	}
-}
-
-func hasSameLetters(s1 string, s2 string) bool { // Function checks the letters of the strings (Scrambled and Unscrambled Words)
-	var counter int
-	for _, letter1 := range s1 {
-		for _, letter2 := range s2 {
-			if letter1 == letter2 {
-				counter++
-				break
-			}
+	for c, n := range dissect1 {
+		if dissect2[c] != n {
+			return false
 		}
 	}
-	if counter == len(s1) {
-		return true
-	} else {
-		return false
-	}
+	return true
 }
 
-func find(tt string, stuff []string) (string, string) { //Some amazing stolen/borrowed code which finds the missing word and phrase from a list of pre-determined phrases
+// Function compares an input phrase with a missing word
+// against a list of complete phrases and singles out the
+// missing word.
+func find(tt string, listOfPhrases []string) (string, string) {
 	re := regexp.MustCompile("_")
 	q := re.ReplaceAllString(tt, `(\w+)`)
+	// Replacing the blank with a word character
 	re2 := regexp.MustCompile(q)
-	for _, s := range stuff {
+
+	// Finding String submatch in the configurable
+	// sentences and returning the missing word
+	for _, s := range listOfPhrases {
 		found := re2.FindStringSubmatch(s)
 		if len(found) > 0 {
 			return s, found[1]
@@ -55,16 +55,13 @@ func find(tt string, stuff []string) (string, string) { //Some amazing stolen/bo
 	return "", ""
 }
 
-func (in *Instance) digEventScramble(msg discord.Message) { // Dig Event Unscramble
-	scramble := exp.digEventScramble.FindStringSubmatch(msg.Content)[1] // Scrambled word is at index 1 of the search query
+func (in *Instance) digEventScramble(msg discord.Message) {
+	scramble := exp.digEventScramble.FindStringSubmatch(msg.Content)[1]
 
-	var Unscrambled []string // Unscrambled Solution
-
-	for _, word := range in.Compat.AllowedScrambles { // Allowed Scrambles in Compatibility
-		if isSameLength(scramble, word) && hasSameLetters(scramble, word) {
-			Unscrambled = append(Unscrambled, word)
+	for _, word := range in.Compat.AllowedScrambles {
+		if len(scramble) == len(word) && haveSameChars(scramble, word) {
 			in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-				Value: Unscrambled[0],
+				Value: word,
 				Log:   "responding to dig scramble",
 			})
 			return
@@ -76,7 +73,7 @@ func (in *Instance) digEventScramble(msg discord.Message) { // Dig Event Unscram
 	})
 }
 
-func (in *Instance) digEventRetype(msg discord.Message) { // Dig Event Retype Stolen from Grind95
+func (in *Instance) digEventRetype(msg discord.Message) {
 	res := exp.digEventRetype.FindStringSubmatch(msg.Content)[1]
 	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
 		Value: clean(res),
@@ -84,10 +81,11 @@ func (in *Instance) digEventRetype(msg discord.Message) { // Dig Event Retype St
 	})
 }
 
-func (in *Instance) digEventFTB(msg discord.Message) { // Dig event Fill in the blank
-	filltheblank := exp.digEventFTB.FindStringSubmatch(msg.Content)[1]
+func (in *Instance) digEventFTB(msg discord.Message) {
+	fillTheBlank := exp.digEventFTB.FindStringSubmatch(msg.Content)[1]
 	ree := regexp.MustCompile(`[a-z]{1}( _)+`)
-	var pruned string = ree.ReplaceAllString(filltheblank, `_`) //Regex tested, is correct.
+	// Replacing the missing word and the hint with an underscore for compatibility with find function
+	var pruned string = ree.ReplaceAllString(fillTheBlank, `_`)
 	_, s := find(pruned, in.Compat.AllowedFTB)
 	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
 		Value: s,
@@ -99,24 +97,15 @@ func (in *Instance) digEventFTB(msg discord.Message) { // Dig event Fill in the 
 	})
 }
 
-func (in *Instance) digEnd(msg discord.Message) { // Scheduling
+func (in *Instance) digEnd(msg discord.Message) {
 	trigger := in.sdlr.AwaitResumeTrigger()
-	if trigger == nil {
+	if trigger == nil || trigger.Value != digCmdValue {
 		return
 	}
-	if msg.ReferencedMessage.Content != digCmdValue {
+	if exp.digEventScramble.MatchString(msg.Content) ||
+		exp.digEventRetype.MatchString(msg.Content) ||
+		exp.digEventFTB.MatchString(msg.Content) {
 		return
 	}
-	if trigger.Value == digCmdValue &&
-		!exp.digEventScramble.MatchString(msg.Content) {
-		in.sdlr.Resume()
-	}
-	if trigger.Value == digCmdValue &&
-		!exp.digEventRetype.MatchString(msg.Content) {
-		in.sdlr.Resume()
-	}
-	if trigger.Value == digCmdValue &&
-		!exp.digEventFTB.MatchString(msg.Content) {
-		in.sdlr.Resume()
-	}
+	in.sdlr.Resume()
 }
