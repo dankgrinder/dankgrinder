@@ -87,13 +87,18 @@ func (in *Instance) digEventFTB(msg discord.Message) {
 	// Replacing the missing word and the hint with an underscore for compatibility with find function
 	var pruned string = ree.ReplaceAllString(fillTheBlank, `_`)
 	_, s := find(pruned, in.Compat.AllowedFTB)
+	if len(s) > 0 {
+		in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
+			Value: s,
+			Log:   "responding to Dig retype event",
+		})
+		return
+	}
+
 	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-		Value: s,
-		Log:   "responding to Dig retype event",
-	})
-	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-		Value: in.Compat.DigCancel[rand.Intn(len(in.Compat.DigCancel))],
-		Log:   "no allowed fill in the blanks, cancelling",
+		Value:  in.Compat.DigCancel[rand.Intn(len(in.Compat.DigCancel))],
+		Log:    "no allowed fill in the blanks, cancelling",
+		Amount: 3,
 	})
 }
 
