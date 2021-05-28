@@ -21,17 +21,23 @@ var exp = struct {
 	shop,
 	blackjack,
 	blackjackBal,
+	digEventScramble,
+	digEventRetype,
+	digEventFTB,
 	event *regexp.Regexp
 }{
-	search:       regexp.MustCompile(`Pick from the list below and type the name in chat\.\s\x60(.+)\x60,\s\x60(.+)\x60,\s\x60(.+)\x60`),
-	fhEvent:      regexp.MustCompile(`10\sseconds.*\s?([Tt]yping|[Tt]ype)\s\x60(.+)\x60`),
-	hl:           regexp.MustCompile(`Your hint is \*\*([0-9]+)\*\*`),
-	bal:          regexp.MustCompile(`\*\*Wallet\*\*: \x60?⏣?\s?([0-9,]+)\x60?`),
-	event:        regexp.MustCompile(`^(Attack the boss by typing|Type) \x60(.+)\x60`),
-	gift:         regexp.MustCompile(`[a-zA-Z\s]* \(([0-9,]+) owned\)`),
-	shop:         regexp.MustCompile(`pls shop ([a-zA-Z\s]+)`),
-	blackjack:    regexp.MustCompile(`\x60[♥♦♠♣] ([0-9]{1,2}|[JQKA])\x60`),
-	blackjackBal: regexp.MustCompile(`(You now have|You have) (\*\*)?(⏣\s)?(\*\*)?([0-9,]+)(\*\*)?(\sstill)?\.`),
+	search:           regexp.MustCompile(`Pick from the list below and type the name in chat\.\s\x60(.+)\x60,\s\x60(.+)\x60,\s\x60(.+)\x60`),
+	fhEvent:          regexp.MustCompile(`10\sseconds.*\s?([Tt]yping|[Tt]ype)\s\x60(.+)\x60`),
+	hl:               regexp.MustCompile(`Your hint is \*\*([0-9]+)\*\*`),
+	bal:              regexp.MustCompile(`\*\*Wallet\*\*: \x60?⏣?\s?([0-9,]+)\x60?`),
+	event:            regexp.MustCompile(`^(Attack the boss by typing|Type) \x60(.+)\x60`),
+	gift:             regexp.MustCompile(`[a-zA-Z\s]* \(([0-9,]+) owned\)`),
+	shop:             regexp.MustCompile(`pls shop ([a-zA-Z\s]+)`),
+	blackjack:        regexp.MustCompile(`\x60[♥♦♠♣] ([0-9]{1,2}|[JQKA])\x60`),
+	blackjackBal:     regexp.MustCompile(`(You now have|You have) (\*\*)?(⏣\s)?(\*\*)?([0-9,]+)(\*\*)?(\sstill)?\.`),
+	digEventScramble: regexp.MustCompile(`Quickly unscramble the word to uncover what's in the dirt! in the next 15\sseconds\s\x60(.+)\x60`),
+	digEventRetype:   regexp.MustCompile(`Quickly re-type the phrase to uncover what's in the dirt! in the next 15 seconds\nType\s\x60(.+)\x60`),
+	digEventFTB:      regexp.MustCompile(`Quickly guess the missing word to uncover what's in the dirt in the next 15 seconds!\n\x60(.+)\x60`),
 }
 
 var numFmt = message.NewPrinter(language.English)
@@ -107,6 +113,34 @@ func (in *Instance) router() *discord.MessageRouter {
 		RespondsTo(in.Client.User.ID).
 		Handler(in.fhEnd)
 
+	//Digging Without Event
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		RespondsTo(in.Client.User.ID).
+		Handler(in.digEnd)
+	//Digging With Scramble
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.digEventScramble).
+		Mentions(in.Client.User.ID).
+		Handler(in.digEventScramble)
+	//Digging with Retype
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.digEventRetype).
+		Mentions(in.Client.User.ID).
+		Handler(in.digEventRetype)
+	//Digging with Fill in the blanks
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.digEventFTB).
+		Mentions(in.Client.User.ID).
+		Handler(in.digEventFTB)
+
 	// Postmeme.
 	rtr.NewRoute().
 		Channel(in.ChannelID).
@@ -176,6 +210,16 @@ func (in *Instance) router() *discord.MessageRouter {
 			ContentContains("You don't have a hunting rifle").
 			Mentions(in.Client.User.ID).
 			Handler(in.abHuntingRifle)
+	}
+
+	// Auto-buy shovel.
+	if in.Features.AutoBuy.Shovel {
+		rtr.NewRoute().
+			Channel(in.ChannelID).
+			Author(DMID).
+			ContentContains("You don't have a shovel").
+			Mentions(in.Client.User.ID).
+			Handler(in.abShovel)
 	}
 
 	// Auto-gift

@@ -30,6 +30,7 @@ const (
 	shopBaseCmdValue      = "pls shop"
 	giftBaseCmdValue      = "pls gift"
 	shareBaseCmdValue     = "pls share"
+	digCmdValue           = "pls dig"
 )
 
 func blackjackCmdValue(amount string) string {
@@ -124,6 +125,13 @@ func (in *Instance) newCmds() []*scheduler.Command {
 		cmds = append(cmds, &scheduler.Command{
 			Value:       tidepodCmdValue,
 			Interval:    time.Duration(in.Features.AutoTidepod.Interval) * time.Second,
+			AwaitResume: true,
+		})
+	}
+	if in.Features.Commands.Dig {
+		cmds = append(cmds, &scheduler.Command{
+			Value:       digCmdValue,
+			Interval:    time.Duration(in.Compat.Cooldown.Dig) * time.Second,
 			AwaitResume: true,
 		})
 	}

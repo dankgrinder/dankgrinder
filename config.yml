@@ -41,11 +41,13 @@ features:
     highlow: true
     fish: true
     hunt: true
+    dig: true
   custom_commands:
   auto_buy:
     fishing_pole: true
     hunting_rifle: true
     laptop: true
+    shovel: true
   auto_sell:
     enable: false
     items:
@@ -373,6 +375,29 @@ compatibility:
     - "i don't want to die"
     - "stop"
     - "."
+  allowed_scrambles:
+    - "scoop"
+    - "dirty"
+    - "ground"
+    - "burrow"
+    - "spider"
+    - "shovel"
+    - "trowel"
+    - "unearth"
+    - "uncover"
+    - "ladybug"
+    - "excavate"
+    - "stickbug"
+  dig_cancel:
+    - "LOL idk this"
+    - "No hable english"
+  allowed_ftb:
+    - "I am a dwarf and I diggy the hole"
+    - "Digging is my passion"
+    - "I hope I find some treasure"
+    - "I have never dug up a body"
+    - "I will dig all day and all night"
+    - "Never have I ever dug up a body"
   cooldown:
     beg: 48
     search: 38
@@ -384,6 +409,7 @@ compatibility:
     sell: 6
     gift: 26
     share: 13
+    dig: 42
   await_response_timeout: 7
 
 suspicion_avoidance:
