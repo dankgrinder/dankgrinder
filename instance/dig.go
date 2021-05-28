@@ -70,6 +70,7 @@ func (in *Instance) digEventScramble(msg discord.Message) {
 	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
 		Value: in.Compat.DigCancel[rand.Intn(len(in.Compat.DigCancel))],
 		Log:   "no allowed dig options provided, responding",
+		Amount: 3,
 	})
 }
 
