@@ -63,6 +63,9 @@ type Compat struct {
 	AllowedScrambles     []string `yaml:"allowed_scrambles"`
 	DigCancel            []string `yaml:"dig_cancel"`
 	AllowedFTB           []string `yaml:"allowed_ftb"`
+	WorkCancel           []string `yaml:"work_cancel"`
+	AllowedScramblesWork []string `yaml:"allowed_scrambles_work"`
+	AllowedHangman       []string `yaml:"allowed_hangman"`
 }
 
 type Cooldown struct {
@@ -77,6 +80,7 @@ type Cooldown struct {
 	Gift      int `yaml:"gift"`
 	Share     int `yaml:"share"`
 	Dig       int `yaml:"dig"`
+	Work      int `yaml:"work"`
 }
 
 type Features struct {
@@ -154,6 +158,7 @@ type Commands struct {
 	Fish     bool `yaml:"fish"`
 	Hunt     bool `yaml:"hunt"`
 	Dig      bool `yaml:"dig"`
+	Work     bool `yaml:"work"`
 }
 
 type SuspicionAvoidance struct {

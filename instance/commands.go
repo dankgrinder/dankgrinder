@@ -31,6 +31,7 @@ const (
 	giftBaseCmdValue      = "pls gift"
 	shareBaseCmdValue     = "pls share"
 	digCmdValue           = "pls dig"
+	workCmdValue          = "pls work"
 )
 
 func blackjackCmdValue(amount string) string {
@@ -124,6 +125,13 @@ func (in *Instance) newCmds() []*scheduler.Command {
 	}
 	if in.Features.AutoBlackjack.Enable {
 		cmds = append(cmds, in.newAutoBlackjackCmd())
+	}
+	if in.Features.Commands.Work {
+		cmds = append(cmds, &scheduler.Command{
+			Value:       workCmdValue,
+			Interval:    time.Duration(in.Compat.Cooldown.Work) * time.Second,
+			AwaitResume: true,
+		})
 	}
 
 	for _, cmd := range in.Features.CustomCommands {

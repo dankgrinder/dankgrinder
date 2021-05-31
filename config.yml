@@ -42,6 +42,7 @@ features:
     fish: true
     hunt: true
     dig: true
+    work: true
   custom_commands:
   auto_buy:
     fishing_pole: true
@@ -398,6 +399,30 @@ compatibility:
     - "I have never dug up a body"
     - "I will dig all day and all night"
     - "Never have I ever dug up a body"
+  allowed_scrambles_work:
+    - "carl-bot"
+    - "moderator"
+    - "permission"
+    - "audit"
+    - "slowmode"
+    - "discord"
+    - "admin"
+    - "hammer"
+    - "welcome"
+    - "softban"
+    - "links"
+    - "advertising"
+    - "support"
+  work_cancel:
+    - "I'm feeling lazy to work today"
+  allowed_hangman:
+    - "Please reread the rules"
+    - "The rules are pretty simple"
+    - "Give that user a mute"
+    - "If you dont like the rules, leave the server"
+    - "Nagging is bad for your health"
+    - "You don't choose the slowmode, the slowmode chooses you"
+    - "This isn't the place to practice abc's"
   cooldown:
     beg: 48
     search: 38
@@ -410,6 +435,7 @@ compatibility:
     gift: 26
     share: 13
     dig: 42
+    work: 10805
   await_response_timeout: 7
 
 suspicion_avoidance:
