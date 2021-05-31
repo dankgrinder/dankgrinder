@@ -70,7 +70,9 @@ func (in *Instance) workEventScramble(msg discord.Message) {
 // Work Event #4 -> Soccer
 func (in *Instance) workEventSoccer(msg discord.Message) {
 	spaces := exp.workEventSoccer.FindStringSubmatch(msg.Content)[2]
-	var q int = len(spaces) // q is a position of the goal keeper of sorts.
+	// q is the position of the goal keeper. Finds q and appropriately
+	// selects where to shoot.
+	var q int = len(spaces)
 
 	if q <= 6 {
 		in.sdlr.ResumeWithCommand(&scheduler.Command{
@@ -90,19 +92,22 @@ func (in *Instance) workEventSoccer(msg discord.Message) {
 func (in *Instance) workEventHangman(msg discord.Message) {
 	hangman := exp.workEventHangman.FindStringSubmatch(msg.Content)[2]
 	ree := regexp.MustCompile(`[a-z]{1}( _)+`)
-	var pruned string = ree.ReplaceAllString(hangman, `_`) //Regex tested, is correct.
+	var pruned string = ree.ReplaceAllString(hangman, `_`)
 	_, s := find(pruned, in.Compat.AllowedHangman)
+	if len(s) > 0 {
+		in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
+			Value: s,
+			Log:   "responding to Work Hangman",
+		})
+		return
+	}
 	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-		Value: s,
-		Log:   "responding to Work Hangman",
-	})
-	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{ //Pretty sure this doesn't work as intended.
-		Value: in.Compat.DigCancel[rand.Intn(len(in.Compat.DigCancel))],
+		Value: in.Compat.WorkCancel[rand.Intn(len(in.Compat.WorkCancel))],
 		Log:   "no allowed hangman, cancelling",
 	})
 }
 
-// Work Event #6 -> Memory
+// Work Event #6 -> Memory (4 word)
 func (in *Instance) workEventMemory(msg discord.Message) {
 	words := exp.workEventMemory.FindStringSubmatch(msg.Content)[2:]
 	result := strings.Join(words, " ")
@@ -112,7 +117,7 @@ func (in *Instance) workEventMemory(msg discord.Message) {
 	})
 }
 
-// Work Event #6 -> Memory 2
+// Work Event #6 -> Memory 2 (3 word)
 func (in *Instance) workEventMemory2(msg discord.Message) {
 	words := exp.workEventMemory.FindStringSubmatch(msg.Content)[2:]
 	result := strings.Join(words, " ")
@@ -122,21 +127,32 @@ func (in *Instance) workEventMemory2(msg discord.Message) {
 	})
 }
 
-// Work Event #7 -> Color (Fix me!)
+// Work Event #7 -> Color
 func (in *Instance) workEventColor(msg discord.Message) {
 	colorObject := exp.workEventColor.FindStringSubmatch(msg.Content)[2:]
+	// result is a field of Instance struct of type map.
+	// Assigning Key - value pairs to the colors and objects
 	in.result = map[string]string{colorObject[1]: colorObject[0], colorObject[3]: colorObject[2], colorObject[5]: colorObject[4]}
-
 }
 
 // Work Event #7 -> Color response
 func (in *Instance) workEventColor2(msg discord.Message) {
-	itemcolor := exp.workEventColor2.FindStringSubmatch(msg.Content)[1]
-	var res = in.result[itemcolor]
+	// Finding target object
+	itemColor := exp.workEventColor2.FindStringSubmatch(msg.Content)[1]
+	var res = in.result[itemColor]
 	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
 		Value: res,
 		Log:   "responding to Work Color",
 	})
+}
+
+// Rework - Incase of promotion
+func (in *Instance) workPromotion(msg discord.Message) {
+	in.sdlr.ResumeWithCommandOrPrioritySchedule((&scheduler.Command{
+		Value: workCmdValue,
+		Log:   "Instance promoted, working",
+	}))
+
 }
 
 func (in *Instance) WorkEnd(msg discord.Message) {
