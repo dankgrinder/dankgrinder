@@ -158,14 +158,6 @@ func (in *Instance) router() *discord.MessageRouter {
 		ContentMatchesExp(exp.digEventFTB).
 		Mentions(in.Client.User.ID).
 		Handler(in.digEventFTB)
-	//Working End (added to prevent crash)
-	rtr.NewRoute().
-		Channel(in.ChannelID).
-		Author(DMID).
-		RespondsTo(in.Client.User.ID).
-		Mentions(in.Client.User.ID).
-		Handler(in.WorkEnd)
-
 	//Working Reversing string
 	rtr.NewRoute().
 		Channel(in.ChannelID).
@@ -215,7 +207,6 @@ func (in *Instance) router() *discord.MessageRouter {
 		ContentMatchesExp(exp.workEventMemory2).
 		RespondsTo(in.Client.User.ID).
 		Handler(in.workEventMemory2)
-
 	//Working Color
 	rtr.NewRoute().
 		Channel(in.ChannelID).
@@ -231,7 +222,6 @@ func (in *Instance) router() *discord.MessageRouter {
 		RespondsTo(in.Client.User.ID).
 		EventType(discord.EventNameMessageUpdate).
 		Handler(in.workEventColor2)
-
 	//Working Don't have a job
 	rtr.NewRoute().
 		Channel(in.ChannelID).
@@ -246,6 +236,13 @@ func (in *Instance) router() *discord.MessageRouter {
 		ContentContains("You recently resigned from your old job.").
 		RespondsTo(in.Client.User.ID).
 		Handler(in.WorkEnd)
+	//Work promotion
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentContains("You never fail to amaze me").
+		RespondsTo(in.Client.User.ID).
+		Handler(in.workPromotion)
 
 	// Postmeme.
 	rtr.NewRoute().
@@ -268,7 +265,7 @@ func (in *Instance) router() *discord.MessageRouter {
 		Channel(in.ChannelID).
 		Author(DMID).
 		ContentMatchesExp(exp.search).
-		Mentions(in.Client.User.ID).
+		RespondsTo(in.Client.User.ID).
 		Handler(in.search)
 
 	// Highlow.
@@ -304,7 +301,7 @@ func (in *Instance) router() *discord.MessageRouter {
 			Channel(in.ChannelID).
 			Author(DMID).
 			ContentContains("You don't have a fishing pole").
-			Mentions(in.Client.User.ID).
+			RespondsTo(in.Client.User.ID).
 			Handler(in.abFishingPole)
 	}
 
@@ -314,7 +311,7 @@ func (in *Instance) router() *discord.MessageRouter {
 			Channel(in.ChannelID).
 			Author(DMID).
 			ContentContains("You don't have a hunting rifle").
-			Mentions(in.Client.User.ID).
+			RespondsTo(in.Client.User.ID).
 			Handler(in.abHuntingRifle)
 	}
 
@@ -324,7 +321,7 @@ func (in *Instance) router() *discord.MessageRouter {
 			Channel(in.ChannelID).
 			Author(DMID).
 			ContentContains("You don't have a shovel").
-			Mentions(in.Client.User.ID).
+			RespondsTo(in.Client.User.ID).
 			Handler(in.abShovel)
 	}
 

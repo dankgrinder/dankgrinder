@@ -415,6 +415,9 @@ compatibility:
     - "support"
   work_cancel:
     - "I'm feeling lazy to work today"
+    - "Working is for nabs"
+    - "Why play dank when I gotta work here too"
+    - "Why always so hard"
   allowed_hangman:
     - "Please reread the rules"
     - "The rules are pretty simple"
