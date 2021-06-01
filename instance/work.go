@@ -62,8 +62,9 @@ func (in *Instance) workEventScramble(msg discord.Message) {
 		}
 	}
 	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-		Value: in.Compat.WorkCancel[rand.Intn(len(in.Compat.WorkCancel))],
-		Log:   "no allowed work options provided, responding",
+		Value:  in.Compat.WorkCancel[rand.Intn(len(in.Compat.WorkCancel))],
+		Log:    "no allowed work options provided, responding",
+		Amount: 3,
 	})
 }
 
@@ -88,7 +89,7 @@ func (in *Instance) workEventSoccer(msg discord.Message) {
 	}
 }
 
-// Work Event #5 -> Hangman (Copy of fill in the blank!)
+// Work Event #5 -> Hangman
 func (in *Instance) workEventHangman(msg discord.Message) {
 	hangman := exp.workEventHangman.FindStringSubmatch(msg.Content)[2]
 	ree := regexp.MustCompile(`[a-z]{1}( _)+`)
@@ -102,29 +103,34 @@ func (in *Instance) workEventHangman(msg discord.Message) {
 		return
 	}
 	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-		Value: in.Compat.WorkCancel[rand.Intn(len(in.Compat.WorkCancel))],
-		Log:   "no allowed hangman, cancelling",
+		Value:  in.Compat.WorkCancel[rand.Intn(len(in.Compat.WorkCancel))],
+		Log:    "no allowed hangman, cancelling",
+		Amount: 3,
 	})
 }
 
-// Work Event #6 -> Memory (4 word)
+// Work Event #6 -> Memory
 func (in *Instance) workEventMemory(msg discord.Message) {
 	words := exp.workEventMemory.FindStringSubmatch(msg.Content)[2:]
-	result := strings.Join(words, " ")
-	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-		Value: result,
-		Log:   "responding to Work Memory",
-	})
+	in.result2 = strings.Join(words, " ")
+}
+func (in *Instance) workEventMemory2(msg discord.Message) {
+	words := exp.workEventMemory2.FindStringSubmatch(msg.Content)[2:]
+	in.result2 = strings.Join(words, " ")
 }
 
-// Work Event #6 -> Memory 2 (3 word)
-func (in *Instance) workEventMemory2(msg discord.Message) {
-	words := exp.workEventMemory.FindStringSubmatch(msg.Content)[2:]
-	result := strings.Join(words, " ")
-	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-		Value: result,
-		Log:   "responding to Work Memory",
-	})
+// Work Event #6 -> Memory Response
+// Memory response does not have any necessary informaton
+// required for functioning of memory event but if the event
+// is responded to before receiving the response, it results
+// in Dank Memer triggering copy paste detection for being too fast
+func (in *Instance) workEventMemory3(msg discord.Message) {
+	if len(in.result2) > 0 {
+		in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
+			Value: in.result2,
+			Log:   "responding to Work Memory",
+		})
+	}
 }
 
 // Work Event #7 -> Color

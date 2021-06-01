@@ -32,6 +32,7 @@ var exp = struct {
 	workEventMemory,
 	workEventColor,
 	workEventMemory2,
+	workEventMemory3,
 	workEventColor2,
 	event *regexp.Regexp
 }{
@@ -55,6 +56,7 @@ var exp = struct {
 	workEventMemory:   regexp.MustCompile(`\*\*Work for (.+)\*\* - Memory - Memorize the words shown and type them in chat.\n\x60(.+)\n(.+)\n(.+)\n(.+)\x60`), // test
 	workEventColor:    regexp.MustCompile(`\*\*Work for (.+)\*\* - Color Match - Match the color to the selected word.\n<:(.+):[\d]+>\s\x60(.+)\x60\n<:(.+):[\d]+>\s\x60(.+)\x60\n<:(.+):[\d]+>\s\x60(.+)\x60`),
 	workEventMemory2:  regexp.MustCompile(`\*\*Work for (.+)\*\* - Memory - Memorize the words shown and type them in chat.\n\x60(.+)\n(.+)\n(.+)\x60`),
+	workEventMemory3:  regexp.MustCompile(`Type the words that were displayed before into the chat now!`),
 	workEventColor2:   regexp.MustCompile(`What color was next to the word \x60(.+)\x60\?`),
 }
 
@@ -193,28 +195,37 @@ func (in *Instance) router() *discord.MessageRouter {
 		ContentMatchesExp(exp.workEventHangman).
 		RespondsTo(in.Client.User.ID).
 		Handler(in.workEventHangman)
-	//Working Memory
+	//Working Memory + response
 	rtr.NewRoute().
 		Channel(in.ChannelID).
 		Author(DMID).
 		ContentMatchesExp(exp.workEventMemory).
 		RespondsTo(in.Client.User.ID).
 		Handler(in.workEventMemory)
-	//Working Memory 2
+
 	rtr.NewRoute().
 		Channel(in.ChannelID).
 		Author(DMID).
 		ContentMatchesExp(exp.workEventMemory2).
 		RespondsTo(in.Client.User.ID).
-		Handler(in.workEventMemory2)
-	//Working Color
+		Handler(in.workEventMemory)
+
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.workEventMemory3).
+		RespondsTo(in.Client.User.ID).
+		EventType(discord.EventNameMessageUpdate).
+		Handler(in.workEventMemory3)
+
+	//Working Color + response
 	rtr.NewRoute().
 		Channel(in.ChannelID).
 		Author(DMID).
 		ContentMatchesExp(exp.workEventColor).
 		RespondsTo(in.Client.User.ID).
 		Handler(in.workEventColor)
-	//Working Color Response
+
 	rtr.NewRoute().
 		Channel(in.ChannelID).
 		Author(DMID).
@@ -234,6 +245,13 @@ func (in *Instance) router() *discord.MessageRouter {
 		Channel(in.ChannelID).
 		Author(DMID).
 		ContentContains("You recently resigned from your old job.").
+		RespondsTo(in.Client.User.ID).
+		Handler(in.WorkEnd)
+	// Worked Recently
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentContains("You need to wait").
 		RespondsTo(in.Client.User.ID).
 		Handler(in.WorkEnd)
 	//Work promotion

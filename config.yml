@@ -44,6 +44,7 @@ features:
     dig: true
     work: true
   custom_commands:
+  - value: "pls work mod"
   auto_buy:
     fishing_pole: true
     hunting_rifle: true
