@@ -112,11 +112,19 @@ func (in *Instance) workEventHangman(msg discord.Message) {
 // Work Event #6 -> Memory
 func (in *Instance) workEventMemory(msg discord.Message) {
 	words := exp.workEventMemory.FindStringSubmatch(msg.Content)[2:]
-	in.result2 = strings.Join(words, " ")
+	response := strings.Join(words, " ")
+	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
+		Value: clean(response),
+		Log:   "responding to Work Memory",
+	})
 }
 func (in *Instance) workEventMemory2(msg discord.Message) {
 	words := exp.workEventMemory2.FindStringSubmatch(msg.Content)[2:]
-	in.result2 = strings.Join(words, " ")
+	response := strings.Join(words, " ")
+	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
+		Value: clean(response),
+		Log:   "responding to Work Memory",
+	})
 }
 
 // Work Event #6 -> Memory Response
@@ -124,14 +132,14 @@ func (in *Instance) workEventMemory2(msg discord.Message) {
 // required for functioning of memory event but if the event
 // is responded to before receiving the response, it results
 // in Dank Memer triggering copy paste detection for being too fast
-func (in *Instance) workEventMemory3(msg discord.Message) {
+/* func (in *Instance) workEventMemory3(msg discord.Message) {
 	if len(in.result2) > 0 {
 		in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-			Value: in.result2,
+			Value: clean(in.result2),
 			Log:   "responding to Work Memory",
 		})
 	}
-}
+} */
 
 // Work Event #7 -> Color
 func (in *Instance) workEventColor(msg discord.Message) {

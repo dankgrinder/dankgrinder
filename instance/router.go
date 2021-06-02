@@ -32,7 +32,6 @@ var exp = struct {
 	workEventMemory,
 	workEventColor,
 	workEventMemory2,
-	workEventMemory3,
 	workEventColor2,
 	event *regexp.Regexp
 }{
@@ -56,7 +55,6 @@ var exp = struct {
 	workEventMemory:   regexp.MustCompile(`\*\*Work for (.+)\*\* - Memory - Memorize the words shown and type them in chat.\n\x60(.+)\n(.+)\n(.+)\n(.+)\x60`), // test
 	workEventColor:    regexp.MustCompile(`\*\*Work for (.+)\*\* - Color Match - Match the color to the selected word.\n<:(.+):[\d]+>\s\x60(.+)\x60\n<:(.+):[\d]+>\s\x60(.+)\x60\n<:(.+):[\d]+>\s\x60(.+)\x60`),
 	workEventMemory2:  regexp.MustCompile(`\*\*Work for (.+)\*\* - Memory - Memorize the words shown and type them in chat.\n\x60(.+)\n(.+)\n(.+)\x60`),
-	workEventMemory3:  regexp.MustCompile(`Type the words that were displayed before into the chat now!`),
 	workEventColor2:   regexp.MustCompile(`What color was next to the word \x60(.+)\x60\?`),
 }
 
@@ -208,15 +206,7 @@ func (in *Instance) router() *discord.MessageRouter {
 		Author(DMID).
 		ContentMatchesExp(exp.workEventMemory2).
 		RespondsTo(in.Client.User.ID).
-		Handler(in.workEventMemory)
-
-	rtr.NewRoute().
-		Channel(in.ChannelID).
-		Author(DMID).
-		ContentMatchesExp(exp.workEventMemory3).
-		RespondsTo(in.Client.User.ID).
-		EventType(discord.EventNameMessageUpdate).
-		Handler(in.workEventMemory3)
+		Handler(in.workEventMemory2)
 
 	//Working Color + response
 	rtr.NewRoute().
