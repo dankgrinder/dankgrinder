@@ -126,6 +126,8 @@ Name | Type | Description
 `highlow` | boolean | Enable the `pls highlow` command
 `fish` | boolean | Enable the `pls fish` command
 `hunt` | boolean | Enable the `pls hunt` command
+`dig` | boolean | Enable the `pls dig` command
+`work` | boolean | Enable the `pls work` command 
 
 ### Custom command object
 Name | Type | Description
@@ -141,6 +143,7 @@ Name | Type | Description
 `fishing_pole` | boolean | Enable the automatic purchase of a fishing pole when it is detected that one is not available
 `hunting_rifle` | boolean | Enable the automatic purchase of a hunting rifle when it is detected that one is not available
 `laptop` | boolean | Enable the automatic purchase of a laptop when it is detected that one is not available
+`shovel` | boolean | Enable the automatic purchase of a shovel when it is detected that one is not available
 
 ### Auto-sell object
 Name | Type | Description
@@ -195,6 +198,14 @@ Name | Type | Description
 `search_cancel` | array of strings | List of things the program will say to cancel a search when no allowed searches are provided. It will pick one randomly
 `cooldown` | [cooldown object](#cooldown-object) | Cooldowns of commands (not custom commands)
 `await_response_timeout` | integer | The time that the program will wait for a response when it is expecting one. Set to a higher value when Dank Memer is slow to respond and this causes issues. Values below `3` are not recommended
+`allowed_scrambles` | array of strings | List of unscrambled words for the dig event minigame. If the event scramble is out of these values, it will proceed to end the event. There is no priority order.
+`dig_cancel` | array of strings | List of things the program will say to cancel a dig event when the scramble/ missing word for fill in the blank is not configured. It will pick one randommly. 
+`allowed_ftb` | array of strings | List of complete phrases from which the missing word will be found in a fill in the blank dig event. 
+`work_cancel`| array of strings | List of things the program will say to cancel a work event when the scramble/ missing word for fill in the blank is not configured. It will pick one randommly. 
+`allowed_scrambles_work` | array of strings | List of unscrambled words for the work event minigame. If the event scramble is out of these values, it will proceed to end the event. There is no priority order.
+`allowed_hangman` | array of strings | List of complete phrases from which the missing word will be found in a hangman work event.
+
+
 
 ### Cooldown object
 Name | Type | Description
@@ -209,6 +220,8 @@ Name | Type | Description
 `sell` | integer | The cooldown of the sell command in seconds, set a few seconds higher to account for network delay
 `gift` | integer | The cooldown of the gift command in seconds, set a few seconds higher to account for network delay
 `share` | integer | The cooldown of the share command in seconds, set a few seconds higher to account for network delay
+`dig` | integer | The cooldown of the dig command in seconds, set a few seconds higher to account for network delay
+'work' | integer | The cooldown of the work command in seconds, set a few seconds higher to account for network delay
 
 ### Suspicion avoidance object
 Name | Type | Description
