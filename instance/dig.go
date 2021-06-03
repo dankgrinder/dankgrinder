@@ -68,8 +68,8 @@ func (in *Instance) digEventScramble(msg discord.Message) {
 		}
 	}
 	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-		Value: in.Compat.DigCancel[rand.Intn(len(in.Compat.DigCancel))],
-		Log:   "no allowed dig options provided, responding",
+		Value:  in.Compat.DigCancel[rand.Intn(len(in.Compat.DigCancel))],
+		Log:    "no allowed dig options provided, responding",
 		Amount: 3,
 	})
 }
@@ -84,7 +84,7 @@ func (in *Instance) digEventRetype(msg discord.Message) {
 
 func (in *Instance) digEventFTB(msg discord.Message) {
 	fillTheBlank := exp.digEventFTB.FindStringSubmatch(msg.Content)[1]
-	ree := regexp.MustCompile(`[a-z]{1}( _)+`)
+	ree := regexp.MustCompile(`[a-z, A-Z]{1}( _)+`)
 	// Replacing the missing word and the hint with an underscore for compatibility with find function
 	var pruned string = ree.ReplaceAllString(fillTheBlank, `_`)
 	_, s := find(pruned, in.Compat.AllowedFTB)

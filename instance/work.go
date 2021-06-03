@@ -92,7 +92,7 @@ func (in *Instance) workEventSoccer(msg discord.Message) {
 // Work Event #5 -> Hangman
 func (in *Instance) workEventHangman(msg discord.Message) {
 	hangman := exp.workEventHangman.FindStringSubmatch(msg.Content)[2]
-	ree := regexp.MustCompile(`[a-z]{1}( _)+`)
+	ree := regexp.MustCompile(`[a-z, A-Z]{1}( _)+`)
 	var pruned string = ree.ReplaceAllString(hangman, `_`)
 	_, s := find(pruned, in.Compat.AllowedHangman)
 	if len(s) > 0 {
