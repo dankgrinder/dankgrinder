@@ -46,6 +46,7 @@ type Instance struct {
 	lastBalanceUpdate time.Time
 	fatal             chan error
 	isClosed          bool
+	result            map[string]string
 }
 
 func (in *Instance) Start() error {

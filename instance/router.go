@@ -21,17 +21,41 @@ var exp = struct {
 	shop,
 	blackjack,
 	blackjackBal,
+	digEventScramble,
+	digEventRetype,
+	digEventFTB,
+	workEventReverse,
+	workEventRetype,
+	workEventScramble,
+	workEventSoccer,
+	workEventHangman,
+	workEventMemory,
+	workEventColor,
+	workEventMemory2,
+	workEventColor2,
 	event *regexp.Regexp
 }{
-	search:       regexp.MustCompile(`Pick from the list below and type the name in chat\.\s\x60(.+)\x60,\s\x60(.+)\x60,\s\x60(.+)\x60`),
-	fhEvent:      regexp.MustCompile(`10\sseconds.*\s?([Tt]yping|[Tt]ype)\s\x60(.+)\x60`),
-	hl:           regexp.MustCompile(`Your hint is \*\*([0-9]+)\*\*`),
-	bal:          regexp.MustCompile(`\*\*Wallet\*\*: \x60?⏣?\s?([0-9,]+)\x60?`),
-	event:        regexp.MustCompile(`^(Attack the boss by typing|Type) \x60(.+)\x60`),
-	gift:         regexp.MustCompile(`[a-zA-Z\s]* \(([0-9,]+) owned\)`),
-	shop:         regexp.MustCompile(`pls shop ([a-zA-Z\s]+)`),
-	blackjack:    regexp.MustCompile(`\x60[♥♦♠♣] ([0-9]{1,2}|[JQKA])\x60`),
-	blackjackBal: regexp.MustCompile(`(You now have|You have) (\*\*)?(⏣\s)?(\*\*)?([0-9,]+)(\*\*)?(\sstill)?\.`),
+	search:            regexp.MustCompile(`Pick from the list below and type the name in chat\.\s\x60(.+)\x60,\s\x60(.+)\x60,\s\x60(.+)\x60`),
+	fhEvent:           regexp.MustCompile(`10\sseconds.*\s?([Tt]yping|[Tt]ype)\s\x60(.+)\x60`),
+	hl:                regexp.MustCompile(`Your hint is \*\*([0-9]+)\*\*`),
+	bal:               regexp.MustCompile(`\*\*Wallet\*\*: \x60?⏣?\s?([0-9,]+)\x60?`),
+	event:             regexp.MustCompile(`^(Attack the boss by typing|Type) \x60(.+)\x60`),
+	gift:              regexp.MustCompile(`[a-zA-Z\s]* \(([0-9,]+) owned\)`),
+	shop:              regexp.MustCompile(`pls shop ([a-zA-Z\s]+)`),
+	blackjack:         regexp.MustCompile(`\x60[♥♦♠♣] ([0-9]{1,2}|[JQKA])\x60`),
+	blackjackBal:      regexp.MustCompile(`(You now have|You have) (\*\*)?(⏣\s)?(\*\*)?([0-9,]+)(\*\*)?(\sstill)?\.`),
+	digEventScramble:  regexp.MustCompile(`Quickly unscramble the word to uncover what's in the dirt! in the next 15\sseconds\s\x60(.+)\x60`),
+	digEventRetype:    regexp.MustCompile(`Quickly re-type the phrase to uncover what's in the dirt! in the next 15 seconds\nType\s\x60(.+)\x60`),
+	digEventFTB:       regexp.MustCompile(`Quickly guess the missing word to uncover what's in the dirt in the next 15 seconds!\n\x60(.+)\x60`),
+	workEventReverse:  regexp.MustCompile(`\*\*Work for (.+)\*\* - Reverse - Type the following word backwards.\n\x60(.+)\x60`), //Index 2
+	workEventRetype:   regexp.MustCompile(`\*\*Work for (.+)\*\* - Retype - Retype the following phrase below.\nType\s\x60(.+)\x60`),
+	workEventScramble: regexp.MustCompile(`\*\*Work for (.+)\*\* - Scramble - The following word is scrambled, you need to try and unscramble it to reveal the original word.\n\x60(.+)\x60`),
+	workEventSoccer:   regexp.MustCompile(`\*\*Work for (.+)\*\* - Soccer - Hit the ball into a goal where the goalkeeper is not at! To hit the ball, type \*\*\x60left\x60, \x60right\x60 or \x60middle\x60\*\*.\n:goal::goal::goal:\n(\s*):levitate:`),
+	workEventHangman:  regexp.MustCompile(`\*\*Work for (.+)\*\* - Hangman - Find the missing __word__ in the following sentence:\n\x60(.+)\x60`),
+	workEventMemory:   regexp.MustCompile(`\*\*Work for (.+)\*\* - Memory - Memorize the words shown and type them in chat.\n\x60(.+)\n(.+)\n(.+)\n(.+)\x60`), // test
+	workEventColor:    regexp.MustCompile(`\*\*Work for (.+)\*\* - Color Match - Match the color to the selected word.\n<:(.+):[\d]+>\s\x60(.+)\x60\n<:(.+):[\d]+>\s\x60(.+)\x60\n<:(.+):[\d]+>\s\x60(.+)\x60`),
+	workEventMemory2:  regexp.MustCompile(`\*\*Work for (.+)\*\* - Memory - Memorize the words shown and type them in chat.\n\x60(.+)\n(.+)\n(.+)\x60`),
+	workEventColor2:   regexp.MustCompile(`What color was next to the word \x60(.+)\x60\?`),
 }
 
 var numFmt = message.NewPrinter(language.English)
@@ -107,6 +131,127 @@ func (in *Instance) router() *discord.MessageRouter {
 		RespondsTo(in.Client.User.ID).
 		Handler(in.fhEnd)
 
+	//Digging Without Event
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		RespondsTo(in.Client.User.ID).
+		Handler(in.digEnd)
+	//Digging With Scramble
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.digEventScramble).
+		Mentions(in.Client.User.ID).
+		Handler(in.digEventScramble)
+	//Digging with Retype
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.digEventRetype).
+		Mentions(in.Client.User.ID).
+		Handler(in.digEventRetype)
+	//Digging with Fill in the blanks
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.digEventFTB).
+		Mentions(in.Client.User.ID).
+		Handler(in.digEventFTB)
+	//Working Reversing string
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.workEventReverse).
+		RespondsTo(in.Client.User.ID).
+		Handler(in.workEventReverse)
+	//Working Retyping string
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.workEventRetype).
+		RespondsTo(in.Client.User.ID).
+		Handler(in.workEventRetype)
+	//Working Scramble solve
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.workEventScramble).
+		RespondsTo(in.Client.User.ID).
+		Handler(in.workEventScramble)
+	//Working Soccer
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.workEventSoccer).
+		RespondsTo(in.Client.User.ID).
+		Handler(in.workEventSoccer)
+	//Working Hangman
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.workEventHangman).
+		RespondsTo(in.Client.User.ID).
+		Handler(in.workEventHangman)
+	//Working Memory + response
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.workEventMemory).
+		RespondsTo(in.Client.User.ID).
+		Handler(in.workEventMemory)
+
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.workEventMemory2).
+		RespondsTo(in.Client.User.ID).
+		Handler(in.workEventMemory2)
+
+	//Working Color + response
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.workEventColor).
+		RespondsTo(in.Client.User.ID).
+		Handler(in.workEventColor)
+
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.workEventColor2).
+		RespondsTo(in.Client.User.ID).
+		EventType(discord.EventNameMessageUpdate).
+		Handler(in.workEventColor2)
+	//Working Don't have a job
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentContains("You don't currently have a job to work at").
+		RespondsTo(in.Client.User.ID).
+		Handler(in.WorkEnd)
+	//Working Recently resigned
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentContains("You recently resigned from your old job.").
+		RespondsTo(in.Client.User.ID).
+		Handler(in.WorkEnd)
+	// Worked Recently
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentContains("You need to wait").
+		RespondsTo(in.Client.User.ID).
+		Handler(in.WorkEnd)
+	//Work promotion
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentContains("You never fail to amaze me").
+		RespondsTo(in.Client.User.ID).
+		Handler(in.workPromotion)
+
 	// Postmeme.
 	rtr.NewRoute().
 		Channel(in.ChannelID).
@@ -128,7 +273,7 @@ func (in *Instance) router() *discord.MessageRouter {
 		Channel(in.ChannelID).
 		Author(DMID).
 		ContentMatchesExp(exp.search).
-		Mentions(in.Client.User.ID).
+		RespondsTo(in.Client.User.ID).
 		Handler(in.search)
 
 	// Highlow.
@@ -164,7 +309,7 @@ func (in *Instance) router() *discord.MessageRouter {
 			Channel(in.ChannelID).
 			Author(DMID).
 			ContentContains("You don't have a fishing pole").
-			Mentions(in.Client.User.ID).
+			RespondsTo(in.Client.User.ID).
 			Handler(in.abFishingPole)
 	}
 
@@ -174,8 +319,18 @@ func (in *Instance) router() *discord.MessageRouter {
 			Channel(in.ChannelID).
 			Author(DMID).
 			ContentContains("You don't have a hunting rifle").
-			Mentions(in.Client.User.ID).
+			RespondsTo(in.Client.User.ID).
 			Handler(in.abHuntingRifle)
+	}
+
+	// Auto-buy shovel.
+	if in.Features.AutoBuy.Shovel {
+		rtr.NewRoute().
+			Channel(in.ChannelID).
+			Author(DMID).
+			ContentContains("You don't have a shovel").
+			RespondsTo(in.Client.User.ID).
+			Handler(in.abShovel)
 	}
 
 	// Auto-gift

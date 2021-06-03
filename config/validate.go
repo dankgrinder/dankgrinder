@@ -146,8 +146,32 @@ func validateCompat(compat Compat) error {
 	if len(compat.AllowedSearches) == 0 {
 		return fmt.Errorf("no allowed searches")
 	}
+	if len(compat.AllowedScrambles) == 0 {
+		return fmt.Errorf("no allowed scrambles")
+	}
+	if len(compat.AllowedScramblesWork) == 0 {
+		return fmt.Errorf("no allowed work scrambles")
+	}
+	if len(compat.AllowedFTB) == 0 {
+		return fmt.Errorf("no allowed dig fill the blanks")
+	}
+	if len(compat.DigCancel) == 0 {
+		return fmt.Errorf("no dig cancel compatibility options")
+	}
 	if len(compat.SearchCancel) == 0 {
 		return fmt.Errorf("no search cancel compatibility options")
+	}
+	if len(compat.WorkCancel) == 0 {
+		return fmt.Errorf("no work cancel compatibility options")
+	}
+	if len(compat.AllowedHangman) == 0 {
+		return fmt.Errorf("no work hangman options")
+	}
+	if compat.Cooldown.Dig <= 0 {
+		return fmt.Errorf("dig cooldown must be greater than 0")
+	}
+	if compat.Cooldown.Work <= 0 {
+		return fmt.Errorf("work cooldown must be greater than 0")
 	}
 	if compat.Cooldown.Postmeme <= 0 {
 		return fmt.Errorf("postmeme cooldown must be greater than 0")

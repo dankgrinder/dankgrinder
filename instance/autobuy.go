@@ -22,6 +22,17 @@ func (in *Instance) abLaptop(_ discord.Message) {
 	})
 }
 
+func (in *Instance) abShovel(_ discord.Message) {
+	trigger := in.sdlr.AwaitResumeTrigger()
+	if trigger == nil || trigger.Value != digCmdValue {
+		return
+	}
+	in.sdlr.ResumeWithCommand(&scheduler.Command{
+		Value: buyCmdValue("1", "shovel"),
+		Log:   "no shovel, buying a new one",
+	})
+}
+
 func (in *Instance) abHuntingRifle(_ discord.Message) {
 	trigger := in.sdlr.AwaitResumeTrigger()
 	if trigger == nil || trigger.Value != huntCmdValue {
