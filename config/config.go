@@ -66,6 +66,9 @@ type Compat struct {
 	WorkCancel           []string `yaml:"work_cancel"`
 	AllowedScramblesWork []string `yaml:"allowed_scrambles_work"`
 	AllowedHangman       []string `yaml:"allowed_hangman"`
+	AllowedScramblesFish []string `yaml:"allowed_scrambles_fish"`
+	AllowedFishFTB       []string `yaml:"allowed_fish_ftb"`
+	FishCancel           []string `yaml:"fish_cancel"`
 }
 
 type Cooldown struct {

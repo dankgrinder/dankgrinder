@@ -14,7 +14,7 @@ const DMID = "270904126974590976"
 
 var exp = struct {
 	search,
-	fhEvent,
+	huntEvent,
 	hl,
 	bal,
 	gift,
@@ -33,10 +33,14 @@ var exp = struct {
 	workEventColor,
 	workEventMemory2,
 	workEventColor2,
+	fishEventScramble,
+	fishEventFTB,
+	fishEventReverse,
+	fishEventRetype,
 	event *regexp.Regexp
 }{
 	search:            regexp.MustCompile(`Pick from the list below and type the name in chat\.\s\x60(.+)\x60,\s\x60(.+)\x60,\s\x60(.+)\x60`),
-	fhEvent:           regexp.MustCompile(`10\sseconds.*\s?([Tt]yping|[Tt]ype)\s\x60(.+)\x60`),
+	huntEvent:         regexp.MustCompile(`10\sseconds.*\s?([Tt]yping|[Tt]ype)\s\x60(.+)\x60`),
 	hl:                regexp.MustCompile(`Your hint is \*\*([0-9]+)\*\*`),
 	bal:               regexp.MustCompile(`\*\*Wallet\*\*: \x60?⏣?\s?([0-9,]+)\x60?`),
 	event:             regexp.MustCompile(`^(Attack the boss by typing|Type) \x60(.+)\x60`),
@@ -56,28 +60,32 @@ var exp = struct {
 	workEventColor:    regexp.MustCompile(`\*\*Work for (.+)\*\* - Color Match - Match the color to the selected word.\n<:(.+):[\d]+>\s\x60(.+)\x60\n<:(.+):[\d]+>\s\x60(.+)\x60\n<:(.+):[\d]+>\s\x60(.+)\x60`),
 	workEventMemory2:  regexp.MustCompile(`\*\*Work for (.+)\*\* - Memory - Memorize the words shown and type them in chat.\n\x60(.+)\n(.+)\n(.+)\x60`),
 	workEventColor2:   regexp.MustCompile(`What color was next to the word \x60(.+)\x60\?`),
+	fishEventScramble: regexp.MustCompile(`the fish is too strong! Quickly unscramble the word to catch it in the next 15 seconds\n\x60(.+)\x60`),
+	fishEventFTB:      regexp.MustCompile(`the fish is too strong! Quickly guess the missing word to catch it in the next 15 seconds!\n\x60(.+)\x60`),
+	fishEventReverse:  regexp.MustCompile(`the fish is too strong! Quickly reverse the word to catch it in the next 10 seconds!.\n\x60(.+)\x60`),
+	fishEventRetype:   regexp.MustCompile(`the fish is too strong! Quickly re-type the phrase to catch it in the next 15 seconds\nType\s\x60(.+)\x60`),
 }
 
 var numFmt = message.NewPrinter(language.English)
 
-func (in *Instance) fhEvent(msg discord.Message) {
-	res := exp.fhEvent.FindStringSubmatch(msg.Content)[2]
+func (in *Instance) huntEvent(msg discord.Message) {
+	res := exp.huntEvent.FindStringSubmatch(msg.Content)[2]
 	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
 		Value: clean(res),
-		Log:   "responding to fishing or hunting event",
+		Log:   "responding to  hunting event",
 	})
 }
 
-func (in *Instance) fhEnd(msg discord.Message) {
+func (in *Instance) huntEnd(msg discord.Message) {
 	trigger := in.sdlr.AwaitResumeTrigger()
 	if trigger == nil {
 		return
 	}
-	if msg.ReferencedMessage.Content != fishCmdValue && msg.ReferencedMessage.Content != huntCmdValue {
+	if msg.ReferencedMessage.Content != huntCmdValue {
 		return
 	}
-	if trigger.Value == fishCmdValue || trigger.Value == huntCmdValue &&
-		!exp.fhEvent.MatchString(msg.Content) {
+	if trigger.Value == huntCmdValue &&
+		!exp.huntEvent.MatchString(msg.Content) {
 		in.sdlr.Resume()
 	}
 }
@@ -114,23 +122,56 @@ func clean(s string) string {
 func (in *Instance) router() *discord.MessageRouter {
 	rtr := &discord.MessageRouter{}
 
-	// Fishing and hunting.
+	// hunting.
 	rtr.NewRoute().
 		Channel(in.ChannelID).
 		Author(DMID).
-		ContentMatchesExp(exp.fhEvent).
+		ContentMatchesExp(exp.huntEvent).
 		Mentions(in.Client.User.ID).
-		Handler(in.fhEvent)
+		Handler(in.huntEvent)
 
-	// When a fish/hunt is completed without any events, Dank Memer will
+	// When a hunt is completed without any events, Dank Memer will
 	// reference the original command. If there are events it will mention. This
 	// can therefore be used to differentiate between the two.
 	rtr.NewRoute().
 		Channel(in.ChannelID).
 		Author(DMID).
 		RespondsTo(in.Client.User.ID).
-		Handler(in.fhEnd)
-
+		Handler(in.huntEnd)
+	// fishing without event
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		RespondsTo(in.Client.User.ID).
+		Handler(in.fishEnd)
+	// fishing with reversing
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.fishEventReverse).
+		Mentions(in.Client.User.ID).
+		Handler(in.fishEventReverse)
+	// fishing with scramble
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.fishEventScramble).
+		Mentions(in.Client.User.ID).
+		Handler(in.fishEventScramble)
+	// fishing with fill blank
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.fishEventFTB).
+		Mentions(in.Client.User.ID).
+		Handler(in.fishEventFTB)
+	// fishing with retyping
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.fishEventRetype).
+		Mentions(in.Client.User.ID).
+		Handler(in.fishEventRetype)
 	//Digging Without Event
 	rtr.NewRoute().
 		Channel(in.ChannelID).

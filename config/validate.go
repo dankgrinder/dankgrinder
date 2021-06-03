@@ -146,6 +146,15 @@ func validateCompat(compat Compat) error {
 	if len(compat.AllowedSearches) == 0 {
 		return fmt.Errorf("no allowed searches")
 	}
+	if len(compat.AllowedScramblesFish) == 0 {
+		return fmt.Errorf("no allowed scrambles fish")
+	}
+	if len(compat.AllowedFishFTB) == 0 {
+		return fmt.Errorf("no allowed fill the blank fish")
+	}
+	if len(compat.FishCancel) == 0 {
+		return fmt.Errorf("no allowed fish cancel compatibility options")
+	}
 	if len(compat.AllowedScrambles) == 0 {
 		return fmt.Errorf("no allowed scrambles")
 	}

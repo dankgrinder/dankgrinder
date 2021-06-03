@@ -427,6 +427,26 @@ compatibility:
     - "Nagging is bad for your health"
     - "You don't choose the slowmode, the slowmode chooses you"
     - "This isn't the place to practice abc's"
+  fish_cancel:
+    - "my fishing IQ is too low"
+  allowed_scrambles_fish:
+    - "fishy"
+    - "jellyfish"
+    - "squid"
+    - "fishing"
+    - "whale"
+    - "ocean"
+    - "water"
+    - "trout"
+  allowed_fish_ftb:
+    - "woah a big one"
+    - "this is very fishy"
+    - "big bait catches big fish"
+    - "the fish are acting super fishy"
+    - "big big fishy"
+    - "get the camera ready mom"
+    - "the fish says glub"
+    - "hook line and sinker"
   cooldown:
     beg: 48
     search: 38
