@@ -37,6 +37,7 @@ var exp = struct {
 	fishEventFTB,
 	fishEventReverse,
 	fishEventRetype,
+	trivia,
 	event *regexp.Regexp
 }{
 	search:            regexp.MustCompile(`Pick from the list below and type the name in chat\.\s\x60(.+)\x60,\s\x60(.+)\x60,\s\x60(.+)\x60`),
@@ -64,6 +65,7 @@ var exp = struct {
 	fishEventFTB:      regexp.MustCompile(`the fish is too strong! Quickly guess the missing word to catch it in the next 15 seconds!\n\x60(.+)\x60`),
 	fishEventReverse:  regexp.MustCompile(`the fish is too strong! Quickly reverse the word to catch it in the next 10 seconds!.\n\x60(.+)\x60`),
 	fishEventRetype:   regexp.MustCompile(`the fish is too strong! Quickly re-type the phrase to catch it in the next 15 seconds\nType\s\x60(.+)\x60`),
+	trivia:            regexp.MustCompile(`\*\*(.+)\*\*\n\*You have \d\d seconds to answer with the correct letter.\*\n\n(.+)\) \*(.+)\*\n(.+)\) \*(.+)\*\n(.+)\) \*(.+)\*\n(.+)\) \*(.+)\*`),
 }
 
 var numFmt = message.NewPrinter(language.English)
@@ -292,6 +294,13 @@ func (in *Instance) router() *discord.MessageRouter {
 		ContentContains("You never fail to amaze me").
 		RespondsTo(in.Client.User.ID).
 		Handler(in.workPromotion)
+	// Trivia
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		HasEmbeds(true).
+		EmbedContains("seconds to answer with the correct letter.").
+		Handler(in.trivia)
 
 	// Postmeme.
 	rtr.NewRoute().

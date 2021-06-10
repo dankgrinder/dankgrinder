@@ -84,6 +84,7 @@ type Cooldown struct {
 	Share     int `yaml:"share"`
 	Dig       int `yaml:"dig"`
 	Work      int `yaml:"work"`
+	Trivia    int `yaml:"trivia"`
 }
 
 type Features struct {
@@ -162,6 +163,7 @@ type Commands struct {
 	Hunt     bool `yaml:"hunt"`
 	Dig      bool `yaml:"dig"`
 	Work     bool `yaml:"work"`
+	Trivia   bool `yaml:"trivia"`
 }
 
 type SuspicionAvoidance struct {

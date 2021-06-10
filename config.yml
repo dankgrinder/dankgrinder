@@ -43,6 +43,8 @@ features:
     hunt: true
     dig: true
     work: true
+    trivia: true 
+
   custom_commands:
   - value: "pls work mod"
   auto_buy:
@@ -460,6 +462,7 @@ compatibility:
     share: 13
     dig: 42
     work: 10805
+    trivia: 15
   await_response_timeout: 7
 
 suspicion_avoidance:

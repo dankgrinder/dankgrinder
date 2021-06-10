@@ -32,6 +32,7 @@ const (
 	shareBaseCmdValue     = "pls share"
 	digCmdValue           = "pls dig"
 	workCmdValue          = "pls work"
+	triviaCmdValue        = "pls trivia"
 )
 
 func blackjackCmdValue(amount string) string {
@@ -130,6 +131,13 @@ func (in *Instance) newCmds() []*scheduler.Command {
 		cmds = append(cmds, &scheduler.Command{
 			Value:       workCmdValue,
 			Interval:    time.Duration(in.Compat.Cooldown.Work) * time.Second,
+			AwaitResume: true,
+		})
+	}
+	if in.Features.Commands.Trivia {
+		cmds = append(cmds, &scheduler.Command{
+			Value:       triviaCmdValue,
+			Interval:    time.Duration(in.Compat.Cooldown.Trivia) * time.Second,
 			AwaitResume: true,
 		})
 	}

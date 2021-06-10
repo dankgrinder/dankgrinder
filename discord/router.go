@@ -86,6 +86,13 @@ func (rt *MessageRoute) ContentContains(s string) *MessageRoute {
 	return rt
 }
 
+func (rt *MessageRoute) EmbedContains(s string) *MessageRoute {
+	rt.conds = append(rt.conds, func(msg Message, _ string) bool {
+		return strings.Contains(msg.Embeds[0].Description, s)
+	})
+	return rt
+}
+
 func (rt *MessageRoute) Author(id string) *MessageRoute {
 	rt.conds = append(rt.conds, func(msg Message, _ string) bool {
 		return msg.Author.ID == id
