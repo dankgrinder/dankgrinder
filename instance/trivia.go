@@ -42,11 +42,11 @@ func (in *Instance) trivia(msg discord.Message) {
 	json.Unmarshal(bytevalue, &database)
 
 	for i := 0; i < len(database.Database); i++ {
-		if question == html.UnescapeString(database.Database[i].Question) { // changes
+		if question == html.UnescapeString(database.Database[i].Question) {
 			var res = choices[database.Database[i].Answer]
 			in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
 				Value: res,
-				Log:   "responding to Work Color",
+				Log:   "responding to trivia",
 			})
 		}
 

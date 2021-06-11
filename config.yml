@@ -461,7 +461,7 @@ compatibility:
     gift: 26
     share: 13
     dig: 42
-    work: 10805
+    work: 3600
     trivia: 15
   await_response_timeout: 7
 
