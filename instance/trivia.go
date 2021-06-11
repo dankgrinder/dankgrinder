@@ -26,7 +26,7 @@ func (in *Instance) trivia(msg discord.Message) {
 
 	details := exp.trivia.FindStringSubmatch(msg.Embeds[0].Description)[1:]
 	question := details[0]
-	choices := map[string]string{details[2]: details[1], details[4]: details[3], details[6]: details[5]}
+	choices := map[string]string{details[2]: details[1], details[4]: details[3], details[6]: details[5], details[8]: details[7]}
 
 	ex, _ := os.Executable()
 	ex = filepath.ToSlash(ex)
