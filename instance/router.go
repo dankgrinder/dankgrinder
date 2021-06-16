@@ -292,7 +292,7 @@ func (in *Instance) router() *discord.MessageRouter {
 		Channel(in.ChannelID).
 		Author(DMID).
 		ContentContains("You never fail to amaze me").
-		RespondsTo(in.Client.User.ID).
+		Mentions(in.Client.User.ID).
 		Handler(in.workPromotion)
 	// Trivia
 	rtr.NewRoute().
