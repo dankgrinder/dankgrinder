@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"html"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"path"
 	"path/filepath"
@@ -49,14 +48,14 @@ func (in *Instance) trivia(msg discord.Message) {
 				Value: res,
 				Log:   "responding to trivia",
 			})
-		} else {
-			choice := []string{"A", "B", "C", "D"}
-			randomIndice := rand.Intn(len(choice))
-			res := choice[randomIndice]
-			in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-				Value: res,
-				Log:   "responding to trivia",
-			})
 		}
 	}
 }
+
+//		choice := []string{"A", "B", "C", "D"}
+//		randomIndice := rand.Intn(len(choice))
+//		res := choice[randomIndice]
+//		in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
+//			Value: res,
+//			Log:   "responding to trivia",
+//		})
