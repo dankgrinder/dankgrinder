@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path"
 	"path/filepath"
@@ -43,13 +44,19 @@ func (in *Instance) trivia(msg discord.Message) {
 
 	for i := 0; i < len(database.Database); i++ {
 		if question == html.UnescapeString(database.Database[i].Question) {
-			var res = choices[database.Database[i].Answer]
+			var res = choices[html.UnescapeString(database.Database[i].Answer)]
+			in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
+				Value: res,
+				Log:   "responding to trivia",
+			})
+		} else {
+			choice := []string{"A", "B", "C", "D"}
+			randomIndice := rand.Intn(len(choice))
+			res := choice[randomIndice]
 			in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
 				Value: res,
 				Log:   "responding to trivia",
 			})
 		}
-
 	}
-
 }
