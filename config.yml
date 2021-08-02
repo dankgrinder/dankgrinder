@@ -12,8 +12,8 @@
 clusters:
   default:
     master:
-      token: ""
-      channel_id: ""
+      token: "ODQyNTI5OTc3NzE0ODY4MzA1.YJ2pRg.xBq9A7kNcMJ5gXyGcNGbQhc1-0M"
+      channel_id: "857927805584277504"
 
 shifts:
   - state: "active"
@@ -35,16 +35,16 @@ shifts:
 
 features:
   commands:
-    beg: true
-    postmeme: true
-    search: true
-    highlow: true
-    fish: true
-    hunt: true
-    dig: true
-    work: true
+    beg: false
+    postmeme: false
+    search: false
+    highlow: false
+    fish: false
+    hunt: false
+    dig: false
+    work: false
     trivia: true
-    crime: true
+    crime: false
 
   custom_commands:
   - value: "pls work mod"
