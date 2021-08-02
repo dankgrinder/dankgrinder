@@ -9,8 +9,9 @@ package instance
 import (
 	"strconv"
 	"strings"
+	"time"
 
-	"github.com/dankgrinder/dankgrinder/instance/scheduler"
+
 
 	"github.com/dankgrinder/dankgrinder/discord"
 )
@@ -74,11 +75,14 @@ func (in *Instance) blackjack(msg discord.Message) {
 
 	in.Logger.Infof("calculated blackjack hand as: %v against dealer's %v", hand, dealersUpCard)
 
-	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-		Value:       in.Features.AutoBlackjack.LogicTable[dealersUpCard][hand],
-		Log:         "responding to blackjack",
-		AwaitResume: true,
-	})
+	if in.Features.AutoBlackjack.LogicTable[dealersUpCard][hand] == "h"{
+		time.Sleep(2 * time.Second)
+		in.pressButton(0, msg)
+	}
+	if in.Features.AutoBlackjack.LogicTable[dealersUpCard][hand] == "s"{
+		time.Sleep(2 * time.Second)
+		in.pressButton(1, msg)
+	}
 }
 
 func (in *Instance) blackjackEnd(msg discord.Message) {

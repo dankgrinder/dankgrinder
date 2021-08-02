@@ -3,6 +3,7 @@ package instance
 import (
 	"math/rand"
 	"regexp"
+	"time"
 
 	"github.com/dankgrinder/dankgrinder/discord"
 	"github.com/dankgrinder/dankgrinder/instance/scheduler"
@@ -42,7 +43,7 @@ var exp = struct {
 }{
 	search:            regexp.MustCompile(`Pick from the list below and type the name in chat\.\s\x60(.+)\x60,\s\x60(.+)\x60,\s\x60(.+)\x60`),
 	huntEvent:         regexp.MustCompile(`10\sseconds.*\s?([Tt]yping|[Tt]ype)\s\x60(.+)\x60`),
-	hl:                regexp.MustCompile(`Your hint is \*\*([0-9]+)\*\*`),
+	hl:                regexp.MustCompile(`I just chose a secret number between 1 and 100.\nIs the secret number \*higher\* or \*lower\* than \*\*(.+)\*\*.`),
 	bal:               regexp.MustCompile(`\*\*Wallet\*\*: \x60?⏣?\s?([0-9,]+)\x60?`),
 	event:             regexp.MustCompile(`^(Attack the boss by typing|Type) \x60(.+)\x60`),
 	gift:              regexp.MustCompile(`[a-zA-Z\s]* \(([0-9,]+) owned\)`),
@@ -65,10 +66,16 @@ var exp = struct {
 	fishEventFTB:      regexp.MustCompile(`the fish is too strong! Quickly guess the missing word to catch it in the next 15 seconds!\n\x60(.+)\x60`),
 	fishEventReverse:  regexp.MustCompile(`the fish is too strong! Quickly reverse the word to catch it in the next 10 seconds!.\n\x60(.+)\x60`),
 	fishEventRetype:   regexp.MustCompile(`the fish is too strong! Quickly re-type the phrase to catch it in the next 15 seconds\nType\s\x60(.+)\x60`),
-	trivia:            regexp.MustCompile(`\*\*(.+)\*\*\n\*You have \d\d seconds to answer with the correct letter.\*\n\n(.+)\) \*(.+)\*\n(.+)\) \*(.+)\*\n(.+)\) \*(.+)\*\n(.+)\) \*(.+)\*`),
+	trivia:            regexp.MustCompile(`\*\*(.+)\*\*\n\*You have \d\d seconds to answer`),
 }
 
 var numFmt = message.NewPrinter(language.English)
+
+func (in *Instance) pm(msg discord.Message) {
+	i := rand.Intn(5)
+	time.Sleep(1 * time.Second)
+	in.pressButton(i, msg)
+}
 
 func (in *Instance) huntEvent(msg discord.Message) {
 	res := exp.huntEvent.FindStringSubmatch(msg.Content)[2]
@@ -90,14 +97,6 @@ func (in *Instance) huntEnd(msg discord.Message) {
 		!exp.huntEvent.MatchString(msg.Content) {
 		in.sdlr.Resume()
 	}
-}
-
-func (in *Instance) pm(_ discord.Message) {
-	res := in.Compat.PostmemeOpts[rand.Intn(len(in.Compat.PostmemeOpts))]
-	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-		Value: res,
-		Log:   "responding to postmeme",
-	})
 }
 
 func (in *Instance) event(msg discord.Message) {
@@ -299,15 +298,15 @@ func (in *Instance) router() *discord.MessageRouter {
 		Channel(in.ChannelID).
 		Author(DMID).
 		HasEmbeds(true).
-		EmbedContains("seconds to answer with the correct letter.").
+		EmbedContains("seconds to answer").
 		Handler(in.trivia)
 
 	// Postmeme.
 	rtr.NewRoute().
 		Channel(in.ChannelID).
 		Author(DMID).
-		ContentContains("What type of meme do you want to post").
-		Mentions(in.Client.User.ID).
+		HasEmbeds(true).
+		EmbedContains("Hopefully people will like it and give you some").
 		Handler(in.pm)
 
 	// Global events.
@@ -322,7 +321,7 @@ func (in *Instance) router() *discord.MessageRouter {
 	rtr.NewRoute().
 		Channel(in.ChannelID).
 		Author(DMID).
-		ContentMatchesExp(exp.search).
+		ContentContains("**Where do you want to search?**").
 		RespondsTo(in.Client.User.ID).
 		Handler(in.search)
 
@@ -331,8 +330,16 @@ func (in *Instance) router() *discord.MessageRouter {
 		Channel(in.ChannelID).
 		Author(DMID).
 		HasEmbeds(true).
+		EmbedContains("I just chose a secret number between 1 and 100.").
 		RespondsTo(in.Client.User.ID).
 		Handler(in.hl)
+	// Crime
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentContains("**What crime do you want to commit?**").
+		RespondsTo(in.Client.User.ID).
+		Handler(in.crime)
 
 	// Balance report.
 	if in.Features.BalanceCheck.Enable {
@@ -359,7 +366,7 @@ func (in *Instance) router() *discord.MessageRouter {
 			Channel(in.ChannelID).
 			Author(DMID).
 			ContentContains("You don't have a fishing pole").
-			RespondsTo(in.Client.User.ID).
+			Mentions(in.Client.User.ID).
 			Handler(in.abFishingPole)
 	}
 
@@ -369,7 +376,7 @@ func (in *Instance) router() *discord.MessageRouter {
 			Channel(in.ChannelID).
 			Author(DMID).
 			ContentContains("You don't have a hunting rifle").
-			RespondsTo(in.Client.User.ID).
+			Mentions(in.Client.User.ID).
 			Handler(in.abHuntingRifle)
 	}
 
@@ -379,7 +386,7 @@ func (in *Instance) router() *discord.MessageRouter {
 			Channel(in.ChannelID).
 			Author(DMID).
 			ContentContains("You don't have a shovel").
-			RespondsTo(in.Client.User.ID).
+			Mentions(in.Client.User.ID).
 			Handler(in.abShovel)
 	}
 
@@ -419,6 +426,7 @@ func (in *Instance) router() *discord.MessageRouter {
 			Author(DMID).
 			ContentContains("You don't own this item??").
 			Handler(in.abTidepod)
+
 	}
 
 	// Auto-blackjack
@@ -427,6 +435,14 @@ func (in *Instance) router() *discord.MessageRouter {
 			Channel(in.ChannelID).
 			Author(DMID).
 			HasEmbeds(true).
+			AuthorNameContains("blackjack game").
+			Handler(in.blackjack)
+
+		rtr.NewRoute().
+			Channel(in.ChannelID).
+			Author(DMID).
+			HasEmbeds(true).
+			EventType(discord.EventNameMessageUpdate).
 			ContentContains("Type `h` to **hit**, type `s` to **stand**, or type `e` to **end** the game.").
 			Handler(in.blackjack)
 

@@ -33,6 +33,7 @@ type Scheduler struct {
 	resume             chan *Command
 	awaitResume        bool
 	awaitResumeTrigger *Command
+
 }
 
 type Command struct {
@@ -312,3 +313,4 @@ func delay(messageDelay *config.MessageDelay) time.Duration {
 	}
 	return time.Duration(d) * time.Millisecond
 }
+

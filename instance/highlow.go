@@ -7,29 +7,23 @@
 package instance
 
 import (
-	"strconv"
-	"strings"
+	"time"
 
 	"github.com/dankgrinder/dankgrinder/discord"
-	"github.com/dankgrinder/dankgrinder/instance/scheduler"
 )
 
 func (in *Instance) hl(msg discord.Message) {
-	if !exp.hl.MatchString(msg.Embeds[0].Description) {
-		return
+	hint := exp.hl.FindStringSubmatch(msg.Embeds[0].Description)[1]
+	if hint[0] > 50 {
+		time.Sleep(1 * time.Second)
+		in.pressButton(0, msg)
 	}
-	nstr := strings.Replace(exp.hl.FindStringSubmatch(msg.Embeds[0].Description)[1], ",", "", -1)
-	n, err := strconv.Atoi(nstr)
-	if err != nil {
-		in.Logger.Errorf("error while reading highlow hint: %v", err)
-		return
+	if hint[0] < 50 {
+		time.Sleep(1 * time.Second)
+		in.pressButton(2, msg)
 	}
-	res := "high"
-	if n > 50 {
-		res = "low"
+	if hint[0] == 50 {
+		time.Sleep(1 * time.Second)
+		in.pressButton(1, msg)
 	}
-	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-		Value: res,
-		Log:   "responding to highlow",
-	})
 }

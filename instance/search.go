@@ -7,27 +7,24 @@
 package instance
 
 import (
-	"math/rand"
+	"fmt"
+	"time"
 
 	"github.com/dankgrinder/dankgrinder/discord"
-	"github.com/dankgrinder/dankgrinder/instance/scheduler"
 )
 
 func (in *Instance) search(msg discord.Message) {
-	choices := exp.search.FindStringSubmatch(msg.Content)[1:]
+	choices := in.returnButtonLabel(3, msg)
+	fmt.Println(choices)
 	for _, choice := range choices {
 		for _, allowed := range in.Compat.AllowedSearches {
 			if choice == allowed {
-				in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-					Value: choice,
-					Log:   "responding to search",
-				})
+				index := in.returnButtonIndex(choice, 3, msg)
+				time.Sleep(2 * time.Second)
+				in.pressButton(index, msg)
+				fmt.Println(index)
 				return
 			}
 		}
 	}
-	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-		Value: in.Compat.SearchCancel[rand.Intn(len(in.Compat.SearchCancel))],
-		Log:   "no allowed search options provided, responding",
-	})
 }

@@ -33,6 +33,7 @@ const (
 	digCmdValue           = "pls dig"
 	workCmdValue          = "pls work"
 	triviaCmdValue        = "pls trivia"
+	crimeCmdValue 	      = "pls crime"
 )
 
 func blackjackCmdValue(amount string) string {
@@ -80,6 +81,13 @@ func (in *Instance) newCmds() []*scheduler.Command {
 		cmds = append(cmds, &scheduler.Command{
 			Value:       searchCmdValue,
 			Interval:    time.Duration(in.Compat.Cooldown.Search) * time.Second,
+			AwaitResume: true,
+		})
+	}
+	if in.Features.Commands.Crime {
+		cmds = append(cmds, &scheduler.Command{
+			Value:       crimeCmdValue,
+			Interval:    time.Duration(in.Compat.Cooldown.Crime) * time.Second,
 			AwaitResume: true,
 		})
 	}

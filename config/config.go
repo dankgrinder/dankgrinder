@@ -55,9 +55,8 @@ type override struct {
 }
 
 type Compat struct {
-	PostmemeOpts         []string `yaml:"postmeme"`
 	AllowedSearches      []string `yaml:"allowed_searches"`
-	SearchCancel         []string `yaml:"search_cancel"`
+	AllowedCrimes        []string `yaml:"allowed_crimes"`
 	Cooldown             Cooldown `yaml:"cooldown"`
 	AwaitResponseTimeout int      `yaml:"await_response_timeout"`
 	AllowedScrambles     []string `yaml:"allowed_scrambles"`
@@ -85,6 +84,7 @@ type Cooldown struct {
 	Dig       int `yaml:"dig"`
 	Work      int `yaml:"work"`
 	Trivia    int `yaml:"trivia"`
+	Crime     int `yaml:"crime"`
 }
 
 type Features struct {
@@ -164,11 +164,13 @@ type Commands struct {
 	Dig      bool `yaml:"dig"`
 	Work     bool `yaml:"work"`
 	Trivia   bool `yaml:"trivia"`
+	Crime    bool `yaml:"crime"`
 }
 
 type SuspicionAvoidance struct {
-	Typing       Typing       `yaml:"typing"`
-	MessageDelay MessageDelay `yaml:"message_delay"`
+	Typing           Typing           `yaml:"typing"`
+	MessageDelay     MessageDelay     `yaml:"message_delay"`
+	ButtonPressDelay ButtonPressDelay `yaml:"button_press"`
 }
 
 type Typing struct {
@@ -180,6 +182,10 @@ type Typing struct {
 type MessageDelay struct {
 	Base      int `yaml:"base"`      // A base duration in milliseconds.
 	Variation int `yaml:"variation"` // A random value in milliseconds from [0,n) added to the base.
+}
+type ButtonPressDelay struct {
+	Base      int `yaml: base`
+	Variation int `yaml:variation`
 }
 
 // Shift indicates an application state (active or dormant) for a duration.

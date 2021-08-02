@@ -43,7 +43,8 @@ features:
     hunt: true
     dig: true
     work: true
-    trivia: true 
+    trivia: true
+    crime: true
 
   custom_commands:
   - value: "pls work mod"
@@ -72,7 +73,8 @@ features:
     maximum_balance: 8000000
     minimum_balance: 5000000
   auto_blackjack:
-    enable: false
+    enable: true
+    amount: 50
     pause_below_balance: 1000000
     logic_table:
       2:
@@ -356,12 +358,6 @@ features:
   debug: false
 
 compatibility:
-  postmeme:
-    - "f"
-    - "r"
-    - "i"
-    - "c"
-    - "k"
   allowed_searches:
     - "bus"
     - "coat"
@@ -373,12 +369,8 @@ compatibility:
     - "pocket"
     - "shoe"
     - "sink"
-  search_cancel:
-    - "no"
-    - "bad options"
-    - "i don't want to die"
-    - "stop"
-    - "."
+  allowed_crimes:
+    - "tax evasion"
   allowed_scrambles:
     - "scoop"
     - "dirty"
@@ -463,7 +455,8 @@ compatibility:
     dig: 42
     work: 3600
     trivia: 15
-  await_response_timeout: 7
+    crime: 55
+  await_response_timeout: 15
 
 suspicion_avoidance:
   typing:
@@ -472,3 +465,6 @@ suspicion_avoidance:
   message_delay:
     base: 100
     variation: 400
+  button_press:
+    base: 5000
+    variation: 1000

@@ -140,9 +140,6 @@ func validateShifts(shifts []Shift) error {
 }
 
 func validateCompat(compat Compat) error {
-	if len(compat.PostmemeOpts) == 0 {
-		return fmt.Errorf("no postmeme compatibility options")
-	}
 	if len(compat.AllowedSearches) == 0 {
 		return fmt.Errorf("no allowed searches")
 	}
@@ -167,8 +164,8 @@ func validateCompat(compat Compat) error {
 	if len(compat.DigCancel) == 0 {
 		return fmt.Errorf("no dig cancel compatibility options")
 	}
-	if len(compat.SearchCancel) == 0 {
-		return fmt.Errorf("no search cancel compatibility options")
+	if len(compat.AllowedCrimes) == 0 {
+		return fmt.Errorf("no crime compatibility options")
 	}
 	if len(compat.WorkCancel) == 0 {
 		return fmt.Errorf("no work cancel compatibility options")

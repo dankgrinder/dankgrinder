@@ -8,9 +8,10 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"time"
+	"math/rand"
 
 	"github.com/dankgrinder/dankgrinder/discord"
-	"github.com/dankgrinder/dankgrinder/instance/scheduler"
 )
 
 type Database struct {
@@ -26,7 +27,7 @@ func (in *Instance) trivia(msg discord.Message) {
 
 	details := exp.trivia.FindStringSubmatch(msg.Embeds[0].Description)[1:]
 	question := details[0]
-	choices := map[string]string{details[2]: details[1], details[4]: details[3], details[6]: details[5], details[8]: details[7]}
+
 
 	ex, _ := os.Executable()
 	ex = filepath.ToSlash(ex)
@@ -43,19 +44,14 @@ func (in *Instance) trivia(msg discord.Message) {
 
 	for i := 0; i < len(database.Database); i++ {
 		if question == html.UnescapeString(database.Database[i].Question) {
-			var res = choices[html.UnescapeString(database.Database[i].Answer)]
-			in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-				Value: res,
-				Log:   "responding to trivia",
-			})
+			var res = html.UnescapeString(database.Database[i].Answer)
+			i := in.returnButtonIndex(res, 4, msg)
+			time.Sleep(1 * time.Second)
+			in.pressButton(i, msg)
+		}else{
+			i := rand.Intn(4)
+			in.pressButton(i, msg)
 		}
 	}
 }
 
-//		choice := []string{"A", "B", "C", "D"}
-//		randomIndice := rand.Intn(len(choice))
-//		res := choice[randomIndice]
-//		in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-//			Value: res,
-//			Log:   "responding to trivia",
-//		})
