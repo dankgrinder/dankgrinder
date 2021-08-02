@@ -22,9 +22,6 @@ func (in *Instance) crime(msg discord.Message) {
 				index := in.returnButtonIndex(choice, 3, msg)
 				time.Sleep(2 * time.Second)
 				in.pressButton(index, msg)
-				fmt.Println(index)
-				return
-			} else {
 				return
 			}
 		}
