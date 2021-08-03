@@ -7,24 +7,43 @@
 package instance
 
 import (
-	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/dankgrinder/dankgrinder/discord"
 )
 
 func (in *Instance) search(msg discord.Message) {
-	choices := in.returnButtonLabel(3, msg)
-	fmt.Println(choices)
-	for _, choice := range choices {
-		for _, allowed := range in.Compat.AllowedSearches {
-			if choice == allowed {
-				index := in.returnButtonIndex(choice, 3, msg)
-				time.Sleep(2 * time.Second)
-				in.pressButton(index, msg)
-				fmt.Println(index)
-				return
+	if in.Compat.SearchMode == 0 {
+		choices := in.returnButtonLabel(3, msg)
+		for _, choice := range choices {
+			for _, allowed := range in.Compat.AllowedSearches {
+				if choice == allowed {
+					index := in.returnButtonIndex(choice, 3, msg)
+					time.Sleep(2 * time.Second)
+					in.pressButton(index, msg)
+				}
 			}
 		}
+	} else if in.Compat.SearchMode == 1 {
+		i := rand.Intn(3)
+		time.Sleep(2 * time.Second)
+		in.pressButton(i, msg)
+
+	} else if in.Compat.SearchMode == 2 {
+		choices := in.returnButtonLabel(3, msg)
+		for _, choice := range choices {
+			for _, allowed := range in.Compat.AllowedSearches {
+				if choice == allowed {
+					index := in.returnButtonIndex(choice, 3, msg)
+					time.Sleep(2 * time.Second)
+					in.pressButton(index, msg)
+					return
+				}
+			}
+		}
+		i := rand.Intn(3)
+		time.Sleep(2 * time.Second)
+		in.pressButton(i, msg)
 	}
 }

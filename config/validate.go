@@ -164,6 +164,12 @@ func validateCompat(compat Compat) error {
 	if len(compat.DigCancel) == 0 {
 		return fmt.Errorf("no dig cancel compatibility options")
 	}
+	if compat.CrimeMode > 2 || compat.CrimeMode < 0{
+		return fmt.Errorf("invalid crime mode")
+	}
+	if compat.SearchMode > 2 || compat.SearchMode < 0 {
+		return fmt.Errorf("invalid search mode")
+	}
 	if len(compat.AllowedCrimes) == 0 {
 		return fmt.Errorf("no crime compatibility options")
 	}

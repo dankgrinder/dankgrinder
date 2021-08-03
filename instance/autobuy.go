@@ -12,10 +12,6 @@ import (
 )
 
 func (in *Instance) abLaptop(_ discord.Message) {
-	trigger := in.sdlr.AwaitResumeTrigger()
-	if trigger == nil || trigger.Value != postmemeCmdValue {
-		return
-	}
 	in.sdlr.ResumeWithCommand(&scheduler.Command{
 		Value: buyCmdValue("1", "laptop"),
 		Log:   "no laptop, buying a new one",
@@ -23,10 +19,7 @@ func (in *Instance) abLaptop(_ discord.Message) {
 }
 
 func (in *Instance) abShovel(_ discord.Message) {
-	trigger := in.sdlr.AwaitResumeTrigger()
-	if trigger == nil || trigger.Value != digCmdValue {
-		return
-	}
+
 	in.sdlr.ResumeWithCommand(&scheduler.Command{
 		Value: buyCmdValue("1", "shovel"),
 		Log:   "no shovel, buying a new one",
@@ -34,10 +27,7 @@ func (in *Instance) abShovel(_ discord.Message) {
 }
 
 func (in *Instance) abHuntingRifle(_ discord.Message) {
-	trigger := in.sdlr.AwaitResumeTrigger()
-	if trigger == nil || trigger.Value != huntCmdValue {
-		return
-	}
+
 	in.sdlr.ResumeWithCommand(&scheduler.Command{
 		Value: buyCmdValue("1", "rifle"),
 		Log:   "no hunting rifle, buying a new one",
@@ -45,10 +35,7 @@ func (in *Instance) abHuntingRifle(_ discord.Message) {
 }
 
 func (in *Instance) abFishingPole(_ discord.Message) {
-	trigger := in.sdlr.AwaitResumeTrigger()
-	if trigger == nil || trigger.Value != fishCmdValue {
-		return
-	}
+
 	in.sdlr.ResumeWithCommand(&scheduler.Command{
 		Value: buyCmdValue("1", "fishing"),
 		Log:   "no fishing pole, buying a new one",

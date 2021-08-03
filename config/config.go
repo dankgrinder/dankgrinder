@@ -68,6 +68,8 @@ type Compat struct {
 	AllowedScramblesFish []string `yaml:"allowed_scrambles_fish"`
 	AllowedFishFTB       []string `yaml:"allowed_fish_ftb"`
 	FishCancel           []string `yaml:"fish_cancel"`
+	SearchMode		     int      `yaml:"search_mode"`
+	CrimeMode 			 int      `yaml:"crime_mode"`
 }
 
 type Cooldown struct {

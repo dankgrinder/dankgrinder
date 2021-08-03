@@ -36,14 +36,14 @@ shifts:
 features:
   commands:
     beg: false
-    postmeme: false
-    search: false
+    postmeme: true
+    search: true
     highlow: false
     fish: false
     hunt: false
     dig: false
     work: false
-    trivia: true
+    trivia: false
     crime: false
 
   custom_commands:
@@ -359,16 +359,12 @@ features:
 
 compatibility:
   allowed_searches:
-    - "bus"
-    - "coat"
-    - "dresser"
+    - "area51"
+    - "bank"
     - "grass"
-    - "laundromat"
-    - "mailbox"
-    - "pantry"
-    - "pocket"
-    - "shoe"
-    - "sink"
+    - "purse"
+    - "mel's room"
+
   allowed_crimes:
     - "tax evasion"
   allowed_scrambles:
@@ -441,6 +437,8 @@ compatibility:
     - "get the camera ready mom"
     - "the fish says glub"
     - "hook line and sinker"
+  search_mode: 2
+  crime_mode: 2
   cooldown:
     beg: 48
     search: 38

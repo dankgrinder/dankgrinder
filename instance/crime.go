@@ -7,23 +7,43 @@
 package instance
 
 import (
-	"fmt"
 	"time"
+	"math/rand"
 
 	"github.com/dankgrinder/dankgrinder/discord"
 )
 
 func (in *Instance) crime(msg discord.Message) {
-	choices := in.returnButtonLabel(3, msg)
-	fmt.Println(choices)
-	for _, choice := range choices {
-		for _, allowed := range in.Compat.AllowedCrimes {
-			if choice == allowed {
-				index := in.returnButtonIndex(choice, 3, msg)
-				time.Sleep(2 * time.Second)
-				in.pressButton(index, msg)
-				return
+	if in.Compat.CrimeMode == 0 {
+		choices := in.returnButtonLabel(3, msg)
+		for _, choice := range choices {
+			for _, allowed := range in.Compat.AllowedCrimes {
+				if choice == allowed {
+					index := in.returnButtonIndex(choice, 3, msg)
+					time.Sleep(2 * time.Second)
+					in.pressButton(index, msg)
+				}
 			}
 		}
+	} else if in.Compat.CrimeMode == 1 {
+		i := rand.Intn(3)
+		time.Sleep(2 * time.Second)
+		in.pressButton(i, msg)
+
+	} else if in.Compat.CrimeMode == 2 {
+		choices := in.returnButtonLabel(3, msg)
+		for _, choice := range choices {
+			for _, allowed := range in.Compat.AllowedCrimes {
+				if choice == allowed {
+					index := in.returnButtonIndex(choice, 3, msg)
+					time.Sleep(2 * time.Second)
+					in.pressButton(index, msg)
+					return
+				}
+			}
+		}
+		i := rand.Intn(3)
+		time.Sleep(2 * time.Second)
+		in.pressButton(i, msg)
 	}
 }
