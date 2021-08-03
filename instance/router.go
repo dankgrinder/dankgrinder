@@ -356,7 +356,7 @@ func (in *Instance) router() *discord.MessageRouter {
 			Channel(in.ChannelID).
 			Author(DMID).
 			ContentContains("oi you need to buy a laptop in the shop to post memes").
-			Mentions(in.Client.User.ID).
+			RespondsTo(in.Client.User.ID).
 			Handler(in.abLaptop)
 	}
 
@@ -366,7 +366,7 @@ func (in *Instance) router() *discord.MessageRouter {
 			Channel(in.ChannelID).
 			Author(DMID).
 			ContentContains("You don't have a fishing pole").
-			Mentions(in.Client.User.ID).
+			RespondsTo(in.Client.User.ID).
 			Handler(in.abFishingPole)
 	}
 
@@ -376,7 +376,7 @@ func (in *Instance) router() *discord.MessageRouter {
 			Channel(in.ChannelID).
 			Author(DMID).
 			ContentContains("You don't have a hunting rifle").
-			Mentions(in.Client.User.ID).
+			RespondsTo(in.Client.User.ID).
 			Handler(in.abHuntingRifle)
 	}
 
@@ -386,7 +386,7 @@ func (in *Instance) router() *discord.MessageRouter {
 			Channel(in.ChannelID).
 			Author(DMID).
 			ContentContains("You don't have a shovel").
-			Mentions(in.Client.User.ID).
+			RespondsTo(in.Client.User.ID).
 			Handler(in.abShovel)
 	}
 
