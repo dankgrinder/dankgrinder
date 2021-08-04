@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 
-
 	"github.com/dankgrinder/dankgrinder/discord"
 )
 
@@ -46,13 +45,26 @@ func (in *Instance) returnButtonLabel(i int, msg discord.Message) []string {
 	return buttonLabels
 }
 
-
 func (in *Instance) returnButtonIndex(label string, indices int, msg discord.Message) int {
 	for k := 0; k < indices; k++ {
 		if label == msg.Components[0].Buttons[k].Label {
-			
+
 			return k + 1
 		}
 	}
 	return -1
+}
+
+func (in *Instance) returnButtonEmojiIndex(name string, indices_button int, indices_ar int, msg discord.Message) []int {
+	numbers := make([]int, 0)
+	for k := 0; k < indices_button; k++ {
+		for j := 0; j < indices_ar; j++ {
+			if name == msg.Components[j].Buttons[k].Emoji.Name {
+
+				numbers = append(numbers, j+1)
+				numbers = append(numbers, k+1)
+			}
+		}
+	}
+	return numbers
 }

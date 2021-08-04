@@ -74,10 +74,9 @@ func (in *Instance) pm(msg discord.Message) {
 	i := rand.Intn(5)
 	in.sdlr.ResumeWithCommand(&scheduler.Command{
 		Actionrow: 1,
-		Button: i+1,
-		Message: msg,
-		Log: "Responding to post meme randomly",
-
+		Button:    i + 1,
+		Message:   msg,
+		Log:       "Responding to post meme randomly",
 	})
 }
 
@@ -143,6 +142,7 @@ func (in *Instance) router() *discord.MessageRouter {
 		Author(DMID).
 		RespondsTo(in.Client.User.ID).
 		Handler(in.huntEnd)
+
 	// fishing without event
 	rtr.NewRoute().
 		Channel(in.ChannelID).
@@ -177,6 +177,35 @@ func (in *Instance) router() *discord.MessageRouter {
 		ContentMatchesExp(exp.fishEventRetype).
 		Mentions(in.Client.User.ID).
 		Handler(in.fishEventRetype)
+	// Scratch
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		HasEmbeds(true).
+		EmbedContains("You can scratch **").
+		Handler(in.scratch)
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		HasEmbeds(true).
+		EmbedContains("You can scratch **").
+		EventType(discord.EventNameMessageUpdate).
+		Handler(in.scratch)
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		HasEmbeds(true).
+		EmbedContains("You can scratch **0** more fields").
+		EventType(discord.EventNameMessageUpdate).
+		Handler(in.scratchEnd)
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		HasEmbeds(true).
+		EmbedContains("You abandoned your Scratch-Off, SHAME!").
+		EventType(discord.EventNameMessageUpdate).
+		Handler(in.scratchEnd)
+
 	//Digging Without Event
 	rtr.NewRoute().
 		Channel(in.ChannelID).
@@ -454,6 +483,7 @@ func (in *Instance) router() *discord.MessageRouter {
 			Channel(in.ChannelID).
 			Author(DMID).
 			HasEmbeds(true).
+			EventType(discord.EventNameMessageUpdate).
 			Handler(in.blackjackEnd)
 	}
 

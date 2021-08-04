@@ -88,7 +88,7 @@ type Message struct {
 	WebhookID string `json:"webhook_id,omitempty"`
 
 	// A list of components attached to the message.
-	Components []MessageComponent `json:"components"`
+	Components []MessageComponent `json:"components,omitempty"`
 
 	// The message which this message references. This field is only set for
 	// messages with type MessageTypeReply.
@@ -99,19 +99,25 @@ type Message struct {
 	ReferencedMessage *Message `json:"referenced_message,omitempty"`
 }
 
-
 type MessageComponent struct {
-	Type int `json:"type"`
-	Buttons []buttons `json:"components"`
+	Type    int       `json:"type"`
+	Buttons []Buttons `json:"components"`
 }
 
-type buttons struct {
-	Type int `json:"type"`
-	Style int `json:"style"`
-	Label string `json:"label"`
-	CustomID string `json:"custom_id"`
-	Hash string `json:"hash"`
-	Disabled bool `json:"disabled"`
+type Buttons struct {
+	Type     int         `json:"type,omitempty"`
+	Style    int         `json:"style,omitempty"`
+	Label    string      `json:"label,omitempty"`
+	CustomID string      `json:"custom_id,omitempty"`
+	Hash     string      `json:"hash,omitempty"`
+	Emoji    ButtonEmoji `json:"emoji,omitempty"`
+	Disabled bool        `json:"disabled,omitempty"`
+}
+
+type ButtonEmoji struct {
+	Name     string `json:"name,omitempty"`
+	ID       string `json:"id,omitempty"`
+	Animated bool   `json:"animated,omitempty"`
 }
 
 type Embed struct {

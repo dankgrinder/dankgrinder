@@ -33,11 +33,15 @@ const (
 	digCmdValue           = "pls dig"
 	workCmdValue          = "pls work"
 	triviaCmdValue        = "pls trivia"
-	crimeCmdValue 	      = "pls crime"
+	crimeCmdValue         = "pls crime"
+	scratchBaseCmdValue   = "pls scratch"
 )
 
 func blackjackCmdValue(amount string) string {
 	return fmt.Sprintf("%v %v", blackjackBaseCmdValue, amount)
+}
+func scratchCmdValue(amount string) string {
+	return fmt.Sprintf("%v %v", scratchBaseCmdValue, amount)
 }
 
 func buyCmdValue(amount, item string) string {
@@ -135,6 +139,9 @@ func (in *Instance) newCmds() []*scheduler.Command {
 	if in.Features.AutoBlackjack.Enable {
 		cmds = append(cmds, in.newAutoBlackjackCmd())
 	}
+	if in.Features.Scratch.Enable {
+		cmds = append(cmds, in.newScratchCmd())
+	}
 	if in.Features.Commands.Work {
 		cmds = append(cmds, &scheduler.Command{
 			Value:       workCmdValue,
@@ -207,6 +214,18 @@ func (in *Instance) newAutoBlackjackCmd() *scheduler.Command {
 		RescheduleAsPriority: in.Features.AutoBlackjack.Priority,
 	}
 	if in.Features.AutoBlackjack.Amount == 0 {
+		cmd.Value = blackjackCmdValue("max")
+	}
+	return cmd
+}
+func (in *Instance) newScratchCmd() *scheduler.Command {
+	cmd := &scheduler.Command{
+		Value:                scratchCmdValue(strconv.Itoa(in.Features.Scratch.Amount)),
+		Interval:             time.Duration(in.Compat.Cooldown.Blackjack) * time.Second,
+		AwaitResume:          true,
+		RescheduleAsPriority: in.Features.Scratch.Priority,
+	}
+	if in.Features.Scratch.Amount == 0 {
 		cmd.Value = blackjackCmdValue("max")
 	}
 	return cmd

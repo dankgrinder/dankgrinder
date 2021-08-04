@@ -35,16 +35,21 @@ shifts:
 
 features:
   commands:
-    beg: false
+    beg: true
     postmeme: true
     search: true
-    highlow: false
-    fish: false
-    hunt: false
-    dig: false
-    work: false
-    trivia: false
-    crime: false
+    highlow: true
+    fish: true
+    hunt: true
+    dig: true
+    work: true
+    trivia: true
+    crime : true
+
+  scratch:
+    enable: true
+    amount: 50
+    priority: false
 
   custom_commands:
   - value: "pls work mod"
@@ -75,7 +80,7 @@ features:
   auto_blackjack:
     enable: true
     amount: 50
-    pause_below_balance: 1000000
+    pause_below_balance: 100
     logic_table:
       2:
         4: "h"
@@ -454,7 +459,8 @@ compatibility:
     work: 3600
     trivia: 15
     crime: 55
-  await_response_timeout: 15
+    scratch: 15
+  await_response_timeout: 7
 
 suspicion_avoidance:
   typing:

@@ -87,6 +87,7 @@ type Cooldown struct {
 	Work      int `yaml:"work"`
 	Trivia    int `yaml:"trivia"`
 	Crime     int `yaml:"crime"`
+	Scratch   int `yaml:scratch`
 }
 
 type Features struct {
@@ -102,6 +103,12 @@ type Features struct {
 	LogToFile          bool            `yaml:"log_to_file"`
 	VerboseLogToStdout bool            `yaml:"verbose_log_to_stdout"`
 	Debug              bool            `yaml:"debug"`
+	Scratch 		   Scratch		   `yaml:"scratch"`
+}
+type Scratch struct {
+	Enable bool `yaml:"enable"`
+	Amount int `yaml:"amount"`
+	Priority bool `yaml:"priority"`
 }
 
 type BalanceCheck struct {

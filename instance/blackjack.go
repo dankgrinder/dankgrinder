@@ -75,19 +75,19 @@ func (in *Instance) blackjack(msg discord.Message) {
 
 	if in.Features.AutoBlackjack.LogicTable[dealersUpCard][hand] == "h" {
 		in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-			Actionrow: 1,
-			Button:    1,
-			Message:   msg,
-			Log:       "Responding with hit",
+			Actionrow:   1,
+			Button:      1,
+			Message:     msg,
+			Log:         "Responding with hit",
+			AwaitResume: true,
 		})
 	}
 	if in.Features.AutoBlackjack.LogicTable[dealersUpCard][hand] == "s" {
 		in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-			Actionrow:   1,
-			Button:      2,
-			Message:     msg,
-			Log:         "Responding with stand",
-			AwaitResume: true,
+			Actionrow: 1,
+			Button:    2,
+			Message:   msg,
+			Log:       "Responding with stand",
 		})
 	}
 }

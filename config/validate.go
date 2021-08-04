@@ -64,6 +64,9 @@ func validateFeatures(features Features) error {
 			return fmt.Errorf("auto-sell enabled but no items configured")
 		}
 	}
+	if features.Scratch.Amount < 0 {
+		return fmt.Errorf("auto-scratch amount must be greater than or equal to 0")
+	}
 	if features.AutoGift.Enable {
 		if features.AutoGift.Interval < 0 {
 			return fmt.Errorf("auto-gift interval must be greater than or equal to 0")
@@ -164,6 +167,7 @@ func validateCompat(compat Compat) error {
 	if len(compat.DigCancel) == 0 {
 		return fmt.Errorf("no dig cancel compatibility options")
 	}
+	
 	if compat.CrimeMode > 2 || compat.CrimeMode < 0{
 		return fmt.Errorf("invalid crime mode")
 	}
@@ -208,6 +212,9 @@ func validateCompat(compat Compat) error {
 	}
 	if compat.Cooldown.Blackjack <= 0 {
 		return fmt.Errorf("blackjack cooldown must be greater than 0")
+	}
+	if compat.Cooldown.Scratch <= 0 {
+		return fmt.Errorf("scratch cooldown must be greater than 0")
 	}
 	if compat.Cooldown.Sell <= 0 {
 		return fmt.Errorf("sell cooldown must be greater than 0")
