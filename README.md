@@ -1,3 +1,4 @@
+### Official support and updates for Dank Grinder have been discontinued indefinitely. While the possibility of future continuation has not been eliminated, it is unlikely and should not be counted on. We would like to exhibit the following fork as a good, up-to-date alternative of the official version: https://github.com/V4NSH4J/dankgrinder
 # Dank Grinder [![](https://goreportcard.com/badge/github.com/dankgrinder/dankgrinder)](https://goreportcard.com/report/github.com/dankgrinder/dankgrinder) [![](https://img.shields.io/github/workflow/status/dankgrinder/dankgrinder/Go)](https://github.com/dankgrinder/dankgrinder/actions) ![](https://img.shields.io/github/license/dankgrinder/dankgrinder) [![](https://img.shields.io/github/v/release/dankgrinder/dankgrinder)](https://github.com/dankgrinder/dankgrinder/releases/latest) ![](https://img.shields.io/github/downloads/dankgrinder/dankgrinder/total)
 The most feature-rich, advanced Dank Memer automation tool.
 
