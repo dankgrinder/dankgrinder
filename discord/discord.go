@@ -7,11 +7,14 @@
 package discord
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
+
+
 )
 
 var (
@@ -103,6 +106,53 @@ func (client Client) SendMessage(content, channelID string, typing time.Duration
 			return ErrIntervalServer
 		default:
 			return fmt.Errorf("unexpected status code while sending message: %v", res.StatusCode)
+		}
+	}
+	return nil
+}
+func (client Client) PressButton(i int, k int, msg Message) error {
+	if client.Token == "" {
+		return fmt.Errorf("no token")
+	}
+	i--
+	k--
+
+	url := "https://discord.com/api/v9/interactions"
+	time.Sleep(2 * time.Second)
+
+	data := map[string]interface{}{"component_type": msg.Components[i].Buttons[k].Type, "custom_id": msg.Components[i].Buttons[k].CustomID, "hash": msg.Components[i].Buttons[k].Hash}
+	values := map[string]interface{}{"application_id": "270904126974590976", "channel_id": msg.ChannelID, "type": "3", "data": data, "guild_id": msg.GuildID, "message_flags": 0, "message_id": msg.ID}
+	json_data, err := json.Marshal(values)
+
+	if err != nil {
+		return fmt.Errorf("error while encoding button click as json: %v", err)
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(json_data))
+	if err != nil {
+		return fmt.Errorf("error while creating http request: %v", err)
+	}
+	req.Header.Set("authorization", client.Token)
+	req.Header.Set("Content-Type", "application/json")
+
+	clientt := &http.Client{}
+	resp, err := clientt.Do(req)
+	if err != nil {
+		return fmt.Errorf("error while sending http request: %v", err)
+	}
+	if resp.StatusCode != 204 {
+		switch resp.StatusCode {
+		case http.StatusUnauthorized:
+			return ErrUnauthorized
+		case http.StatusForbidden:
+			return ErrForbidden
+		case http.StatusNotFound:
+			return ErrNotFound
+		case http.StatusTooManyRequests:
+			return ErrTooManyRequests
+		case http.StatusInternalServerError:
+			return ErrIntervalServer
+		default:
+			return fmt.Errorf("unexpected status code while clicking button: %v", resp.StatusCode)
 		}
 	}
 	return nil

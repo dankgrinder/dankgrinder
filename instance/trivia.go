@@ -9,9 +9,9 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"time"
 
 	"github.com/dankgrinder/dankgrinder/discord"
+	"github.com/dankgrinder/dankgrinder/instance/scheduler"
 )
 
 type Database struct {
@@ -41,19 +41,25 @@ func (in *Instance) trivia(msg discord.Message) {
 	var database Database
 	json.Unmarshal(bytevalue, &database)
 
-	for i := 0; i < len(database.Database); i++ {
-		if question == html.UnescapeString(database.Database[i].Question) {
-			var res = html.UnescapeString(database.Database[i].Answer)
-			i := in.returnButtonIndex(res, 4, msg)
-			time.Sleep(1 * time.Second)
-			in.pressButton(i, msg)
-		}
-	}
-	for i := 0; i < len(database.Database); i++ {
-		if question != html.UnescapeString(database.Database[i].Question) {
+	for p := 0; p < len(database.Database); p++ {
+		if question == html.UnescapeString(database.Database[p].Question) {
+			var res = html.UnescapeString(database.Database[p].Answer)
+			p := in.returnButtonIndex(res, 4, msg)
+
+			in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
+				Actionrow: 1,
+				Button:    p,
+				Message:   msg,
+				Log:       "Responding to trivia",
+			})
 			return
 		}
 	}
 	i := rand.Intn(4)
-	in.pressButton(i, msg)
+	in.sdlr.ResumeWithCommand(&scheduler.Command{
+		Actionrow: 1,
+		Button: i + 1,
+		Message: msg,
+		Log: "trivia answer not found, responding with random option",
+	})
 }

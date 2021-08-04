@@ -3,7 +3,6 @@ package instance
 import (
 	"math/rand"
 	"regexp"
-	"time"
 
 	"github.com/dankgrinder/dankgrinder/discord"
 	"github.com/dankgrinder/dankgrinder/instance/scheduler"
@@ -73,8 +72,13 @@ var numFmt = message.NewPrinter(language.English)
 
 func (in *Instance) pm(msg discord.Message) {
 	i := rand.Intn(5)
-	time.Sleep(1 * time.Second)
-	in.pressButton(i, msg)
+	in.sdlr.ResumeWithCommand(&scheduler.Command{
+		Actionrow: 1,
+		Button: i+1,
+		Message: msg,
+		Log: "Responding to post meme randomly",
+
+	})
 }
 
 func (in *Instance) huntEvent(msg discord.Message) {

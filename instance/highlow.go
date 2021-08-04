@@ -7,23 +7,35 @@
 package instance
 
 import (
-	"time"
 
 	"github.com/dankgrinder/dankgrinder/discord"
+	"github.com/dankgrinder/dankgrinder/instance/scheduler"
 )
 
 func (in *Instance) hl(msg discord.Message) {
 	hint := exp.hl.FindStringSubmatch(msg.Embeds[0].Description)[1]
 	if hint[0] > 50 {
-		time.Sleep(1 * time.Second)
-		in.pressButton(0, msg)
+		in.sdlr.ResumeWithCommand(&scheduler.Command{
+			Actionrow: 1,
+			Button: 1,
+			Message: msg,
+			Log: "Responding with Low",
+		})
 	}
 	if hint[0] < 50 {
-		time.Sleep(1 * time.Second)
-		in.pressButton(2, msg)
+		in.sdlr.ResumeWithCommand(&scheduler.Command{
+			Actionrow: 1,
+			Button: 3,
+			Message: msg,
+			Log: "Responding with High",
+		})
 	}
 	if hint[0] == 50 {
-		time.Sleep(1 * time.Second)
-		in.pressButton(1, msg)
+		in.sdlr.ResumeWithCommand(&scheduler.Command{
+			Actionrow: 1,
+			Button: 3,
+			Message: msg,
+			Log: "Responding with Jackpot",
+		})
 	}
 }

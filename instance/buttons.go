@@ -5,11 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
-	"time"
 
-	"github.com/dankgrinder/dankgrinder/config"
+
 	"github.com/dankgrinder/dankgrinder/discord"
 )
 
@@ -48,18 +46,12 @@ func (in *Instance) returnButtonLabel(i int, msg discord.Message) []string {
 	return buttonLabels
 }
 
-func buttonPressDelay(button_press *config.ButtonPressDelay) time.Duration {
-	d := button_press.Base
-	if button_press.Variation > 0 {
-		d += rand.Intn(button_press.Variation)
-	}
-	return time.Duration(d) * time.Millisecond
-}
 
 func (in *Instance) returnButtonIndex(label string, indices int, msg discord.Message) int {
 	for k := 0; k < indices; k++ {
 		if label == msg.Components[0].Buttons[k].Label {
-			return k
+			
+			return k + 1
 		}
 	}
 	return -1

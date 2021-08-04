@@ -33,7 +33,6 @@ type Scheduler struct {
 	resume             chan *Command
 	awaitResume        bool
 	awaitResumeTrigger *Command
-
 }
 
 type Command struct {
@@ -71,6 +70,12 @@ type Command struct {
 	CondFunc func() bool
 
 	execs uint
+
+	Actionrow int
+
+	Button int
+
+	Message discord.Message
 }
 
 func (s *Scheduler) Start() error {
@@ -236,59 +241,96 @@ func (s *Scheduler) reschedule(cmd *Command) {
 }
 
 func (s *Scheduler) send(cmd *Command) {
-	if cmd.CondFunc != nil && !cmd.CondFunc() {
-		retryAfter := cmd.Interval
-		if retryAfter <= 0 {
-			retryAfter = time.Second * 10
+	if cmd.Actionrow == 0 && cmd.Button == 0 {
+		if cmd.CondFunc != nil && !cmd.CondFunc() {
+			retryAfter := cmd.Interval
+			if retryAfter <= 0 {
+				retryAfter = time.Second * 10
+			}
+			time.AfterFunc(retryAfter, func() {
+				s.Schedule(cmd)
+			})
+			s.Logger.Infof("stopped execution of command because its conditions were not satisfied: %v", cmd.Value)
+			return
 		}
-		time.AfterFunc(retryAfter, func() {
-			s.Schedule(cmd)
-		})
-		s.Logger.Infof("stopped execution of command because its conditions were not satisfied: %v", cmd.Value)
-		return
-	}
-	d := delay(s.MessageDelay)
-	tt := typing(cmd.Value, s.Typing)
-	info := "sending command"
-	if cmd.Log != "" {
-		info = cmd.Log
-	}
-	s.Logger.WithFields(map[string]interface{}{
-		"delay":  d.String(),
-		"typing": tt.String(),
-	}).Infof("%v: %v", info, cmd.Value)
+		d := delay(s.MessageDelay)
+		tt := typing(cmd.Value, s.Typing)
+		info := "sending command"
+		if cmd.Log != "" {
+			info = cmd.Log
+		}
+		s.Logger.WithFields(map[string]interface{}{
+			"delay":  d.String(),
+			"typing": tt.String(),
+		}).Infof("%v: %v", info, cmd.Value)
 
-	err := s.Client.SendMessage(cmd.Value, s.ChannelID, tt)
-	switch err {
-	case nil:
-	case discord.ErrForbidden, discord.ErrUnauthorized, discord.ErrNotFound:
-		s.FatalHandler(fmt.Errorf("scheduler fatal: %v", err))
-		// Run in a goroutine because otherwise the scheduler's goroutine would
-		// be attempting to send a message to itself via its close channel which
-		// just causes a permanently dormant goroutine.
-		go s.Close()
+		err := s.Client.SendMessage(cmd.Value, s.ChannelID, tt)
+		switch err {
+		case nil:
+		case discord.ErrForbidden, discord.ErrUnauthorized, discord.ErrNotFound:
+			s.FatalHandler(fmt.Errorf("scheduler fatal: %v", err))
+			// Run in a goroutine because otherwise the scheduler's goroutine would
+			// be attempting to send a message to itself via its close channel which
+			// just causes a permanently dormant goroutine.
+			go s.Close()
 
-		// Set to true to make sure the scheduler doesn't loop back around so
-		// fast that it hasn't been closed yet by the goroutine created previously.
-		s.awaitResume = true
-		return
-	case discord.ErrIntervalServer:
-		s.Logger.Errorf("error while sending message: %v", err)
-		s.PrioritySchedule(cmd)
-		return
-	case discord.ErrTooManyRequests:
-		s.Logger.Errorf("error while sending message: %v", err)
-		s.PrioritySchedule(cmd)
-		s.Logger.Infof("sleeping for 20 seconds")
-		time.Sleep(time.Second * 20)
-		return
-	default:
-		s.Logger.Errorf("error while sending message: %v", err)
-		return
-	}
-	s.reschedule(cmd)
-	if cmd.AwaitResume {
-		s.awaitResumeTrigger, s.awaitResume = cmd, true
+			// Set to true to make sure the scheduler doesn't loop back around so
+			// fast that it hasn't been closed yet by the goroutine created previously.
+			s.awaitResume = true
+			return
+		case discord.ErrIntervalServer:
+			s.Logger.Errorf("error while sending message: %v", err)
+			s.PrioritySchedule(cmd)
+			return
+		case discord.ErrTooManyRequests:
+			s.Logger.Errorf("error while sending message: %v", err)
+			s.PrioritySchedule(cmd)
+			s.Logger.Infof("sleeping for 20 seconds")
+			time.Sleep(time.Second * 20)
+			return
+		default:
+			s.Logger.Errorf("error while sending message: %v", err)
+			return
+		}
+		s.reschedule(cmd)
+		if cmd.AwaitResume {
+			s.awaitResumeTrigger, s.awaitResume = cmd, true
+		}
+	} else if cmd.Actionrow != 0 && cmd.Button != 0 {
+
+		errr := s.Client.PressButton(cmd.Actionrow, cmd.Button, cmd.Message)
+
+		switch errr {
+		case nil:
+		case discord.ErrForbidden, discord.ErrUnauthorized, discord.ErrNotFound:
+			s.FatalHandler(fmt.Errorf("scheduler fatal: %v", errr))
+			// Run in a goroutine because otherwise the scheduler's goroutine would
+			// be attempting to send a message to itself via its close channel which
+			// just causes a permanently dormant goroutine.
+			go s.Close()
+
+			// Set to true to make sure the scheduler doesn't loop back around so
+			// fast that it hasn't been closed yet by the goroutine created previously.
+			s.awaitResume = true
+			return
+		case discord.ErrIntervalServer:
+			s.Logger.Errorf("error while clicking button: %v", errr)
+			s.PrioritySchedule(cmd)
+			return
+		case discord.ErrTooManyRequests:
+			s.Logger.Errorf("error while clicking button: %v", errr)
+			s.PrioritySchedule(cmd)
+			s.Logger.Infof("sleeping for 20 seconds")
+			time.Sleep(time.Second * 20)
+			return
+		default:
+			s.Logger.Errorf("error while clicking button: %v", errr)
+			return
+		}
+		s.reschedule(cmd)
+		if cmd.AwaitResume {
+			s.awaitResumeTrigger, s.awaitResume = cmd, true
+		}
 	}
 }
 
@@ -313,4 +355,3 @@ func delay(messageDelay *config.MessageDelay) time.Duration {
 	}
 	return time.Duration(d) * time.Millisecond
 }
-

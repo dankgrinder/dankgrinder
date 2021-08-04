@@ -8,9 +8,8 @@ package instance
 
 import (
 	"math/rand"
-	"time"
-
 	"github.com/dankgrinder/dankgrinder/discord"
+	"github.com/dankgrinder/dankgrinder/instance/scheduler"
 )
 
 func (in *Instance) search(msg discord.Message) {
@@ -20,15 +19,24 @@ func (in *Instance) search(msg discord.Message) {
 			for _, allowed := range in.Compat.AllowedSearches {
 				if choice == allowed {
 					index := in.returnButtonIndex(choice, 3, msg)
-					time.Sleep(2 * time.Second)
-					in.pressButton(index, msg)
+					in.sdlr.ResumeWithCommand(&scheduler.Command{
+						Actionrow: 1,
+						Button: index,
+						Message: msg,
+						Log: "Responding to Search from Allowed options",
+
+					})
 				}
 			}
 		}
 	} else if in.Compat.SearchMode == 1 {
 		i := rand.Intn(3)
-		time.Sleep(2 * time.Second)
-		in.pressButton(i, msg)
+		in.sdlr.ResumeWithCommand(&scheduler.Command{
+			Actionrow: 1,
+			Button: i+1,
+			Message: msg,
+			Log: "Responding to search randomly",
+		})
 
 	} else if in.Compat.SearchMode == 2 {
 		choices := in.returnButtonLabel(3, msg)
@@ -36,14 +44,22 @@ func (in *Instance) search(msg discord.Message) {
 			for _, allowed := range in.Compat.AllowedSearches {
 				if choice == allowed {
 					index := in.returnButtonIndex(choice, 3, msg)
-					time.Sleep(2 * time.Second)
-					in.pressButton(index, msg)
+					in.sdlr.ResumeWithCommand(&scheduler.Command{
+						Actionrow: 1,
+						Button: index,
+						Message: msg,
+						Log: "Responding to search from priority options",
+					})
 					return
 				}
 			}
 		}
 		i := rand.Intn(3)
-		time.Sleep(2 * time.Second)
-		in.pressButton(i, msg)
+		in.sdlr.ResumeWithCommand(&scheduler.Command{
+			Actionrow: 1,
+			Button: i+1,
+			Message: msg,
+			Log: "Responding to search randomly, no priority option.",
+		})
 	}
 }
