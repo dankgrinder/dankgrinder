@@ -38,6 +38,8 @@ var exp = struct {
 	fishEventReverse,
 	fishEventRetype,
 	trivia,
+	guess,
+	guessHint,
 	event *regexp.Regexp
 }{
 	search:            regexp.MustCompile(`Pick from the list below and type the name in chat\.\s\x60(.+)\x60,\s\x60(.+)\x60,\s\x60(.+)\x60`),
@@ -66,6 +68,8 @@ var exp = struct {
 	fishEventReverse:  regexp.MustCompile(`the fish is too strong! Quickly reverse the word to catch it in the next 10 seconds!.\n\x60(.+)\x60`),
 	fishEventRetype:   regexp.MustCompile(`the fish is too strong! Quickly re-type the phrase to catch it in the next 15 seconds\nType\s\x60(.+)\x60`),
 	trivia:            regexp.MustCompile(`\*\*(.+)\*\*\n\*You have \d\d seconds to answer`),
+	guess:             regexp.MustCompile(`not this time, \x60(.+)\x60 attempts left and \x60(.+)\x60 (hint|hints) left.`),
+	guessHint:         regexp.MustCompile(`Your last number \(\*\*(.+)\*\*\) was too (.+)\nYou\'ve got \x60(.+)\x60 attempts left and \x60(.+)\x60 (hint|hints) left.`),
 }
 
 var numFmt = message.NewPrinter(language.English)
@@ -357,6 +361,41 @@ func (in *Instance) router() *discord.MessageRouter {
 		ContentContains("**Where do you want to search?**").
 		RespondsTo(in.Client.User.ID).
 		Handler(in.search)
+	// Gtn
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentContains("You've got 4 attempts to try and guess my random number between").
+		RespondsTo(in.Client.User.ID).
+		Handler(in.guessTheNumber)
+
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.guess).
+		RespondsTo(in.Client.User.ID).
+		Handler(in.guessTheNumber)
+
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.guessHint).
+		RespondsTo(in.Client.User.ID).
+		Handler(in.guessTheNumber)
+
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentContains("Good stuff, you got the number right. I was thinking").
+		RespondsTo(in.Client.User.ID).
+		Handler(in.gtnEnd)
+
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentContains("Unlucky, you ran out of attempts to guess the number").
+		RespondsTo(in.Client.User.ID).
+		Handler(in.gtnEnd)
 
 	// Highlow.
 	rtr.NewRoute().

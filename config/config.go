@@ -68,8 +68,8 @@ type Compat struct {
 	AllowedScramblesFish []string `yaml:"allowed_scrambles_fish"`
 	AllowedFishFTB       []string `yaml:"allowed_fish_ftb"`
 	FishCancel           []string `yaml:"fish_cancel"`
-	SearchMode		     int      `yaml:"search_mode"`
-	CrimeMode 			 int      `yaml:"crime_mode"`
+	SearchMode           int      `yaml:"search_mode"`
+	CrimeMode            int      `yaml:"crime_mode"`
 }
 
 type Cooldown struct {
@@ -88,6 +88,7 @@ type Cooldown struct {
 	Trivia    int `yaml:"trivia"`
 	Crime     int `yaml:"crime"`
 	Scratch   int `yaml:scratch`
+	Guess     int `yaml:"guess"`
 }
 
 type Features struct {
@@ -103,11 +104,11 @@ type Features struct {
 	LogToFile          bool            `yaml:"log_to_file"`
 	VerboseLogToStdout bool            `yaml:"verbose_log_to_stdout"`
 	Debug              bool            `yaml:"debug"`
-	Scratch 		   Scratch		   `yaml:"scratch"`
+	Scratch            Scratch         `yaml:"scratch"`
 }
 type Scratch struct {
-	Enable bool `yaml:"enable"`
-	Amount int `yaml:"amount"`
+	Enable   bool `yaml:"enable"`
+	Amount   int  `yaml:"amount"`
 	Priority bool `yaml:"priority"`
 }
 
@@ -174,6 +175,7 @@ type Commands struct {
 	Work     bool `yaml:"work"`
 	Trivia   bool `yaml:"trivia"`
 	Crime    bool `yaml:"crime"`
+	Guess    bool `yaml:"guess"`
 }
 
 type SuspicionAvoidance struct {

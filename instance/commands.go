@@ -35,6 +35,7 @@ const (
 	triviaCmdValue        = "pls trivia"
 	crimeCmdValue         = "pls crime"
 	scratchBaseCmdValue   = "pls scratch"
+	guessCmdValue = "pls gtn"
 )
 
 func blackjackCmdValue(amount string) string {
@@ -43,7 +44,6 @@ func blackjackCmdValue(amount string) string {
 func scratchCmdValue(amount string) string {
 	return fmt.Sprintf("%v %v", scratchBaseCmdValue, amount)
 }
-
 func buyCmdValue(amount, item string) string {
 	return fmt.Sprintf("%v %v %v", buyBaseCmdValue, item, amount)
 }
@@ -113,6 +113,13 @@ func (in *Instance) newCmds() []*scheduler.Command {
 		cmds = append(cmds, &scheduler.Command{
 			Value:       huntCmdValue,
 			Interval:    time.Duration(in.Compat.Cooldown.Hunt) * time.Second,
+			AwaitResume: true,
+		})
+	}
+	if in.Features.Commands.Guess {
+		cmds = append(cmds, &scheduler.Command{
+			Value:       guessCmdValue,
+			Interval:    time.Duration(in.Compat.Cooldown.Guess) * time.Second,
 			AwaitResume: true,
 		})
 	}
@@ -230,6 +237,7 @@ func (in *Instance) newScratchCmd() *scheduler.Command {
 	}
 	return cmd
 }
+
 
 func (in *Instance) newCmdChain(cmds []*scheduler.Command, chainInterval time.Duration) *scheduler.Command {
 	for i := 0; i < len(cmds); i++ {

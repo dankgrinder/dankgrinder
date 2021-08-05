@@ -216,6 +216,9 @@ func validateCompat(compat Compat) error {
 	if compat.Cooldown.Scratch <= 0 {
 		return fmt.Errorf("scratch cooldown must be greater than 0")
 	}
+	if compat.Cooldown.Guess <= 0 {
+		return fmt.Errorf("Guess cooldown must be greater than 0")
+	}
 	if compat.Cooldown.Sell <= 0 {
 		return fmt.Errorf("sell cooldown must be greater than 0")
 	}
