@@ -9,6 +9,7 @@
 package instance
 
 import (
+	"fmt"
 	"math/rand"
 	"regexp"
 	"strings"
@@ -16,6 +17,14 @@ import (
 	"github.com/dankgrinder/dankgrinder/discord"
 	"github.com/dankgrinder/dankgrinder/instance/scheduler"
 )
+
+// Remove punctuation from strings
+func removePunctuation(s string) string {
+	reg := regexp.MustCompile("[^a-zA-Z0-9_ ]+")
+	result := reg.ReplaceAllString(s, "")
+
+	return result
+}
 
 // Reverse function (Reverses any string)
 func Reverse(s string) string {
@@ -92,9 +101,16 @@ func (in *Instance) workEventSoccer(msg discord.Message) {
 // Work Event #5 -> Hangman
 func (in *Instance) workEventHangman(msg discord.Message) {
 	hangman := exp.workEventHangman.FindStringSubmatch(msg.Content)[2]
+	fmt.Println(hangman)
 	ree := regexp.MustCompile(`[a-z, A-Z]{1}( _)+`)
-	var pruned string = ree.ReplaceAllString(hangman, `_`)
-	_, s := find(pruned, in.Compat.AllowedHangman)
+	var pruned string = ree.ReplaceAllString(removePunctuation(hangman), `_`)
+	fmt.Println(pruned)
+	var options []string
+	for _, x := range in.Compat.AllowedHangman {
+		options = append(options, removePunctuation(x))
+	}
+	fmt.Println(options)
+	_, s := find(pruned, options)
 	if len(s) > 0 {
 		in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
 			Value: s,
@@ -127,26 +143,13 @@ func (in *Instance) workEventMemory2(msg discord.Message) {
 	})
 }
 
-// Work Event #6 -> Memory Response
-// Memory response does not have any necessary informaton
-// required for functioning of memory event but if the event
-// is responded to before receiving the response, it results
-// in Dank Memer triggering copy paste detection for being too fast
-/* func (in *Instance) workEventMemory3(msg discord.Message) {
-	if len(in.result2) > 0 {
-		in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-			Value: clean(in.result2),
-			Log:   "responding to Work Memory",
-		})
-	}
-} */
-
 // Work Event #7 -> Color
 func (in *Instance) workEventColor(msg discord.Message) {
 	colorObject := exp.workEventColor.FindStringSubmatch(msg.Content)[2:]
 	// result is a field of Instance struct of type map.
 	// Assigning Key - value pairs to the colors and objects
 	in.result = map[string]string{colorObject[1]: colorObject[0], colorObject[3]: colorObject[2], colorObject[5]: colorObject[4]}
+	in.sdlr.AwaitResumeTrigger()
 }
 
 // Work Event #7 -> Color response
