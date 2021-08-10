@@ -1,13 +1,15 @@
 # Dank Grinder [![](https://goreportcard.com/badge/github.com/dankgrinder/dankgrinder)](https://goreportcard.com/report/github.com/dankgrinder/dankgrinder) [![](https://img.shields.io/github/workflow/status/dankgrinder/dankgrinder/Go)](https://github.com/dankgrinder/dankgrinder/actions) ![](https://img.shields.io/github/license/dankgrinder/dankgrinder) [![](https://img.shields.io/github/v/release/dankgrinder/dankgrinder)](https://github.com/dankgrinder/dankgrinder/releases/latest) ![](https://img.shields.io/github/downloads/dankgrinder/dankgrinder/total)
-The most feature-rich, advanced Dank Memer automation tool.
+The most feature-rich, advanced Dank Memer automation tool (Now compatible with buttons!).  
+Made by github.com/dankgrinder & Buttons, work, trivia, crime, search, dig, guess the number, scratch and fish added by github.com/v4nsh4j (discord: CampingRunner#4408)
 
-Want to join the community or need support? [Join our Discord](https://discord.gg/Fjzpq8YPSn). Have a question? [Create a question issue](https://github.com/dankgrinder/dankgrinder/issues/new?assignees=&labels=question&template=question.md&title=). Want to suggest a feature? [Create a suggestion issue](https://github.com/dankgrinder/dankgrinder/issues/new?assignees=&labels=suggestion&template=suggestion.md&title=). Encountered a bug? [Report a bug](https://github.com/dankgrinder/dankgrinder/issues/new?assignees=&labels=bug&template=bug-report.md&title=). Want to contribute? [Read our contribution guidelines](https://github.com/dankgrinder/dankgrinder/blob/master/CONTRIBUTING.md).
+Want to join the community or need support? [Join our Discord](https://discord.gg/Fjzpq8YPSn) (Be sure to join with an unconnected fresh alt to prevent bot blacklist on main). Have a question? [Create a question issue](https://github.com/dankgrinder/dankgrinder/issues/new?assignees=&labels=question&template=question.md&title=). Want to suggest a feature? [Create a suggestion issue](https://github.com/dankgrinder/dankgrinder/issues/new?assignees=&labels=suggestion&template=suggestion.md&title=). Encountered a bug? [Report a bug](https://github.com/dankgrinder/dankgrinder/issues/new?assignees=&labels=bug&template=bug-report.md&title=). Want to contribute? [Read our contribution guidelines](https://github.com/dankgrinder/dankgrinder/blob/master/CONTRIBUTING.md).
 
 <p align="center">
 <img src="https://i.imgur.com/3AQk7eh.png" alt="logo" />
 </p>
 
 ## Features
+* Compatible with buttons introduced in Update
 * Can run many instances at once
 * Uses very little system resources
 * High configurability; configure custom commands and much more
@@ -16,11 +18,11 @@ Want to join the community or need support? [Join our Discord](https://discord.g
 * Responds to global events, search, and postmeme
 * Automatically uses tidepods and buys lifesavers when dying from them
 * Automatically buys a fishing pole, hunting rifle or laptop if they have broken
-
+* Can Automate most of dank memer's commands! 
 ## Getting started
 
 ### Installation
-1. Download the latest release for your operating system [here](https://github.com/dankgrinder/dankgrinder/releases/latest) (darwin is for macOS), or [build from source](#building-from-source). If you build from source you can delete everything besides the compiled binaries and config.yml.
+1. Download the latest release for your operating system [here](https://github.com/V4NSH4J/dankgrinder/releases) (darwin is for macOS), or [build from source](#building-from-source). If you build from source you can delete everything besides the compiled binaries and config.yml.
 2. Extract the archive
 3. [Configure](#configuration). Make sure `token` and `channel_id` fields of the instance are set, it will not run otherwise
 
@@ -64,12 +66,19 @@ A working Go installation, see https://golang.org/doc/install.
 
 The executables should then be in the `/build` folder.
 
+Alternate method for building: 
+1. Install golang from https://golang.org
+2. In a command prompt or a terminal, navigate to the dankgrinder folder and build:
+   `$ go build`
+
 ## Configuration
 All configuration can be done by editing config.yml with your editor of choice (e.g. Visual Studio Code, Sublime Text, Notepad++). The comments in the file itself provide extra explanation where necessary. For the bot to run, you must at least enter an [authorization token](#getting-an-authorization-token) and a [channel id](#enabling-discords-developer-mode). If you are running into issues, you can [join our Discord](https://discord.gg/Fjzpq8YPSn).
 
 If you do not know how yaml works and are getting fatal errors, use [this guide](https://www.tutorialspoint.com/yaml/yaml_basics.htm) to learn the basics of yaml. Configuration errors are characterized by a near-instant fatal error when starting the program. If the program opens and then closes immediately on Windows, open a command prompt first, drag the executable onto it and hit enter. You should now be able to see the error.
 
 A question mark after a field name means this field is optional.
+
+Shifts are integral for running dankgrinder safely without being banned. Hosting dankgrinder on services like repl.it might mess-up the shifts and repeat the first active shift over and over again. This is not an issue with dankgrinder but one with repl.it and allocation of it's resources. If you wish to host dankgrinder, consider a VPS. 
 
 Name | Type | Description
 ---- | ---- | ----
@@ -116,6 +125,7 @@ Name | Type | Description
 `verbose_log_to_stdout` | boolean | Whether or not to hook info events of instances to the standard logger
 `log_to_file` | boolean | Whether or not to log errors and information to a file
 `debug` | boolean | Enable logging debug level information. Currently has no effect
+`scratch` | [scratch object](#scratch-object) | Options for automatically using the scratch command.
 
 ### Commands object
 Name | Type | Description
@@ -128,6 +138,9 @@ Name | Type | Description
 `hunt` | boolean | Enable the `pls hunt` command
 `dig` | boolean | Enable the `pls dig` command
 `work` | boolean | Enable the `pls work` command 
+`trivia` | boolean | Enable the `pls trivia` command 
+`crime` | boolean | Enable the `pls crime` command 
+`guess` | boolean | Enable the `pls guess` command 
 
 ### Custom command object
 Name | Type | Description
@@ -159,6 +172,9 @@ Name | Type | Description
 `interval` | integer | The interval at which items will be gifted during an active shift. If set to 0, items will only be gifted once at the beginning of every active shift
 `items` | array of strings | The Dank Memer item ids of the items to gift
 
+### Gifting & Sharing confirmations update 
+Run a custom command "pls settings confirmations false" on your alts for gifting and sharing to function properly!
+
 ### Auto-blackjack object
 Name | Type | Description
 ---- | ---- | ----
@@ -167,6 +183,11 @@ Name | Type | Description
 `amount` | integer | The amount to bet every time, set to `0` to bet the maximum amount of coins
 `pause_below_balance` | integer | The balance below which the program should stop betting. The balance is read from the balance check functionality. Consider having the interval of this quite low, to make sure the balance the program thinks you have is as up-to-date as possible
 `logic_table` | dictionary[string]dictionary[string]string | What to do for every possible blackjack hand. The string values are the exact response that will be triggered
+
+### Scratch object
+`enable` | boolean | Whether or not to enable scratch blackjack
+`priority` | boolean | Whether or not to give the command priority over other, regular commands if there are commands queued
+`amount` | integer | The amount to bet every time, set to `0` to bet the maximum amount of coins
 
 ### Auto-share object
 Name | Type | Description
@@ -195,6 +216,7 @@ Name | Type | Description
 ---- | ---- | ----
 `postmeme` | array of strings | What options can be chosen for the postmeme command. The program will pick one randomly
 `allowed_searches` | array of strings | The searches the application is allowed to pick. Items higher/earlier in the list have higher priority
+`allowed_crimes` | array of strings | The crimes the application is allowed to pick. Items higher/earlier in the list have higher priority
 `search_cancel` | array of strings | List of things the program will say to cancel a search when no allowed searches are provided. It will pick one randomly
 `cooldown` | [cooldown object](#cooldown-object) | Cooldowns of commands (not custom commands)
 `await_response_timeout` | integer | The time that the program will wait for a response when it is expecting one. Set to a higher value when Dank Memer is slow to respond and this causes issues. Values below `3` are not recommended
@@ -204,6 +226,11 @@ Name | Type | Description
 `work_cancel`| array of strings | List of things the program will say to cancel a work event when the scramble/ missing word for fill in the blank is not configured. It will pick one randommly. 
 `allowed_scrambles_work` | array of strings | List of unscrambled words for the work event minigame. If the event scramble is out of these values, it will proceed to end the event. There is no priority order.
 `allowed_hangman` | array of strings | List of complete phrases from which the missing word will be found in a hangman work event.
+`allowed_scrambles_fish`| array of strings | List of compatible unscrambled words for solving fish scramble event. If the event scramble is out of these values, it will proceed to cancel the event. There is no priority order
+`allowed_fish_ftb` | array of strings | List of compatible fill the blank sentences for solving fish fill in the blank event. If the event blank is out of these values, it will proceed to cancel the event. There is no priority order
+`fish_cancel` | array of strings |  List of things the program will say to cancel a fish event when the scramble/ missing word for fill in the blank is not configured. It will pick one randommly. 
+`search_mode` | integer | Can take values 0, 1 and 2. If it's set to 0 it will click a button if it's added to the search options, there will be no proper priority order. If it's set to 1, it will search a location randomly. If it's set to 2, it will prioritize the options mentioned in allowed searches and if not present, it will randomly select a location. 
+`crime_mode` | integer | Can take values 0, 1 and 2. If it's set to 0 it will click a button if it's added to the crime options, there will be no proper priority order. If it's set to 1, it will click  a crime randomly. If it's set to 2, it will prioritize the options mentioned in allowed crimes and if not present, it will randomly select a crime. 
 
 
 
@@ -222,6 +249,10 @@ Name | Type | Description
 `share` | integer | The cooldown of the share command in seconds, set a few seconds higher to account for network delay
 `dig` | integer | The cooldown of the dig command in seconds, set a few seconds higher to account for network delay
 'work' | integer | The cooldown of the work command in seconds, set a few seconds higher to account for network delay
+`trivia` | integer | The cooldown of the trivia command in seconds, set a few seconds higher to account for network delay 
+`crime` | integer | The cooldown of the crime command in seconds, set a few seconds higher to account for network delay
+`scratch` | integer | The cooldown of the scratch command in seconds, set a few seconds higher to account for network delay
+`guess` | integer | The cooldown of the guess command in seconds, set a few seconds higher to account for network delay
 
 ### Suspicion avoidance object
 Name | Type | Description
@@ -286,7 +317,7 @@ In example custom command 3, the value is sent once in the beginning of every ac
 In example custom command 4, 20 zz will be bought whenever the balance is above 9,000,000.
 
 ### Instances
-Example if you would like to run two instances simultaneously and 24/7 (this shift configuration is not recommended):
+Example if you would like to run two or more instances simultaneously and 24/7. You may add as many as you wish. (this shift configuration is not recommended):
 ```yaml
 clusters:
   default:
@@ -296,6 +327,8 @@ clusters:
     instances:
       - token: "b2YgY291cnNlIHRoaXM.aXNuJ3QgYQ.cmVhbCB0b2tlbiBlaXRoZXIsIHNpbGx5"
         channel_id: "791694383098495047"
+      - token: "fU8Di291cnNlIHRoaXM.aXNuJ3QgYQ.cmVhbCB0b2tlbiBlaXRoZXIsIHNpbGx5"
+        channel_id: "791694383098495048"
 ```
 
 ### Default values and when you can leave out fields
