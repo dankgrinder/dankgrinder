@@ -9,7 +9,6 @@
 package instance
 
 import (
-	"fmt"
 	"math/rand"
 	"regexp"
 	"strings"
@@ -101,15 +100,12 @@ func (in *Instance) workEventSoccer(msg discord.Message) {
 // Work Event #5 -> Hangman
 func (in *Instance) workEventHangman(msg discord.Message) {
 	hangman := exp.workEventHangman.FindStringSubmatch(msg.Content)[2]
-	fmt.Println(hangman)
 	ree := regexp.MustCompile(`[a-z, A-Z]{1}( _)+`)
 	var pruned string = ree.ReplaceAllString(removePunctuation(hangman), `_`)
-	fmt.Println(pruned)
 	var options []string
 	for _, x := range in.Compat.AllowedHangman {
 		options = append(options, removePunctuation(x))
 	}
-	fmt.Println(options)
 	_, s := find(pruned, options)
 	if len(s) > 0 {
 		in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
