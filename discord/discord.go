@@ -13,8 +13,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
-
 )
 
 var (
@@ -133,6 +131,8 @@ func (client Client) PressButton(i int, k int, msg Message) error {
 	}
 	req.Header.Set("authorization", client.Token)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", "Chrome/86.0.4240.75")
+	req.Header.Set("Accept-Language", "en-GB")
 
 	clientt := &http.Client{}
 	resp, err := clientt.Do(req)
