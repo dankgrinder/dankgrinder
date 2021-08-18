@@ -151,6 +151,8 @@ func (client Client) PressButton(i int, k int, msg Message) error {
 			return ErrTooManyRequests
 		case http.StatusInternalServerError:
 			return ErrIntervalServer
+		case 400:
+			return nil
 		default:
 			return fmt.Errorf("unexpected status code while clicking button: %v", resp.StatusCode)
 		}
