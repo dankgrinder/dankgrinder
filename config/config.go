@@ -87,7 +87,7 @@ type Cooldown struct {
 	Work      int `yaml:"work"`
 	Trivia    int `yaml:"trivia"`
 	Crime     int `yaml:"crime"`
-	Scratch   int `yaml:scratch`
+	Scratch   int `yaml:"scratch"`
 	Guess     int `yaml:"guess"`
 }
 
@@ -128,6 +128,7 @@ type AutoBlackjack struct {
 	Priority          bool                         `yaml:"priority"`
 	Amount            int                          `yaml:"amount"`
 	PauseBelowBalance int                          `yaml:"pause_below_balance"`
+	PauseAboveBalance int 						   `yaml:"pause_above_balance"`
 	LogicTable        map[string]map[string]string `yaml:"logic_table"`
 }
 
@@ -184,6 +185,11 @@ type SuspicionAvoidance struct {
 	ButtonPressDelay ButtonPressDelay `yaml:"button_press"`
 }
 
+type ButtonPressDelay struct {
+	Base      int `yaml:"base"`
+	Variation int `yaml:"variation"`
+}
+
 type Typing struct {
 	Base      int `yaml:"base"`      // A base duration in milliseconds.
 	Speed     int `yaml:"speed"`     // Speed in keystrokes per minute.
@@ -194,10 +200,7 @@ type MessageDelay struct {
 	Base      int `yaml:"base"`      // A base duration in milliseconds.
 	Variation int `yaml:"variation"` // A random value in milliseconds from [0,n) added to the base.
 }
-type ButtonPressDelay struct {
-	Base      int `yaml: base`
-	Variation int `yaml:variation`
-}
+
 
 // Shift indicates an application state (active or dormant) for a duration.
 type Shift struct {

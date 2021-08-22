@@ -79,9 +79,10 @@ features:
     maximum_balance: 8000000
     minimum_balance: 5000000
   auto_blackjack:
-    enable: false
+    enable: true
     amount: 50
     pause_below_balance: 100
+    pause_above_balance: 50000000
     logic_table:
       2:
         4: "h"
@@ -1160,5 +1161,5 @@ suspicion_avoidance:
     base: 100
     variation: 400
   button_press:
-    base: 5000
+    base: 15000
     variation: 1000

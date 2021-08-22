@@ -35,7 +35,7 @@ const (
 	triviaCmdValue        = "pls trivia"
 	crimeCmdValue         = "pls crime"
 	scratchBaseCmdValue   = "pls scratch"
-	guessCmdValue = "pls gtn"
+	guessCmdValue         = "pls gtn"
 )
 
 func blackjackCmdValue(amount string) string {
@@ -215,7 +215,7 @@ func (in *Instance) newAutoBlackjackCmd() *scheduler.Command {
 		Interval: time.Duration(in.Compat.Cooldown.Blackjack) * time.Second,
 		CondFunc: func() bool {
 			correctBalance := in.Features.AutoBlackjack.PauseBelowBalance == 0 || in.balance >= in.Features.AutoBlackjack.PauseBelowBalance
-			return correctBalance && in.balance < 10000000
+			return correctBalance && in.balance < in.Features.AutoBlackjack.PauseAboveBalance
 		},
 		AwaitResume:          true,
 		RescheduleAsPriority: in.Features.AutoBlackjack.Priority,
@@ -228,16 +228,15 @@ func (in *Instance) newAutoBlackjackCmd() *scheduler.Command {
 func (in *Instance) newScratchCmd() *scheduler.Command {
 	cmd := &scheduler.Command{
 		Value:                scratchCmdValue(strconv.Itoa(in.Features.Scratch.Amount)),
-		Interval:             time.Duration(in.Compat.Cooldown.Blackjack) * time.Second,
+		Interval:             time.Duration(in.Compat.Cooldown.Scratch) * time.Second,
 		AwaitResume:          true,
 		RescheduleAsPriority: in.Features.Scratch.Priority,
 	}
 	if in.Features.Scratch.Amount == 0 {
-		cmd.Value = blackjackCmdValue("max")
+		cmd.Value = scratchCmdValue("max")
 	}
 	return cmd
 }
-
 
 func (in *Instance) newCmdChain(cmds []*scheduler.Command, chainInterval time.Duration) *scheduler.Command {
 	for i := 0; i < len(cmds); i++ {

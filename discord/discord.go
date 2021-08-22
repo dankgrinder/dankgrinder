@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"strings"
 	"time"
@@ -112,11 +113,14 @@ func (client Client) PressButton(i int, k int, msg Message) error {
 	if client.Token == "" {
 		return fmt.Errorf("no token")
 	}
+
 	i--
 	k--
 
+	x := rand.Intn(500)
+	time.Sleep(time.Duration(x) * time.Millisecond)
+
 	url := "https://discord.com/api/v9/interactions"
-	time.Sleep(2 * time.Second)
 
 	data := map[string]interface{}{"component_type": msg.Components[i].Buttons[k].Type, "custom_id": msg.Components[i].Buttons[k].CustomID, "hash": msg.Components[i].Buttons[k].Hash}
 	values := map[string]interface{}{"application_id": "270904126974590976", "channel_id": msg.ChannelID, "type": "3", "data": data, "guild_id": msg.GuildID, "message_flags": 0, "message_id": msg.ID}
@@ -134,8 +138,8 @@ func (client Client) PressButton(i int, k int, msg Message) error {
 	req.Header.Set("User-Agent", "Chrome/86.0.4240.75")
 	req.Header.Set("Accept-Language", "en-GB")
 
-	clientt := &http.Client{}
-	resp, err := clientt.Do(req)
+	httpClient := &http.Client{}
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error while sending http request: %v", err)
 	}
