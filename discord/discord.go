@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -118,12 +119,15 @@ func (client Client) PressButton(i int, k int, msg Message) error {
 	k--
 
 	x := rand.Intn(500)
+
 	time.Sleep(time.Duration(x) * time.Millisecond)
+	snowflake := strconv.FormatInt((time.Now().UTC().UnixNano()/1000000)-1420070400000, 2) + "0000000000000000000000"
+	nonce, _ := strconv.ParseInt(snowflake, 2, 64)
 
 	url := "https://discord.com/api/v9/interactions"
 
 	data := map[string]interface{}{"component_type": msg.Components[i].Buttons[k].Type, "custom_id": msg.Components[i].Buttons[k].CustomID, "hash": msg.Components[i].Buttons[k].Hash}
-	values := map[string]interface{}{"application_id": "270904126974590976", "channel_id": msg.ChannelID, "type": "3", "data": data, "guild_id": msg.GuildID, "message_flags": 0, "message_id": msg.ID}
+	values := map[string]interface{}{"application_id": 270904126974590976, "channel_id": msg.ChannelID, "type": "3", "data": data, "guild_id": msg.GuildID, "message_flags": 0, "message_id": msg.ID, "nonce": nonce}
 	json_data, err := json.Marshal(values)
 
 	if err != nil {
@@ -155,8 +159,6 @@ func (client Client) PressButton(i int, k int, msg Message) error {
 			return ErrTooManyRequests
 		case http.StatusInternalServerError:
 			return ErrIntervalServer
-		case 400:
-			return nil
 		default:
 			return fmt.Errorf("unexpected status code while clicking button: %v", resp.StatusCode)
 		}
