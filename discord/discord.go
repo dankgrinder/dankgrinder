@@ -68,11 +68,12 @@ func (client Client) SendMessage(content, channelID string, typing time.Duration
 		}
 	}
 
-	reqURL := fmt.Sprintf("https://discord.com/api/v8/channels/%v/messages", channelID)
+	reqURL := fmt.Sprintf("https://discord.com/api/v9/channels/%v/messages", channelID)
 
 	body, err := json.Marshal(&map[string]interface{}{
 		"content": content,
 		"tts":     false,
+		"nonce":   client.snowflake(),
 	})
 	if err != nil {
 		return fmt.Errorf("error while encoding message content as json: %v", err)
@@ -83,7 +84,7 @@ func (client Client) SendMessage(content, channelID string, typing time.Duration
 		return fmt.Errorf("error while creating http request: %v", err)
 	}
 	req.Header.Add("Authorization", client.Token)
-	req.Header.Add("User-Agent", "Chrome/86.0.4240.75")
+	req.Header.Add("User-Agent", "Chrome/94.0.4606.31")
 	req.Header.Add("Accept-Language", "en-GB")
 	req.Header.Add("Content-Type", "application/json")
 
@@ -121,13 +122,12 @@ func (client Client) PressButton(i int, k int, msg Message) error {
 	x := rand.Intn(500)
 
 	time.Sleep(time.Duration(x) * time.Millisecond)
-	snowflake := strconv.FormatInt((time.Now().UTC().UnixNano()/1000000)-1420070400000, 2) + "0000000000000000000000"
-	nonce, _ := strconv.ParseInt(snowflake, 2, 64)
+
 
 	url := "https://discord.com/api/v9/interactions"
 
 	data := map[string]interface{}{"component_type": msg.Components[i].Buttons[k].Type, "custom_id": msg.Components[i].Buttons[k].CustomID, "hash": msg.Components[i].Buttons[k].Hash}
-	values := map[string]interface{}{"application_id": 270904126974590976, "channel_id": msg.ChannelID, "type": "3", "data": data, "guild_id": msg.GuildID, "message_flags": 0, "message_id": msg.ID, "nonce": nonce}
+	values := map[string]interface{}{"application_id": 270904126974590976, "channel_id": msg.ChannelID, "type": "3", "data": data, "guild_id": msg.GuildID, "message_flags": 0, "message_id": msg.ID, "nonce": client.snowflake()}
 	json_data, err := json.Marshal(values)
 
 	if err != nil {
@@ -139,11 +139,12 @@ func (client Client) PressButton(i int, k int, msg Message) error {
 	}
 	req.Header.Set("authorization", client.Token)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "Chrome/86.0.4240.75")
+	req.Header.Set("User-Agent", "Chrome/94.0.4606.31 ")
 	req.Header.Set("Accept-Language", "en-GB")
 
 	httpClient := &http.Client{}
 	resp, err := httpClient.Do(req)
+	fmt.Println(resp)
 	if err != nil {
 		return fmt.Errorf("error while sending http request: %v", err)
 	}
@@ -159,6 +160,8 @@ func (client Client) PressButton(i int, k int, msg Message) error {
 			return ErrTooManyRequests
 		case http.StatusInternalServerError:
 			return ErrIntervalServer
+		case 400:
+			return nil
 		default:
 			return fmt.Errorf("unexpected status code while clicking button: %v", resp.StatusCode)
 		}
@@ -239,4 +242,10 @@ func (client Client) headers(r *http.Request) *http.Request {
 	r.Header.Add("User-Agent", "Chrome/86.0.4240.75")
 	r.Header.Add("Accept-Language", "en-GB")
 	return r
+}
+
+func (client Client) snowflake() int64 {
+	snowflake := strconv.FormatInt((time.Now().UTC().UnixNano()/1000000)-1420070400000, 2) + "0000000000000000000000"
+	nonce, _ := strconv.ParseInt(snowflake, 2, 64)
+	return nonce
 }

@@ -298,6 +298,7 @@ func (s *Scheduler) send(cmd *Command) {
 		}
 	} else if cmd.Actionrow != 0 && cmd.Button != 0 {
 
+
 		errr := s.Client.PressButton(cmd.Actionrow, cmd.Button, cmd.Message)
 
 		switch errr {

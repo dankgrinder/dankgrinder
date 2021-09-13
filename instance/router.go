@@ -114,6 +114,12 @@ func (in *Instance) event(msg discord.Message) {
 	})
 }
 
+func (in *Instance) automodBypass(_ discord.Message) {
+	in.sdlr.Logger.Errorf("Instance %v is blacklisted, Please remove it from config to prevent a bot ban", in.Client.User)
+	in.ws.Close()
+	in.sdlr.Close()
+}
+
 // clean removes all characters except for ASCII characters [32, 126] (basically
 // all keys you would find on a US keyboard).
 func clean(s string) string {
@@ -146,6 +152,12 @@ func (in *Instance) router() *discord.MessageRouter {
 		Author(DMID).
 		RespondsTo(in.Client.User.ID).
 		Handler(in.huntEnd)
+	// Automod Ban Bypass
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentContains("stop trying to run commands, you're blacklisted. Do this too much and you'll get a full ban.").
+		Handler(in.automodBypass)
 
 	// fishing without event
 	rtr.NewRoute().
