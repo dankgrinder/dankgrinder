@@ -123,7 +123,6 @@ func (client Client) PressButton(i int, k int, msg Message) error {
 
 	time.Sleep(time.Duration(x) * time.Millisecond)
 
-
 	url := "https://discord.com/api/v9/interactions"
 
 	data := map[string]interface{}{"component_type": msg.Components[i].Buttons[k].Type, "custom_id": msg.Components[i].Buttons[k].CustomID, "hash": msg.Components[i].Buttons[k].Hash}
@@ -144,7 +143,6 @@ func (client Client) PressButton(i int, k int, msg Message) error {
 
 	httpClient := &http.Client{}
 	resp, err := httpClient.Do(req)
-	fmt.Println(resp)
 	if err != nil {
 		return fmt.Errorf("error while sending http request: %v", err)
 	}
