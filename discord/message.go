@@ -120,23 +120,11 @@ type ButtonEmoji struct {
 	Animated bool   `json:"animated,omitempty"`
 }
 
-type Embed struct {
-	Title string `json:"title,omitempty"`
-
-	// The type of embed. Always EmbedTypeRich for webhook embeds.
-	Type        string `json:"type,omitempty"`
-	Description string `json:"description,omitempty"`
-	URL         string `json:"url,omitempty"`
-
-	// The time at which the embed was sent.
-	Time time.Time `json:"timestamp,omitempty"`
-
-	// The color code of the embed.
-	Color    int           `json:"color,omitempty"`
-	Footer   EmbedFooter   `json:"footer,omitempty"`
-	Provider EmbedProvider `json:"provider,omitempty"`
-	Author   EmbedAuthor   `json:"author,omitempty"`
-	Fields   []EmbedField  `json:"fields,omitempty"`
+type MessageEmbedImage struct {
+	URL      string `json:"url,omitempty"`
+	ProxyURL string `json:"proxy_url,omitempty"`
+	Width    int    `json:"width,omitempty"`
+	Height   int    `json:"height,omitempty"`
 }
 
 type EmbedField struct {
@@ -146,7 +134,7 @@ type EmbedField struct {
 }
 
 type EmbedFooter struct {
-	Text         string `json:"text"`
+	Text         string `json:"text,omitempty"`
 	IconURL      string `json:"icon_url,omitempty"`
 	ProxyIconURL string `json:"proxy_icon_url,omitempty"`
 }
@@ -162,3 +150,24 @@ type EmbedProvider struct {
 	Name string `json:"name,omitempty"`
 	URL  string `json:"url,omitempty"`
 }
+
+type Embed struct {
+	Title string `json:"title,omitempty"`
+
+	// The type of embed. Always EmbedTypeRich for webhook embeds.
+	Type        string   `json:"type,omitempty"`
+	Description string   `json:"description,omitempty"`
+	URL         string   `json:"url,omitempty"`
+	Image       *MessageEmbedImage `json:"image,omitempty"`
+
+	// The time at which the embed was sent.
+	Time time.Time `json:"timestamp,omitempty"`
+
+	// The color code of the embed.
+	Color    int           `json:"color,omitempty"`
+	Footer   EmbedFooter   `json:"footer,omitempty"`
+	Provider EmbedProvider `json:"provider,omitempty"`
+	Author   EmbedAuthor   `json:"author,omitempty"`
+	Fields   []EmbedField  `json:"fields,omitempty"`
+}
+

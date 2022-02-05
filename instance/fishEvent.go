@@ -73,6 +73,7 @@ func (in *Instance) fishEventRetype(msg discord.Message) {
 	})
 }
 
+
 func (in *Instance) fishEnd(msg discord.Message) { //
 	trigger := in.sdlr.AwaitResumeTrigger()
 	if trigger == nil || trigger.Value != fishCmdValue {
@@ -86,3 +87,4 @@ func (in *Instance) fishEnd(msg discord.Message) { //
 	}
 	in.sdlr.Resume()
 }
+

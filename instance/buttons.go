@@ -68,3 +68,13 @@ func (in *Instance) returnButtonEmojiIndex(name string, indices_button int, indi
 	}
 	return numbers
 }
+
+func (in *Instance) returnButtonIndex2(label string, indices int, msg discord.Message) int {
+	for k := 0; k < indices; k++ {
+		if label == msg.Components[1].Buttons[k].Label {
+
+			return k + 1
+		}
+	}
+	return -1
+}

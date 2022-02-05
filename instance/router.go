@@ -1,6 +1,8 @@
 package instance
 
 import (
+
+	"fmt"
 	"math/rand"
 	"regexp"
 
@@ -29,40 +31,42 @@ var exp = struct {
 	workEventScramble,
 	workEventSoccer,
 	workEventHangman,
-	workEventMemory,
+	workEventRepeat,
 	workEventColor,
-	workEventMemory2,
 	workEventColor2,
 	fishEventScramble,
 	fishEventFTB,
 	fishEventReverse,
 	fishEventRetype,
+	fishCatch,
+	fishCatch2,
 	trivia,
 	guess,
 	guessHint,
+	workEventEmoji,
+	shopEvent,
 	event *regexp.Regexp
 }{
 	search:            regexp.MustCompile(`Pick from the list below and type the name in chat\.\s\x60(.+)\x60,\s\x60(.+)\x60,\s\x60(.+)\x60`),
-	huntEvent:         regexp.MustCompile(`10\sseconds.*\s?([Tt]yping|[Tt]ype)\s\x60(.+)\x60`),
+	huntEvent:         regexp.MustCompile(`Dodge the Fireball\n(\s*)+<:Dragon:861390869696741396>\n(\s*)<:FireBall:883714770748964864>\n(\s*):levitate:`),
 	hl:                regexp.MustCompile(`I just chose a secret number between 1 and 100.\nIs the secret number \*higher\* or \*lower\* than \*\*(.+)\*\*.`),
 	bal:               regexp.MustCompile(`\*\*Wallet\*\*: \x60?⏣?\s?([0-9,]+)\x60?`),
-	event:             regexp.MustCompile(`^(Attack the boss by typing|Type) \x60(.+)\x60`),
+	event:             regexp.MustCompile(`Attack the boss by clicking \x60(.+)\x60`),
 	gift:              regexp.MustCompile(`[a-zA-Z\s]* \(([0-9,]+) owned\)`),
 	shop:              regexp.MustCompile(`pls shop ([a-zA-Z\s]+)`),
-	blackjack:         regexp.MustCompile(`\x60[♥♦♠♣] ([0-9]{1,2}|[JQKA])\x60`),
+	blackjack:         regexp.MustCompile(`\x60\[[♥♦♠♣] ([0-9]{1,2}|[JQKA])\]\x60`),
 	blackjackBal:      regexp.MustCompile(`(You now have|You have) (\*\*)?(⏣\s)?(\*\*)?([0-9,]+)(\*\*)?(\sstill)?\.`),
 	digEventScramble:  regexp.MustCompile(`Quickly unscramble the word to uncover what's in the dirt! in the next 15\sseconds\s\x60(.+)\x60`),
 	digEventRetype:    regexp.MustCompile(`Quickly re-type the phrase to uncover what's in the dirt! in the next 15 seconds\nType\s\x60(.+)\x60`),
 	digEventFTB:       regexp.MustCompile(`Quickly guess the missing word to uncover what's in the dirt in the next 15 seconds!\n\x60(.+)\x60`),
-	workEventReverse:  regexp.MustCompile(`\*\*Work for (.+)\*\* - Reverse - Type the following word backwards.\n\x60(.+)\x60`), //Index 2
+	workEventReverse:  regexp.MustCompile(`\*\*Work for (.+)\*\* - Reverse - Type the following word backwards.\n\x60(.+)\x60`),
 	workEventRetype:   regexp.MustCompile(`\*\*Work for (.+)\*\* - Retype - Retype the following phrase below.\nType\s\x60(.+)\x60`),
 	workEventScramble: regexp.MustCompile(`\*\*Work for (.+)\*\* - Scramble - The following word is scrambled, you need to try and unscramble it to reveal the original word.\n\x60(.+)\x60`),
-	workEventSoccer:   regexp.MustCompile(`\*\*Work for (.+)\*\* - Soccer - Hit the ball into a goal where the goalkeeper is not at! To hit the ball, type \*\*\x60left\x60, \x60right\x60 or \x60middle\x60\*\*.\n:goal::goal::goal:\n(\s*):levitate:`),
+	workEventSoccer:   regexp.MustCompile(`Hit the ball!\n:goal::goal::goal:\n(\s*):levitate:`),
 	workEventHangman:  regexp.MustCompile(`\*\*Work for (.+)\*\* - Hangman - Find the missing __word__ in the following sentence:\n\x60(.+)\x60`),
-	workEventMemory:   regexp.MustCompile(`\*\*Work for (.+)\*\* - Memory - Memorize the words shown and type them in chat.\n\x60(.+)\n(.+)\n(.+)\n(.+)\x60`), // test
+	workEventRepeat:   regexp.MustCompile(`Remember words order!\n\x60(.+)\x60\n\x60(.+)\x60\n\x60(.+)\x60\n\x60(.+)\x60\n\x60(.+)\x60`),
 	workEventColor:    regexp.MustCompile(`\*\*Work for (.+)\*\* - Color Match - Match the color to the selected word.\n<:(.+):[\d]+>\s\x60(.+)\x60\n<:(.+):[\d]+>\s\x60(.+)\x60\n<:(.+):[\d]+>\s\x60(.+)\x60`),
-	workEventMemory2:  regexp.MustCompile(`\*\*Work for (.+)\*\* - Memory - Memorize the words shown and type them in chat.\n\x60(.+)\n(.+)\n(.+)\x60`),
-	workEventColor2:   regexp.MustCompile(`What color was next to the word \x60(.+)\x60\?`),
+	workEventColor2:   regexp.MustCompile(`What color was next to the word \x60(.+)\x60`),
 	fishEventScramble: regexp.MustCompile(`the fish is too strong! Quickly unscramble the word to catch it in the next 15 seconds\n\x60(.+)\x60`),
 	fishEventFTB:      regexp.MustCompile(`the fish is too strong! Quickly guess the missing word to catch it in the next 15 seconds!\n\x60(.+)\x60`),
 	fishEventReverse:  regexp.MustCompile(`the fish is too strong! Quickly reverse the word to catch it in the next 10 seconds!.\n\x60(.+)\x60`),
@@ -70,6 +74,10 @@ var exp = struct {
 	trivia:            regexp.MustCompile(`\*\*(.+)\*\*\n\*You have \d\d seconds to answer`),
 	guess:             regexp.MustCompile(`not this time, \x60(.+)\x60 attempts left and \x60(.+)\x60 (hint|hints) left.`),
 	guessHint:         regexp.MustCompile(`Your last number \(\*\*(.+)\*\*\) was too (.+)\nYou\'ve got \x60(.+)\x60 attempts left and \x60(.+)\x60 (hint|hints) left.`),
+	workEventEmoji:    regexp.MustCompile(`\*\*Work for (.+)\*\* - Emoji Match - Look at the emoji closely!\n(.+)`),
+	fishCatch:         regexp.MustCompile(`Catch the fish!\n(\s*)<:(.+):[\d]+>\n:bucket::bucket::bucket:`),
+	fishCatch2:        regexp.MustCompile(`Catch the fish!\n<:(.+):[\d]+>\n:bucket::bucket::bucket:`),
+	shopEvent:         regexp.MustCompile(`What is the \*\*(.+)\*\* of this item?`),
 }
 
 var numFmt = message.NewPrinter(language.English)
@@ -81,36 +89,6 @@ func (in *Instance) pm(msg discord.Message) {
 		Button:    i + 1,
 		Message:   msg,
 		Log:       "Responding to post meme randomly",
-	})
-}
-
-func (in *Instance) huntEvent(msg discord.Message) {
-	res := exp.huntEvent.FindStringSubmatch(msg.Content)[2]
-	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-		Value: clean(res),
-		Log:   "responding to  hunting event",
-	})
-}
-
-func (in *Instance) huntEnd(msg discord.Message) {
-	trigger := in.sdlr.AwaitResumeTrigger()
-	if trigger == nil {
-		return
-	}
-	if msg.ReferencedMessage.Content != huntCmdValue {
-		return
-	}
-	if trigger.Value == huntCmdValue &&
-		!exp.huntEvent.MatchString(msg.Content) {
-		in.sdlr.Resume()
-	}
-}
-
-func (in *Instance) event(msg discord.Message) {
-	res := exp.event.FindStringSubmatch(msg.Content)[2]
-	in.sdlr.PrioritySchedule(&scheduler.Command{
-		Value: clean(res),
-		Log:   "responding to event",
 	})
 }
 
@@ -133,15 +111,24 @@ func clean(s string) string {
 	return result
 }
 
+func (in *Instance)printMessage(msg discord.Message) {
+	fmt.Println("%v", msg)
+
+}
+
 func (in *Instance) router() *discord.MessageRouter {
 	rtr := &discord.MessageRouter{}
-
 	// hunting.
 	rtr.NewRoute().
 		Channel(in.ChannelID).
 		Author(DMID).
 		ContentMatchesExp(exp.huntEvent).
-		Mentions(in.Client.User.ID).
+		Handler(in.huntEvent)
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.huntEvent).
+		EventType(discord.EventNameMessageUpdate).
 		Handler(in.huntEvent)
 
 	// When a hunt is completed without any events, Dank Memer will
@@ -159,12 +146,36 @@ func (in *Instance) router() *discord.MessageRouter {
 		ContentContains("stop trying to run commands, you're blacklisted. Do this too much and you'll get a full ban.").
 		Handler(in.automodBypass)
 
+
 	// fishing without event
 	rtr.NewRoute().
 		Channel(in.ChannelID).
 		Author(DMID).
 		RespondsTo(in.Client.User.ID).
 		Handler(in.fishEnd)
+	// Catch the fish
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.fishCatch).
+		Handler(in.fishCatch)
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.fishCatch2).
+		Handler(in.fishCatch)
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		EventType(discord.EventNameMessageUpdate).
+		ContentMatchesExp(exp.fishCatch2).
+		Handler(in.fishCatch)
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.fishCatch).
+		EventType(discord.EventNameMessageUpdate).
+		Handler(in.fishCatch)
 	// fishing with reversing
 	rtr.NewRoute().
 		Channel(in.ChannelID).
@@ -275,7 +286,12 @@ func (in *Instance) router() *discord.MessageRouter {
 		Channel(in.ChannelID).
 		Author(DMID).
 		ContentMatchesExp(exp.workEventSoccer).
-		RespondsTo(in.Client.User.ID).
+		Handler(in.workEventSoccer)
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.workEventSoccer).
+		EventType(discord.EventNameMessageUpdate).
 		Handler(in.workEventSoccer)
 	//Working Hangman
 	rtr.NewRoute().
@@ -284,34 +300,43 @@ func (in *Instance) router() *discord.MessageRouter {
 		ContentMatchesExp(exp.workEventHangman).
 		RespondsTo(in.Client.User.ID).
 		Handler(in.workEventHangman)
-	//Working Memory + response
+	//Working Repeat + response
 	rtr.NewRoute().
 		Channel(in.ChannelID).
 		Author(DMID).
-		ContentMatchesExp(exp.workEventMemory).
-		RespondsTo(in.Client.User.ID).
-		Handler(in.workEventMemory)
+		ContentMatchesExp(exp.workEventRepeat).
+		Handler(in.workEventRepeat)
 
 	rtr.NewRoute().
 		Channel(in.ChannelID).
 		Author(DMID).
-		ContentMatchesExp(exp.workEventMemory2).
-		RespondsTo(in.Client.User.ID).
-		Handler(in.workEventMemory2)
+		ContentContains("Click the buttons in correct order!").
+		EventType(discord.EventNameMessageUpdate).
+		Handler(in.workEventRetype2)
+	//Working Emoji + response
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentMatchesExp(exp.workEventEmoji).
+		Handler(in.workEventEmoji)
 
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		ContentContains("What was the emoji?").
+		EventType(discord.EventNameMessageUpdate).
+		Handler(in.workEventEmoji2)
 	//Working Color + response
 	rtr.NewRoute().
 		Channel(in.ChannelID).
 		Author(DMID).
 		ContentMatchesExp(exp.workEventColor).
-		RespondsTo(in.Client.User.ID).
 		Handler(in.workEventColor)
 
 	rtr.NewRoute().
 		Channel(in.ChannelID).
 		Author(DMID).
 		ContentMatchesExp(exp.workEventColor2).
-		RespondsTo(in.Client.User.ID).
 		EventType(discord.EventNameMessageUpdate).
 		Handler(in.workEventColor2)
 	//Working Don't have a job
@@ -365,6 +390,25 @@ func (in *Instance) router() *discord.MessageRouter {
 		HasEmbeds(false).
 		ContentMatchesExp(exp.event).
 		Handler(in.event)
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		HasEmbeds(false).
+		ContentContains("Berries and Cream").
+		Handler(in.event)
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		HasEmbeds(true).
+		EmbedMatchesExp(exp.shopEvent).
+		Handler(in.shopEvent)
+	rtr.NewRoute().
+		Channel(in.ChannelID).
+		Author(DMID).
+		HasEmbeds(true).
+		EventType(discord.EventNameMessageUpdate).
+		EmbedMatchesExp(exp.shopEvent).
+		Handler(in.shopEvent)
 
 	// Search.
 	rtr.NewRoute().

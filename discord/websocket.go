@@ -110,6 +110,7 @@ func (c *WSConn) listen() {
 		if err != nil {
 			c.closePinger <- struct{}{}
 			c.underlying.Close()
+			fmt.Println(err)
 			c.fatalHandler(err)
 			break
 		}
@@ -166,7 +167,6 @@ func (c *WSConn) readHello() (time.Duration, error) {
 	if err != nil {
 		return 0, fmt.Errorf("error while reading message from websocket: %v", err)
 	}
-
 	var body Event
 	if err := json.Unmarshal(b, &body); err != nil {
 		return 0, fmt.Errorf("error while unmarshalling incoming websocket message: %v", err)
@@ -189,7 +189,6 @@ func (c *WSConn) awaitEvent(e string) error {
 	if err != nil {
 		return fmt.Errorf("error while reading message from websocket: %v", err)
 	}
-
 	var body Event
 	if err = json.Unmarshal(b, &body); err != nil {
 		return fmt.Errorf("error while unmarshalling incoming websocket message: %v", err)

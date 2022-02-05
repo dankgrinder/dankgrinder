@@ -47,6 +47,8 @@ type Instance struct {
 	fatal             chan error
 	isClosed          bool
 	result            map[string]string
+	result2			  string
+	result3			  []string
 }
 
 func (in *Instance) Start() error {

@@ -11,7 +11,6 @@ package instance
 import (
 	"math/rand"
 	"regexp"
-	"strings"
 
 	"github.com/dankgrinder/dankgrinder/discord"
 	"github.com/dankgrinder/dankgrinder/instance/scheduler"
@@ -78,21 +77,25 @@ func (in *Instance) workEventScramble(msg discord.Message) {
 
 // Work Event #4 -> Soccer
 func (in *Instance) workEventSoccer(msg discord.Message) {
-	spaces := exp.workEventSoccer.FindStringSubmatch(msg.Content)[2]
+	spaces := exp.workEventSoccer.FindStringSubmatch(msg.Content)[1]
 	// q is the position of the goal keeper. Finds q and appropriately
 	// selects where to shoot.
 	var q int = len(spaces)
 
 	if q <= 6 {
-		in.sdlr.ResumeWithCommand(&scheduler.Command{
-			Value: "right",
-			Log:   "responding to work soccer",
+		in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
+			Actionrow: 1,
+			Button:    3,
+			Message:   msg,
+			Log:       "responding to work soccer",
 		})
 	}
 	if q > 6 {
-		in.sdlr.ResumeWithCommand(&scheduler.Command{
-			Value: "left",
-			Log:   "responding to work soccer",
+		in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
+			Actionrow: 1,
+			Button:    1,
+			Message:   msg,
+			Log:       "responding to work soccer",
 		})
 	}
 }
@@ -121,22 +124,57 @@ func (in *Instance) workEventHangman(msg discord.Message) {
 	})
 }
 
-// Work Event #6 -> Memory
-func (in *Instance) workEventMemory(msg discord.Message) {
-	words := exp.workEventMemory.FindStringSubmatch(msg.Content)[2:]
-	response := strings.Join(words, " ")
-	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-		Value: clean(response),
-		Log:   "responding to Work Memory",
-	})
+// Work Event #6 -> Repeat
+func (in *Instance) workEventRepeat(msg discord.Message) {
+	in.result3 = exp.workEventRepeat.FindStringSubmatch(msg.Content)[1:]
+
 }
-func (in *Instance) workEventMemory2(msg discord.Message) {
-	words := exp.workEventMemory2.FindStringSubmatch(msg.Content)[2:]
-	response := strings.Join(words, " ")
-	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-		Value: clean(response),
-		Log:   "responding to Work Memory",
-	})
+
+func (in *Instance) workEventRetype2(msg discord.Message) {
+	first, second, third, fourth, fifth := in.returnButtonIndex(in.result3[0], 5, msg), in.returnButtonIndex(in.result3[1], 5, msg), in.returnButtonIndex(in.result3[2], 5, msg), in.returnButtonIndex(in.result3[3], 5, msg), in.returnButtonIndex(in.result3[4], 5, msg)
+	if first != -1 && second != -1 && third != -1 && fourth != -1 && fifth != -1 {
+		//	json_msg, _ := json.Marshal(msg)
+		//	fmt.Println(string(json_msg))
+		in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
+			Actionrow:   1,
+			Button:      first,
+			Message:     msg,
+			Log:         "responding to Work Memory",
+			AwaitResume: true,
+		})
+
+		in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
+			Actionrow:   1,
+			Button:      second,
+			Message:     msg,
+			Log:         "responding to Work Memory",
+			AwaitResume: true,
+		})
+
+		in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
+			Actionrow:   1,
+			Button:      third,
+			Message:     msg,
+			Log:         "responding to Work Memory",
+			AwaitResume: true,
+		})
+
+		in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
+			Actionrow:   1,
+			Button:      fourth,
+			Message:     msg,
+			Log:         "responding to Work Memory",
+			AwaitResume: true,
+		})
+
+		in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
+			Actionrow:   1,
+			Button:      fifth,
+			Message:     msg,
+			Log:         "responding to Work Memory",
+			AwaitResume: true,
+		})
+	}
 }
 
 // Work Event #7 -> Color
@@ -145,18 +183,51 @@ func (in *Instance) workEventColor(msg discord.Message) {
 	// result is a field of Instance struct of type map.
 	// Assigning Key - value pairs to the colors and objects
 	in.result = map[string]string{colorObject[1]: colorObject[0], colorObject[3]: colorObject[2], colorObject[5]: colorObject[4]}
-	in.sdlr.AwaitResumeTrigger()
+
 }
 
 // Work Event #7 -> Color response
 func (in *Instance) workEventColor2(msg discord.Message) {
 	// Finding target object
-	itemColor := exp.workEventColor2.FindStringSubmatch(msg.Content)[1]
-	var res = in.result[itemColor]
-	in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
-		Value: res,
-		Log:   "responding to Work Color",
-	})
+	itemObject := exp.workEventColor2.FindStringSubmatch(msg.Content)[1]
+	itemColor := in.result[itemObject]
+	index := in.returnButtonIndex(itemColor, 4, msg)
+	if index != -1 {
+		in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
+			Actionrow: 1,
+			Button:    index,
+			Message:   msg,
+			Log:       "Responding to work Color event",
+		})
+	}
+}
+
+// Work Event #8 -> Emoji
+func (in *Instance) workEventEmoji(msg discord.Message) {
+	in.result2 = exp.workEventEmoji.FindStringSubmatch(msg.Content)[2]
+}
+
+func (in *Instance) workEventEmoji2(msg discord.Message) {
+	res := in.returnButtonIndex(in.result2, 5, msg)
+	if res != -1 {
+		in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
+			Actionrow: 1,
+			Button:    res,
+			Message:   msg,
+			Log:       "Responding to work event emoji",
+		})
+		return
+	}
+	res2 := in.returnButtonIndex2(in.result2, 5, msg)
+	if res2 != -1 {
+		in.sdlr.ResumeWithCommandOrPrioritySchedule(&scheduler.Command{
+			Actionrow: 2,
+			Button:    res2,
+			Message:   msg,
+			Log:       "Responding to work event emoji",
+		})
+		return
+	}
 }
 
 // Rework - Incase of promotion
@@ -176,8 +247,7 @@ func (in *Instance) WorkEnd(msg discord.Message) {
 	if exp.workEventScramble.MatchString(msg.Content) ||
 		exp.workEventRetype.MatchString(msg.Content) ||
 		exp.workEventHangman.MatchString(msg.Content) ||
-		exp.workEventMemory.MatchString(msg.Content) ||
-		exp.workEventMemory2.MatchString(msg.Content) ||
+		exp.workEventRepeat.MatchString(msg.Content) ||
 		exp.workEventReverse.MatchString(msg.Content) ||
 		exp.workEventColor.MatchString(msg.Content) ||
 		exp.workEventColor2.MatchString(msg.Content) ||

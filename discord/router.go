@@ -78,6 +78,12 @@ func (rt *MessageRoute) ContentMatchesExp(exp *regexp.Regexp) *MessageRoute {
 	})
 	return rt
 }
+func (rt *MessageRoute) EmbedMatchesExp(exp *regexp.Regexp) *MessageRoute {
+	rt.conds = append(rt.conds, func(msg Message, _ string) bool {
+		return exp.MatchString(msg.Embeds[0].Description)
+	})
+	return rt
+}
 
 func (rt *MessageRoute) ContentContains(s string) *MessageRoute {
 	rt.conds = append(rt.conds, func(msg Message, _ string) bool {

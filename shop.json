@@ -1,0 +1,326 @@
+{
+    "Shop": [
+        {
+            "ID": "AntiRobPack",
+            "EmojiID": "873172443462791200",
+            "Name": "Anti-Rob Pack",
+            "Cost": "1,000",
+            "Type": "Item Pack"
+        },
+        {
+            "ID": "GrindPack",
+            "EmojiID": "873172443685064744",
+            "Name": "Grind Pack",
+            "Cost": "1,000",
+            "Type": "Item Pack"
+        },
+        {
+            "ID": "pinkphallicobject",
+            "EmojiID": "834192945019617280",
+            "Name": "Pink Phallic Object",
+            "Cost": "10",
+            "Type": "Collectable"
+        },
+        {
+            "ID": "phone",
+            "EmojiID": "830509316632346625",
+            "Name": "Cell Phone",
+            "Cost": "3,500",
+            "Type": "Tool"
+        },
+        {
+            "ID": "padlock",
+            "EmojiID": "830509316900651059",
+            "Name": "Padlock",
+            "Cost": "4,000",
+            "Type": "Tool"
+        },
+        {
+            "ID": "laptop",
+            "EmojiID": "830509316674813974",
+            "Name": "Laptop",
+            "Cost": "5,000",
+            "Type": "Tool"
+        },
+        {
+            "ID": "sand",
+            "EmojiID": "830509316901175366",
+            "Name": "Box of Sand",
+            "Cost": "5,000",
+            "Type": "Tool"
+        },
+        {
+            "ID": "Apple",
+            "EmojiID": "887000049266069575",
+            "Name": "Apple",
+            "Cost": "8,000",
+            "Type": "Power-up"
+        },
+        {
+            "ID": "Landmine",
+            "EmojiID": "887000049354145792",
+            "Name": "Landmine",
+            "Cost": "9,500",
+            "Type": "Tool"
+        },
+        {
+            "ID": "fakeid",
+            "EmojiID": "573151946911776798",
+            "Name": "Fake ID",
+            "Cost": "10,000",
+            "Type": "Tool"
+        },
+        {
+            "ID": "laptop",
+            "EmojiID": "830509316674813974",
+            "Name": "Laptop",
+            "Cost": "5,000",
+            "Type": "Tool"
+        },
+        {
+            "ID": "sand",
+            "EmojiID": "830509316901175366",
+            "Name": "Box of Sand",
+            "Cost": "5,000",
+            "Type": "Tool"
+        },
+        {
+            "ID": "Apple",
+            "EmojiID": "887000049266069575",
+            "Name": "Apple",
+            "Cost": "8,000",
+            "Type": "Power-up"
+        },
+        {
+            "ID": "Landmine",
+            "EmojiID": "887000049354145792",
+            "Name": "Landmine",
+            "Cost": "9,500",
+            "Type": "Tool"
+        },
+        {
+            "ID": "fakeid",
+            "EmojiID": "573151946911776798",
+            "Name": "Fake ID",
+            "Cost": "10,000",
+            "Type": "Tool"
+        },
+        {
+            "ID": "Alcohol",
+            "EmojiID": "887000049555501127",
+            "Name": "Alcohol",
+            "Cost": "10,319",
+            "Type": "Power-up"
+        },
+        {
+            "ID": "horseshoe",
+            "EmojiID": "813911522975678476",
+            "Name": "Lucky Horseshoe",
+            "Cost": "25,000",
+            "Type": "Power-up"
+        },
+        {
+            "ID": "fidgetspinner",
+            "EmojiID": "573150030030962699",
+            "Name": "Fidget Spinner",
+            "Cost": "25,000",
+            "Type": "Power-up"
+        },
+        {
+            "ID": "shovel",
+            "EmojiID": "842779232819478619",
+            "Name": "Shovel",
+            "Cost": "25,000",
+            "Type": "Tool"
+        },
+        {
+            "ID": "fishingpole",
+            "EmojiID": "714998788397465732",
+            "Name": "Fishing Pole",
+            "Cost": "25,000",
+            "Type": "Tool"
+        },
+        {
+            "ID": "Alcohol",
+            "EmojiID": "887000049555501127",
+            "Name": "Alcohol",
+            "Cost": "12,000",
+            "Type": "Power-up"
+        },
+        {
+            "ID": "horseshoe",
+            "EmojiID": "813911522975678476",
+            "Name": "Lucky Horseshoe",
+            "Cost": "25,000",
+            "Type": "Power-up"
+        },
+        {
+            "ID": "fidgetspinner",
+            "EmojiID": "573150030030962699",
+            "Name": "Fidget Spinner",
+            "Cost": "25,000",
+            "Type": "Power-up"
+        },
+        {
+            "ID": "shovel",
+            "EmojiID": "842779232819478619",
+            "Name": "Shovel",
+            "Cost": "25,000",
+            "Type": "Tool"
+        },
+        {
+            "ID": "fishingpole",
+            "EmojiID": "714998788397465732",
+            "Name": "Fishing Pole",
+            "Cost": "25,000",
+            "Type": "Tool"
+        },
+        {
+            "ID": "huntingrifle",
+            "EmojiID": "714543607947722822",
+            "Name": "Hunting Rifle",
+            "Cost": "25,000",
+            "Type": "Tool"
+        },
+        {
+            "ID": "coinbomb",
+            "EmojiID": "688456543372312594",
+            "Name": "Coin Bomb",
+            "Cost": "30,000",
+            "Type": "Tool"
+        },
+        {
+            "ID": "lifesaver",
+            "EmojiID": "573151706641203210",
+            "Name": "Life Saver",
+            "Cost": "30,000",
+            "Type": "Power-up"
+        },
+        {
+            "ID": "Tidepod",
+            "EmojiID": "887000049740030032",
+            "Name": "Tidepod",
+            "Cost": "30,000",
+            "Type": "Power-up"
+        },
+        {
+            "ID": "wishlist",
+            "EmojiID": "723641465615548447",
+            "Name": "Robbers Wishlist",
+            "Cost": "50,000",
+            "Type": "Tool"
+        },
+        {
+            "ID": "huntingrifle",
+            "EmojiID": "714543607947722822",
+            "Name": "Hunting Rifle",
+            "Cost": "25,000",
+            "Type": "Tool"
+        },
+        {
+            "ID": "coinbomb",
+            "EmojiID": "688456543372312594",
+            "Name": "Coin Bomb",
+            "Cost": "30,000",
+            "Type": "Tool"
+        },
+        {
+            "ID": "lifesaver",
+            "EmojiID": "573151706641203210",
+            "Name": "Life Saver",
+            "Cost": "30,000",
+            "Type": "Power-up"
+        },
+        {
+            "ID": "Tidepod",
+            "EmojiID": "887000049740030032",
+            "Name": "Tidepod",
+            "Cost": "30,000",
+            "Type": "Power-up"
+        },
+        {
+            "ID": "wishlist",
+            "EmojiID": "723641465615548447",
+            "Name": "Robbers Wishlist",
+            "Cost": "50,000",
+            "Type": "Tool"
+        },
+        {
+            "ID": "shreddedcheese",
+            "EmojiID": "830509316933943307",
+            "Name": "Shredded Cheese",
+            "Cost": "70,000",
+            "Type": "Power-up"
+        },
+        {
+            "ID": "pizza",
+            "EmojiID": "788070334640422942",
+            "Name": "Pizza Slice",
+            "Cost": "250,000",
+            "Type": "Power-up"
+        },
+        {
+            "ID": "Ring",
+            "EmojiID": "862369027984064552",
+            "Name": "Engagement Ring",
+            "Cost": "350,000",
+            "Type": "Collectable"
+        },
+        {
+            "ID": "shreddedcheese",
+            "EmojiID": "830509316933943307",
+            "Name": "Shredded Cheese",
+            "Cost": "70,000",
+            "Type": "Power-up"
+        },
+        {
+            "ID": "pizza",
+            "EmojiID": "788070334640422942",
+            "Name": "Pizza Slice",
+            "Cost": "250,000",
+            "Type": "Power-up"
+        },
+        {
+            "ID": "Ring",
+            "EmojiID": "862369027984064552",
+            "Name": "Engagement Ring",
+            "Cost": "350,000",
+            "Type": "Collectable"
+        },
+        {
+            "ID": "pepecrown",
+            "EmojiID": "834862725120917544",
+            "Name": "Pepe Crown",
+            "Cost": "250,000,000",
+            "Type": "Collectable"
+        },
+        {
+            "ID": "feelsweirdman",
+            "EmojiID": "668945671427981312",
+            "Name": "Rare Pepe",
+            "Cost": "75,000",
+            "Type": "Collectable"
+        },
+        {
+            "ID": "pepecoin",
+            "EmojiID": "718138332982280272",
+            "Name": "Pepe Coin",
+            "Cost": "625,000",
+            "Type": "Collectable"
+        },
+        {
+            "ID": "pepemedal",
+            "EmojiID": "716848179022397462",
+            "Name": "Pepe Medal",
+            "Cost": "10,000,000",
+            "Type": "Collectable"
+        },
+        {
+            "ID": "pepetrophy",
+            "EmojiID": "718136428219072662",
+            "Name": "Pepe Trophy",
+            "Cost": "50,000,000",
+            "Type": "Collectable"
+        }
+    ]
+}
