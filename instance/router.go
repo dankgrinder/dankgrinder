@@ -54,7 +54,7 @@ var exp = struct {
 	event:             regexp.MustCompile(`Attack the boss by clicking \x60(.+)\x60`),
 	gift:              regexp.MustCompile(`[a-zA-Z\s]* \(([0-9,]+) owned\)`),
 	shop:              regexp.MustCompile(`pls shop ([a-zA-Z\s]+)`),
-	blackjack:         regexp.MustCompile(`\x60\[[♥♦♠♣] ([0-9]{1,2}|[JQKA])\]\x60`),
+	blackjack:         regexp.MustCompile(`\x60[♥♦♠♣] ([0-9]{1,2}|[JQKA])\x60`),
 	blackjackBal:      regexp.MustCompile(`(You now have|You have) (\*\*)?(⏣\s)?(\*\*)?([0-9,]+)(\*\*)?(\sstill)?\.`),
 	digEventScramble:  regexp.MustCompile(`Quickly unscramble the word to uncover what's in the dirt! in the next 15\sseconds\s\x60(.+)\x60`),
 	digEventRetype:    regexp.MustCompile(`Quickly re-type the phrase to uncover what's in the dirt! in the next 15 seconds\nType\s\x60(.+)\x60`),
