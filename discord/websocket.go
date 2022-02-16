@@ -9,6 +9,7 @@ package discord
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -34,7 +35,7 @@ type WSConnOpts struct {
 	FatalHandler  func(err *websocket.CloseError)
 }
 
-func (client Client) NewWSConn(rtr *MessageRouter, fatalHandler func(err error)) (*WSConn, error) {
+func (client *Client) NewWSConn(rtr *MessageRouter, fatalHandler func(err error)) (*WSConn, error) {
 	conn, _, err := websocket.DefaultDialer.Dial(gatewayURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error while establishing websocket connection: %v", err)
@@ -44,7 +45,7 @@ func (client Client) NewWSConn(rtr *MessageRouter, fatalHandler func(err error))
 		underlying:   conn,
 		rtr:          rtr,
 		fatalHandler: fatalHandler,
-		client:       client,
+		client:       *client,
 		closePinger:  make(chan struct{}),
 	}
 
@@ -90,10 +91,13 @@ func (client Client) NewWSConn(rtr *MessageRouter, fatalHandler func(err error))
 		return nil, fmt.Errorf("error while sending authentication message: %v", err)
 	}
 
-	if err = c.awaitEvent(EventNameReady); err != nil {
+	session, err := c.awaitEvent(EventNameReady)
+	if err != nil {
 		c.underlying.Close()
 		return nil, fmt.Errorf("error while awaiting ready message: %v", err)
 	}
+
+	client.SessionID = session
 
 	go c.ping(interval)
 	go c.listen()
@@ -184,19 +188,27 @@ func (c *WSConn) readHello() (time.Duration, error) {
 // awaitEvent will block until the gateway sends a message with the passed event.
 // An error is returned if the next message received from the server is not of
 // the correct event name.
-func (c *WSConn) awaitEvent(e string) error {
+func (c *WSConn) awaitEvent(e string) (string, error) {
 	_, b, err := c.underlying.ReadMessage()
 	if err != nil {
-		return fmt.Errorf("error while reading message from websocket: %v", err)
+		return "", fmt.Errorf("error while reading message from websocket: %v", err)
 	}
-	var body Event
+	var body map[string]interface{}
 	if err = json.Unmarshal(b, &body); err != nil {
-		return fmt.Errorf("error while unmarshalling incoming websocket message: %v", err)
+		return "", fmt.Errorf("error while unmarshalling incoming websocket message: %v", err)
 	}
-	if body.EventName != e {
-		return fmt.Errorf("unexpected event name for received websocket message: %v, expected %v", body.EventName, e)
+	if !strings.Contains(string(b), "READY") {
+		return "", fmt.Errorf("unexpected opcode for received websocket message: message is not a ready message")
 	}
-	return nil
+	if body["t"].(string) != e {
+		return "", fmt.Errorf("unexpected event name for received websocket message: %v, expected %v", body["t"].(string), e)
+	}
+	if !strings.Contains(string(b), "session_id") {
+		return "", fmt.Errorf("ready event does not contain session ID")
+	}
+	session := (body["d"].(map[string]interface{}))["session_id"].(string)
+
+	return session, nil
 }
 
 func (c *WSConn) Close() error {

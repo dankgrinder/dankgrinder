@@ -26,8 +26,9 @@ var (
 )
 
 type Client struct {
-	Token string
-	User  User
+	Token     string
+	User      User
+	SessionID string
 }
 
 func NewClient(token string) (*Client, error) {
@@ -83,12 +84,12 @@ func (client Client) SendMessage(content, channelID string, typing time.Duration
 	if err != nil {
 		return fmt.Errorf("error while creating http request: %v", err)
 	}
-	req.Header.Add("Authorization", client.Token)
-	req.Header.Add("User-Agent", "Chrome/94.0.4606.31")
-	req.Header.Add("Accept-Language", "en-GB")
-	req.Header.Add("Content-Type", "application/json")
+	cookies, err := GetCookieString()
+	if err != nil {
+		return fmt.Errorf("error while getting cookies: %v", err)
+	}
 
-	res, err := http.DefaultClient.Do(req)
+	res, err := http.DefaultClient.Do(CommonHeaders(req, cookies, client.Token))
 	if err != nil {
 		return fmt.Errorf("error while sending http request: %v", err)
 	}
@@ -124,11 +125,9 @@ func (client Client) PressButton(i int, k int, msg Message) error {
 	time.Sleep(time.Duration(x) * time.Millisecond)
 
 	url := "https://discord.com/api/v9/interactions"
-
 	data := map[string]interface{}{"component_type": msg.Components[i].Buttons[k].Type, "custom_id": msg.Components[i].Buttons[k].CustomID, "hash": msg.Components[i].Buttons[k].Hash}
-	values := map[string]interface{}{"application_id": 270904126974590976, "channel_id": msg.ChannelID, "type": "3", "data": data, "guild_id": msg.GuildID, "message_flags": 0, "message_id": msg.ID, "nonce": client.snowflake()}
+	values := map[string]interface{}{"application_id": 270904126974590976, "channel_id": msg.ChannelID, "type": "3", "data": data, "guild_id": msg.GuildID, "message_flags": 0, "message_id": msg.ID, "nonce": client.snowflake(), "session_id": client.SessionID}
 	json_data, err := json.Marshal(values)
-
 	if err != nil {
 		return fmt.Errorf("error while encoding button click as json: %v", err)
 	}
@@ -136,16 +135,17 @@ func (client Client) PressButton(i int, k int, msg Message) error {
 	if err != nil {
 		return fmt.Errorf("error while creating http request: %v", err)
 	}
-	req.Header.Set("authorization", client.Token)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "Chrome/94.0.4606.31 ")
-	req.Header.Set("Accept-Language", "en-GB")
-
+	cookies, err := GetCookieString()
+	if err != nil {
+		return fmt.Errorf("error while getting cookies: %v", err)
+	}
 	httpClient := &http.Client{}
-	resp, err := httpClient.Do(req)
+	resp, err := httpClient.Do(CommonHeaders(req, cookies, client.Token))
 	if err != nil {
 		return fmt.Errorf("error while sending http request: %v", err)
 	}
+
+
 	if resp.StatusCode != 204 {
 		switch resp.StatusCode {
 		case http.StatusUnauthorized:
@@ -246,4 +246,49 @@ func (client Client) snowflake() int64 {
 	snowflake := strconv.FormatInt((time.Now().UTC().UnixNano()/1000000)-1420070400000, 2) + "0000000000000000000000"
 	nonce, _ := strconv.ParseInt(snowflake, 2, 64)
 	return nonce
+}
+
+func CommonHeaders(req *http.Request, cookies string, auth string) *http.Request {
+	req.Header.Set("Authorization", auth)
+	req.Header.Set("Cookies", cookies)
+	req.Header.Set("X-Super-Properties", "eyJvcyI6IldpbmRvd3MiLCJicm93c2VyIjoiRGlzY29yZCBDbGllbnQiLCJyZWxlYXNlX2NoYW5uZWwiOiJzdGFibGUiLCJjbGllbnRfdmVyc2lvbiI6IjEuMC45MDAzIiwib3NfdmVyc2lvbiI6IjEwLjAuMjIwMDAiLCJvc19hcmNoIjoieDY0Iiwic3lzdGVtX2xvY2FsZSI6ImVuLVVTIiwiY2xpZW50X2J1aWxkX251bWJlciI6MTA0OTY3LCJjbGllbnRfZXZlbnRfc291cmNlIjpudWxsfQ==")
+	req.Header.Set("sec-fetch-dest", "empty")
+	req.Header.Set("x-debug-options", "bugReporterEnabled")
+	req.Header.Set("sec-fetch-mode", "cors")
+	req.Header.Set("X-Discord-Locale", "en-US")
+	req.Header.Set("X-Debug-Options", "bugReporterEnabled")
+	req.Header.Set("sec-fetch-site", "same-origin")
+	req.Header.Set("accept-language", "en-US")
+	req.Header.Set("content-type", "application/json")
+	req.Header.Set("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0")
+	req.Header.Set("TE", "trailers")
+	return req
+}
+
+func GetCookieString() (string, error) {
+
+	url := "https://discord.com"
+
+	req, err := http.NewRequest("GET", url, nil)
+
+	if err != nil {
+		return "", fmt.Errorf("error while making request to get cookie %v", err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("error while getting response from cookie request %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.Cookies() == nil {
+		return "", fmt.Errorf("there are no cookies in response")
+	}
+	var cookies string
+	for _, cookie := range resp.Cookies() {
+		cookies = cookies + cookie.Name + "=" + cookie.Value + "; "
+	}
+
+	return cookies + "locale=en-US", nil
+
 }
