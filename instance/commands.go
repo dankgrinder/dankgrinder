@@ -60,6 +60,25 @@ func shareCmdValue(amount, id string) string {
 // executed periodically. It contains all commands as configured.
 func (in *Instance) newCmds() []*scheduler.Command {
 	var cmds []*scheduler.Command
+	if in.Features.BalanceCheck.Enable {
+		cmds = append(cmds, &scheduler.Command{
+			Value:    balanceCheckCmdValue,
+			Interval: time.Duration(in.Features.BalanceCheck.Interval) * time.Second,
+		})
+	}
+	for _, cmd := range in.Features.CustomCommands {
+		// cmd.Value and cmd.Amount are not checked for correct values here
+		// because they were checked when the application started using
+		// cfg.Validate().
+		cmds = append(cmds, &scheduler.Command{
+			Value:    cmd.Value,
+			Interval: time.Duration(cmd.Interval) * time.Second,
+			Amount:   uint(cmd.Amount),
+			CondFunc: func() bool {
+				return cmd.PauseBelowBalance == 0 || in.balance >= cmd.PauseBelowBalance
+			},
+		})
+	}
 	if in.Features.Commands.Beg {
 		cmds = append(cmds, &scheduler.Command{
 			Value:    begCmdValue,
@@ -101,12 +120,6 @@ func (in *Instance) newCmds() []*scheduler.Command {
 			AwaitResume: true,
 		})
 	}
-	if in.Features.BalanceCheck.Enable {
-		cmds = append(cmds, &scheduler.Command{
-			Value:    balanceCheckCmdValue,
-			Interval: time.Duration(in.Features.BalanceCheck.Interval) * time.Second,
-		})
-	}
 	if in.Features.AutoTidepod.Enable {
 		cmds = append(cmds, &scheduler.Command{
 			Value:       tidepodCmdValue,
@@ -116,20 +129,6 @@ func (in *Instance) newCmds() []*scheduler.Command {
 	}
 	if in.Features.AutoBlackjack.Enable {
 		cmds = append(cmds, in.newAutoBlackjackCmd())
-	}
-
-	for _, cmd := range in.Features.CustomCommands {
-		// cmd.Value and cmd.Amount are not checked for correct values here
-		// because they were checked when the application started using
-		// cfg.Validate().
-		cmds = append(cmds, &scheduler.Command{
-			Value:    cmd.Value,
-			Interval: time.Duration(cmd.Interval) * time.Second,
-			Amount:   uint(cmd.Amount),
-			CondFunc: func() bool {
-				return cmd.PauseBelowBalance == 0 || in.balance >= cmd.PauseBelowBalance
-			},
-		})
 	}
 	return cmds
 }
