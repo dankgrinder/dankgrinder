@@ -89,7 +89,7 @@ func (client Client) SendMessage(content, channelID string, typing time.Duration
 		return fmt.Errorf("error while getting cookies: %v", err)
 	}
 
-	res, err := http.DefaultClient.Do(CommonHeaders(req, cookies, client.Token))
+	res, err := http.DefaultClient.Do(Headers(req, cookies, client.Token))
 	if err != nil {
 		return fmt.Errorf("error while sending http request: %v", err)
 	}
@@ -140,7 +140,7 @@ func (client Client) PressButton(i int, k int, msg Message) error {
 		return fmt.Errorf("error while getting cookies: %v", err)
 	}
 	httpClient := &http.Client{}
-	resp, err := httpClient.Do(CommonHeaders(req, cookies, client.Token))
+	resp, err := httpClient.Do(Headers(req, cookies, client.Token))
 	if err != nil {
 		return fmt.Errorf("error while sending http request: %v", err)
 	}
@@ -172,12 +172,11 @@ func (client Client) PressButton(i int, k int, msg Message) error {
 // changed between when you created the client and now. Otherwise, this is also
 // available in the User field of the Client struct.
 func (client Client) CurrentUser() (User, error) {
-	req, err := http.NewRequest("GET", "https://discord.com/api/v8/users/@me", nil)
+	req, err := http.NewRequest("GET", "https://discord.com/api/v9/users/@me", nil)
 	if err != nil {
 		return User{}, fmt.Errorf("error while creating http request: %v", err)
 	}
-	client.headers(req)
-	res, err := http.DefaultClient.Do(req)
+	res, err := http.DefaultClient.Do(Headers(req, "", client.Token))
 	if err != nil {
 		return User{}, fmt.Errorf("error while sending http request: %v", err)
 	}
@@ -208,13 +207,12 @@ func (client Client) typing(channelID string) error {
 	if channelID == "" {
 		return fmt.Errorf("no channel id")
 	}
-	reqURL := fmt.Sprintf("https://discord.com/api/v8/channels/%v/typing", channelID)
+	reqURL := fmt.Sprintf("https://discord.com/api/v9/channels/%v/typing", channelID)
 	req, err := http.NewRequest("POST", reqURL, nil)
 	if err != nil {
 		return fmt.Errorf("error while creating http request: %v", err)
 	}
-	client.headers(req)
-	res, err := http.DefaultClient.Do(req)
+	res, err := http.DefaultClient.Do(Headers(req, "", client.Token))
 	if err != nil {
 		return fmt.Errorf("error while sending http request: %v", err)
 	}
@@ -235,12 +233,6 @@ func (client Client) typing(channelID string) error {
 	return nil
 }
 
-func (client Client) headers(r *http.Request) *http.Request {
-	r.Header.Add("Authorization", client.Token)
-	r.Header.Add("User-Agent", "Chrome/86.0.4240.75")
-	r.Header.Add("Accept-Language", "en-GB")
-	return r
-}
 
 func (client Client) snowflake() int64 {
 	snowflake := strconv.FormatInt((time.Now().UTC().UnixNano()/1000000)-1420070400000, 2) + "0000000000000000000000"
@@ -248,20 +240,32 @@ func (client Client) snowflake() int64 {
 	return nonce
 }
 
-func CommonHeaders(req *http.Request, cookies string, auth string) *http.Request {
-	req.Header.Set("Authorization", auth)
-	req.Header.Set("Cookies", cookies)
-	req.Header.Set("X-Super-Properties", "eyJvcyI6IldpbmRvd3MiLCJicm93c2VyIjoiRGlzY29yZCBDbGllbnQiLCJyZWxlYXNlX2NoYW5uZWwiOiJzdGFibGUiLCJjbGllbnRfdmVyc2lvbiI6IjEuMC45MDAzIiwib3NfdmVyc2lvbiI6IjEwLjAuMjIwMDAiLCJvc19hcmNoIjoieDY0Iiwic3lzdGVtX2xvY2FsZSI6ImVuLVVTIiwiY2xpZW50X2J1aWxkX251bWJlciI6MTA0OTY3LCJjbGllbnRfZXZlbnRfc291cmNlIjpudWxsfQ==")
-	req.Header.Set("sec-fetch-dest", "empty")
-	req.Header.Set("x-debug-options", "bugReporterEnabled")
-	req.Header.Set("sec-fetch-mode", "cors")
-	req.Header.Set("X-Discord-Locale", "en-US")
-	req.Header.Set("X-Debug-Options", "bugReporterEnabled")
-	req.Header.Set("sec-fetch-site", "same-origin")
-	req.Header.Set("accept-language", "en-US")
-	req.Header.Set("content-type", "application/json")
-	req.Header.Set("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0")
-	req.Header.Set("TE", "trailers")
+const UserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) discord/0.0.61 Chrome/91.0.4472.164 Electron/13.6.6 Safari/537.36"
+const XTrack = "eyJvcyI6IldpbmRvd3MiLCJicm93c2VyIjoiRmlyZWZveCIsImRldmljZSI6IiIsInN5c3RlbV9sb2NhbGUiOiJlbi1VUyIsImJyb3dzZXJfdXNlcl9hZ2VudCI6Ik1vemlsbGEvNS4wIChXaW5kb3dzIE5UIDEwLjA7IFdpbjY0OyB4NjQ7IHJ2Ojk3LjApIEdlY2tvLzIwMTAwMTAxIEZpcmVmb3gvOTcuMCIsImJyb3dzZXJfdmVyc2lvbiI6Ijk3LjAiLCJvc192ZXJzaW9uIjoiMTAiLCJyZWZlcnJlciI6IiIsInJlZmVycmluZ19kb21haW4iOiIiLCJyZWZlcnJlcl9jdXJyZW50IjoiIiwicmVmZXJyaW5nX2RvbWFpbl9jdXJyZW50IjoiIiwicmVsZWFzZV9jaGFubmVsIjoic3RhYmxlIiwiY2xpZW50X2J1aWxkX251bWJlciI6OTk5OSwiY2xpZW50X2V2ZW50X3NvdXJjZSI6bnVsbH0="
+const XSuper = "eyJvcyI6Ik1hYyBPUyBYIiwiYnJvd3NlciI6IkRpc2NvcmQgQ2xpZW50IiwicmVsZWFzZV9jaGFubmVsIjoicHRiIiwiY2xpZW50X3ZlcnNpb24iOiIwLjAuNjEiLCJvc192ZXJzaW9uIjoiMjEuMy4wIiwib3NfYXJjaCI6ImFybTY0Iiwic3lzdGVtX2xvY2FsZSI6ImVuLVVTIiwiY2xpZW50X2J1aWxkX251bWJlciI6MTIzODMzLCJjbGllbnRfZXZlbnRfc291cmNlIjpudWxsfQ=="
+
+
+func Headers(req *http.Request, cookie, auth string) *http.Request {
+	for k, v := range map[string]string{
+		"Host":               "discord.com",
+		"User-Agent":         UserAgent,
+		"Accept":             "*/*",
+		"Accept-Language":    "en-US,en;q=0.5",
+		"Content-Type":       "application/json",
+		"Authorization":      auth,
+		"X-Super-Properties": XSuper,
+		"X-Discord-Locale":   "en-US",
+		"X-Debug-Options":    "bugReporterEnabled",
+		"Origin":             "https://discord.com",
+		"Sec-Fetch-Dest":     "empty",
+		"Sec-Fetch-Mode":     "cors",
+		"Sec-Fetch-Site":     "same-origin",
+	} {
+		req.Header.Set(k, v)
+	}
+	if cookie != "" {
+		req.Header.Set("Cookie", cookie)
+	}
 	return req
 }
 
@@ -292,3 +296,4 @@ func GetCookieString() (string, error) {
 	return cookies + "locale=en-US", nil
 
 }
+
