@@ -126,7 +126,7 @@ func (client Client) PressButton(i int, k int, msg Message) error {
 
 	url := "https://discord.com/api/v9/interactions"
 	data := map[string]interface{}{"component_type": msg.Components[i].Buttons[k].Type, "custom_id": msg.Components[i].Buttons[k].CustomID, "hash": msg.Components[i].Buttons[k].Hash}
-	values := map[string]interface{}{"application_id": 270904126974590976, "channel_id": msg.ChannelID, "type": "3", "data": data, "guild_id": msg.GuildID, "message_flags": 0, "message_id": msg.ID, "nonce": client.snowflake(), "session_id": client.SessionID}
+	values := map[string]interface{}{"application_id": "270904126974590976", "channel_id": msg.ChannelID, "type": "3", "data": data, "guild_id": msg.GuildID, "message_flags": 0, "message_id": msg.ID, "nonce": client.snowflake(), "session_id": client.SessionID}
 	json_data, err := json.Marshal(values)
 	if err != nil {
 		return fmt.Errorf("error while encoding button click as json: %v", err)
